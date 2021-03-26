@@ -153,6 +153,7 @@ TEST_F(ElfParserTest, ReadDynamicNeededAndRpath) {
   argv.push_back("/dev/null");
   argv.push_back("-shared");
   argv.push_back("-Wl,-rpath=/lib");
+  argv.push_back("-Wl,-no-as-needed");
   argv.push_back("-o");
   argv.push_back("/tmp/null.so");
   ReadCommandOutputByPopen("gcc", argv, env, ".", MERGE_STDOUT_STDERR, nullptr);
