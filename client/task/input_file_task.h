@@ -14,7 +14,7 @@
 #include "compile_task.h"
 #include "file_hash_cache.h"
 #include "goma_blob.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 #include "simple_timer.h"
 #include "worker_thread_manager.h"
 

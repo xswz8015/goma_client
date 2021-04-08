@@ -11,7 +11,7 @@
 
 #include "goma_hash.h"
 
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 
 namespace devtools_goma {
 

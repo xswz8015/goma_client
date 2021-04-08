@@ -7,8 +7,8 @@
 
 #include <algorithm>
 
+#include "client/deps_cache_data.pb.h"
 #include "glog/logging.h"
-#include "prototmp/deps_cache_data.pb.h"
 
 namespace devtools_goma {
 

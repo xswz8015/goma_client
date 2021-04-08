@@ -15,7 +15,7 @@
 
 #ifdef ENABLE_LZMA
 #include "google/protobuf/io/zero_copy_stream_impl.h"
-#include "prototmp/goma_log.pb.h"
+#include "lib/goma_log.pb.h"
 using google::protobuf::io::ArrayInputStream;
 using google::protobuf::io::ConcatenatingInputStream;
 using google::protobuf::io::StringOutputStream;

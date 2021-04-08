@@ -8,7 +8,7 @@
 #include "compile_task.h"
 #include "glog/logging.h"
 #include "goma_data_util.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 #include "worker_thread_manager.h"
 
 namespace devtools_goma {

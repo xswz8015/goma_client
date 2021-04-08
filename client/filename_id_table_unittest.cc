@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 #include "absl/container/flat_hash_set.h"
-#include "prototmp/deps_cache_data.pb.h"
+#include "client/deps_cache_data.pb.h"
 
 namespace devtools_goma {
 

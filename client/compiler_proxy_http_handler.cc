@@ -63,7 +63,7 @@
 #include "goma_flags.cc"
 
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/goma_log.pb.h"
+#include "lib/goma_log.pb.h"
 MSVC_POP_WARNING()
 
 

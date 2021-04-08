@@ -14,7 +14,7 @@
 #include "util.h"
 
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 MSVC_POP_WARNING()
 
 namespace devtools_goma {
@@ -298,21 +298,6 @@ TEST(FilePathUtilTest, RemoveDuplicateFiles) {
     };
     std::vector<std::string> removed;
     RemoveDuplicateFiles("", &filenames, &removed);
-#ifdef _WIN32
-    // Windows: case-insensitive, use the case variation of the first non-unique
-    // Windows path that was encountered, based on case-sensitive ordering of
-    // strings within std::set.
-    std::set<std::string> expected{
-        file::JoinPath(kRootDir, "Foo"),
-    };
-    std::vector<std::string> expected_removed{
-        file::JoinPath(kRootDir, "fOO"),
-        file::JoinPath(kRootDir, "fOo"),
-        file::JoinPath(absl::AsciiStrToLower(kRootDir), "FOO"),
-        file::JoinPath(absl::AsciiStrToLower(kRootDir), "foO"),
-    };
-#else
-    // non-Windows: different filepath if case is not same.
     std::set<std::string> expected{
         file::JoinPath(kRootDir, "fOO"),
         file::JoinPath(kRootDir, "Foo"),
@@ -321,7 +306,6 @@ TEST(FilePathUtilTest, RemoveDuplicateFiles) {
         file::JoinPath(absl::AsciiStrToLower(kRootDir), "foO"),
     };
     std::vector<std::string> expected_removed;
-#endif  // _WIN32
     EXPECT_EQ(filenames, expected);
     EXPECT_EQ(removed, expected_removed);
   }

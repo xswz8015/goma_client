@@ -14,7 +14,7 @@
 #include "cpu.h"
 #include "glog/logging.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/goma_log.pb.h"
+#include "lib/goma_log.pb.h"
 MSVC_POP_WARNING()
 #include "http_rpc.h"
 #include "worker_thread.h"

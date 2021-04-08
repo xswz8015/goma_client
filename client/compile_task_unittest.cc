@@ -19,7 +19,7 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 #include "json_util.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 #include "rpc_controller.h"
 #include "threadpool_http_server.h"
 #include "worker_thread_manager.h"

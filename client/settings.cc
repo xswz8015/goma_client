@@ -16,7 +16,7 @@
 #include "http_rpc_init.h"
 #include "mypath.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/settings.pb.h"
+#include "client/settings.pb.h"
 MSVC_POP_WARNING()
 #include "util.h"
 #include "worker_thread_manager.h"

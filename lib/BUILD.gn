@@ -1,7 +1,5 @@
 # Copyright 2014 Google LLC. The Goma Authors. All Rights Reserved.
 
-proto_out_dir = "prototmp"
-
 import("//testing/libfuzzer/fuzzer_test.gni")
 import("//third_party/protobuf/proto_library.gni")
 
@@ -16,6 +14,7 @@ proto_library("goma_proto") {
 config("lib_config") {
   include_dirs = [ "." ]
 }
+
 static_library("lib") {
   sources = [
     "cmdline_parser.cc",

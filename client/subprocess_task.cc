@@ -21,7 +21,7 @@
 #include "glog/logging.h"
 #include "glog/stl_logging.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/subprocess.pb.h"
+#include "client/subprocess.pb.h"
 MSVC_POP_WARNING()
 #include "scoped_tmp_file.h"
 #include "subprocess_controller_client.h"

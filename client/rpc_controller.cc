@@ -5,7 +5,7 @@
 #include "rpc_controller.h"
 
 #include "glog/logging.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 #include "worker_thread_manager.h"
 
 #ifdef _WIN32

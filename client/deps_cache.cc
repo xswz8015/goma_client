@@ -36,8 +36,8 @@
 #include "vc_flags.h"
 
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/deps_cache_data.pb.h"
-#include "prototmp/goma_stats.pb.h"
+#include "client/deps_cache_data.pb.h"
+#include "lib/goma_stats.pb.h"
 MSVC_POP_WARNING()
 
 namespace {

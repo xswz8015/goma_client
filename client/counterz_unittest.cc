@@ -9,7 +9,7 @@
 #include "absl/time/time.h"
 #include "json_util.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO();
-#include "prototmp/counterz.pb.h"
+#include "client/counterz.pb.h"
 MSVC_POP_WARNING();
 
 namespace devtools_goma {

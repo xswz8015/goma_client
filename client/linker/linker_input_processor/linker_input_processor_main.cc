@@ -12,8 +12,8 @@
 #include "cxx/gcc_compiler_info_builder.h"
 #include "gcc_flags.h"
 #include "glog/logging.h"
+#include "lib/goma_data.pb.h"
 #include "mypath.h"
-#include "prototmp/goma_data.pb.h"
 
 using devtools_goma::GCCCompilerInfoBuilder;
 

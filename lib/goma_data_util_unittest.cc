@@ -6,7 +6,7 @@
 #include "lib/goma_data_util.h"
 
 #include "gtest/gtest.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 
 namespace devtools_goma {
 

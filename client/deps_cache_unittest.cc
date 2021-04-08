@@ -16,6 +16,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/time/time.h"
+#include "client/deps_cache_data.pb.h"
 #include "compiler_flags.h"
 #include "compiler_info.h"
 #include "cxx/cxx_compiler_info.h"
@@ -26,7 +27,6 @@
 #include "java_flags.h"
 #include "path.h"
 #include "path_resolver.h"
-#include "prototmp/deps_cache_data.pb.h"
 #include "subprocess.h"
 #include "unittest_util.h"
 #include "vc_flags.h"

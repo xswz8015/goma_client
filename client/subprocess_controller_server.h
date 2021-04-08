@@ -18,7 +18,7 @@
 #endif
 #include "compiler_specific.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/subprocess.pb.h"
+#include "client/subprocess.pb.h"
 MSVC_POP_WARNING()
 #include "subprocess_controller.h"
 

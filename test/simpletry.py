@@ -387,13 +387,18 @@ class CompilerProxyManager(object):
   # TODO: fix this.
   # pylint: disable=W0212
 
-  def __init__(self, goma_ctl_path, port, kill=False,
+  def __init__(self,
+               goma_ctl_path,
+               port,
+               ats=False,
+               kill=False,
                service_account_file=None):
     """Initialize.
 
     Args:
       goma_ctl_path: a string of path goma_ctl.py is located.
       port: a string or an integer port number of compiler_proxy.
+      ats: True to enable ArbitraryToolchainSupport. False for windows cross.
       kill: True to kill the GOMA processes before starting compiler_proxy.
       service_account_file: a string of service account filename.
     """
@@ -401,6 +406,7 @@ class CompilerProxyManager(object):
     mod_name, _ = os.path.splitext(_GOMA_CTL)
     self._module = imp.load_source(mod_name,
                                    os.path.join(goma_ctl_path, _GOMA_CTL))
+    self._ats = ats
     self._kill = kill
     self._tmpdir = None
     self._port = int(port)
@@ -418,7 +424,10 @@ class CompilerProxyManager(object):
     os.environ['TMP'] = self._tmpdir
     os.environ['GOMA_DEPS_CACHE_FILE'] = 'deps_cache'
     os.environ['GOMA_RPC_EXTRA_PARAMS'] = '?prod'
-    os.environ['GOMA_ARBITRARY_TOOLCHAIN_SUPPORT'] = 'true'
+    if self._ats:
+      os.environ['GOMA_ARBITRARY_TOOLCHAIN_SUPPORT'] = 'true'
+    else:
+      os.environ['GOMA_ARBITRARY_TOOLCHAIN_SUPPORT'] = 'false'
     assert self._module._GetLogDirectory() == self._tmpdir
 
     os.environ['GOMA_COMPILER_PROXY_PORT'] = str(self._port)
@@ -586,13 +595,6 @@ def main():
                            default=os.path.join(
                                test_dir, '..', 'out', 'Release'),
                            help='goma binary directory')
-  option_parser.add_option('--goma-api-key-file',
-                           default=os.path.abspath(
-                               os.path.join(test_dir, '..',  # curdir
-                                            '..', '..',  # build/client
-                                            '..', '..',  # slave/$builddir
-                                            'goma', 'goma.key')),
-                           help='goma api key file')
   option_parser.add_option('--goma-service-account-file',
                            help='goma service account file')
 
@@ -600,11 +602,27 @@ def main():
   goma_dir = os.path.abspath(options.goma_dir)
 
   if not os.environ.get('GOMATEST_USE_RUNNING_COMPILER_PROXY', ''):
+    print('enable ATS')
     with CompilerProxyManager(
-        goma_dir, options.port,
+        goma_dir,
+        options.port,
+        ats=True,
         kill=options.kill,
         service_account_file=options.goma_service_account_file):
       exit_code = ExecuteTests(goma_dir)
+      print('enable ATS exit_code=%d' % exit_code)
+    print('disable ATS')
+    with CompilerProxyManager(
+        goma_dir,
+        options.port,
+        ats=False,
+        kill=options.kill,
+        service_account_file=options.goma_service_account_file):
+      e = ExecuteTests(goma_dir)
+      print('disable ATS exit_code=%s' % e)
+      if exit_code == 0:
+        exit_code = e
+
   else:
     exit_code = ExecuteTests(goma_dir)
 

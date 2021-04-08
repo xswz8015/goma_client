@@ -60,9 +60,9 @@
 #include "worker_thread.h"
 
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/error_notice.pb.h"
-#include "prototmp/goma_stats.pb.h"
-#include "prototmp/goma_statz_stats.pb.h"
+#include "client/error_notice.pb.h"
+#include "lib/goma_stats.pb.h"
+#include "lib/goma_statz_stats.pb.h"
 MSVC_POP_WARNING()
 
 #ifdef _WIN32
@@ -663,8 +663,7 @@ void CompileService::DumpToJson(Json::Value* json, absl::Time after) {
     (*json)["http_rpc"] = std::move(http_rpc);
   }
 
-  (*json)["last_update_ms"] =
-      static_cast<long long>(absl::ToUnixMillis(last_update_time));
+  (*json)["last_update_ms"] = Json::Value(absl::ToUnixMillis(last_update_time));
 }
 
 void CompileService::DumpStats(std::ostringstream* ss) {

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "prototmp/compiler_info_data.pb.h"
+#include "client/compiler_info_data.pb.h"
 
 namespace devtools_goma {
 

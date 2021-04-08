@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "lib/file_reader.h"
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 
 #ifdef _WIN32
 # include <shlobj.h>

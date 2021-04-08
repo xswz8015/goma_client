@@ -14,7 +14,7 @@
 #include "compiler_specific.h"
 #include "lockhelper.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/subprocess.pb.h"
+#include "client/subprocess.pb.h"
 MSVC_POP_WARNING()
 #include "util.h"
 #include "worker_thread.h"

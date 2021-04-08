@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "84682eb39805d6342b589817a87068fb3d1535cc",
+     "clang_revision": "a387faa2a6741f565e45d78804a49a0e55de5909",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
@@ -35,7 +35,7 @@ deps = {
 
      # jsoncpp
      "client/third_party/jsoncpp/source":
-     Var("chromium_git") + '/external/github.com/open-source-parsers/jsoncpp.git@f572e8e42e22cfcf5ab0aea26574f408943edfa4', # from svn 248
+     Var("chromium_git") + '/external/github.com/open-source-parsers/jsoncpp.git@9059f5cad030ba11d37818847443a53918c327b1', # 1.9.4
 
      # chrome's tools/clang
      "client/tools/clang":
@@ -44,7 +44,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@9be3252947c6ace1f179dbb4af544e86917a2430",
+     "https://boringssl.googlesource.com/boringssl@fa2d3d56b9f542f8519b1c2298213d92eb954f3c",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":

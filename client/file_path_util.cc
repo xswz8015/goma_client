@@ -20,7 +20,7 @@
 #include "vc_flags.h"
 
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
-#include "prototmp/goma_data.pb.h"
+#include "lib/goma_data.pb.h"
 MSVC_POP_WARNING()
 
 namespace devtools_goma {
@@ -277,10 +277,6 @@ void RemoveDuplicateFiles(const std::string& cwd,
   std::set<std::string> unique_files;
   for (const auto& filename : *filenames) {
     std::string abs_filename = file::JoinPathRespectAbsolute(cwd, filename);
-#ifdef _WIN32
-    // On Windows, convert to lowercase for uniqueness comparison.
-    absl::AsciiStrToLower(&abs_filename);
-#endif  // _WIN32
     auto p = path_map.emplace(std::move(abs_filename), filename);
     if (p.second) {
       unique_files.insert(filename);
