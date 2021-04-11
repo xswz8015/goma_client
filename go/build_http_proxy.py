@@ -18,6 +18,8 @@ def main():
   parser.add_argument('--output', help='proxy filename', required=True)
   parser.add_argument(
       '--cache-dir', help='gocache directory name', required=True)
+  parser.add_argument(
+      '--goarch', help='go architecture for which to compile', required=True)
   args = parser.parse_args()
 
   gopath = os.path.join(_TOP_DIR, 'third_party', 'go', 'bin', 'go')
@@ -26,6 +28,7 @@ def main():
     env.pop(key, None)
   env['CGO_ENABLED'] = '0'
   env['GOCACHE'] = args.cache_dir
+  env['GOARCH'] = args.goarch
   subprocess.check_call([
       gopath, 'build', '-o', args.output,
       os.path.join(_SCRIPT_DIR, 'proxy', 'proxy.go')

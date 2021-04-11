@@ -514,7 +514,7 @@ def ConfigFlags(config):
     flags.comment = '# login as %s' % token_info['email']
     flags.enableSendInfo()
     flags.update({'GOMACTL_USE_PROXY': 'true'})
-    if sys.platform in ('cygwin', 'linux', 'linux2', 'win32'):
+    if sys.platform in ('linux', 'linux2'):
       flags.enableATS()
     return flags
   return flags
