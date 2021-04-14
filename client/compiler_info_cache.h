@@ -13,6 +13,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
 #include "absl/time/time.h"
 #include "autolock_timer.h"
 #include "basictypes.h"
@@ -57,12 +58,15 @@ class CompilerInfoCache {
   ~CompilerInfoCache();
 
   // Initializes the CompilerInfoCache.
-  // when cache_filename is empty, this won't load cached data.
-  // otherwise, it will try to load cached data from
-  // JoinPathRespectAbsolute(cache_dir, cache_filename).
+  // Call LoadIfEnabled to load cache file.
   static void Init(const std::string& cache_dir,
                    const std::string& cache_filename,
                    absl::Duration cache_holding_time);
+  // Load cached data from
+  // JoinPathRespectAbsolute(cache_dir, cache_filename),
+  // when cache_filename is not empty.
+  // Do nothing if cache_filename is empty.
+  static void LoadIfEnabled();
   static CompilerInfoCache* instance() { return instance_; }
 
   // Saves CompilerInfoCache into cache file.
@@ -103,6 +107,8 @@ class CompilerInfoCache {
   int NumStoreDups() const;
   int NumMiss() const;
   int NumFail() const;
+  int NumUsed() const;
+  int Count() const;
   int LoadedSize() const;
 
   // Takes the ownership of validator.
@@ -145,7 +151,8 @@ class CompilerInfoCache {
   const CacheFile cache_file_;
   const absl::Duration cache_holding_time_;
 
-  std::unique_ptr<CompilerInfoValidator> validator_ GUARDED_BY(mu_);
+  std::unique_ptr<CompilerInfoValidator> validator_ GUARDED_BY(mu_) =
+      absl::make_unique<CompilerInfoCache::CompilerInfoValidator>();
 
   mutable ReadWriteLock mu_;
 
@@ -158,11 +165,12 @@ class CompilerInfoCache {
                       std::unique_ptr<absl::flat_hash_set<std::string>>>
       keys_by_hash_ GUARDED_BY(mu_);
 
-  int num_stores_ GUARDED_BY(mu_);
-  int num_store_dups_ GUARDED_BY(mu_);
-  int num_miss_ GUARDED_BY(mu_);
-  int num_fail_ GUARDED_BY(mu_);
-  int loaded_size_ GUARDED_BY(mu_);
+  int num_stores_ GUARDED_BY(mu_) = 0;
+  int num_store_dups_ GUARDED_BY(mu_) = 0;
+  int num_miss_ GUARDED_BY(mu_) = 0;
+  int num_fail_ GUARDED_BY(mu_) = 0;
+  int loaded_size_ GUARDED_BY(mu_) = 0;
+  absl::Time loaded_timestamp_ GUARDED_BY(mu_) = absl::Now();
 
   DISALLOW_COPY_AND_ASSIGN(CompilerInfoCache);
 };

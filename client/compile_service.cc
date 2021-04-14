@@ -624,6 +624,8 @@ void CompileService::DumpToJson(Json::Value* json, absl::Time after) {
         CompilerInfoCache::instance()->NumStoreDups();
     num_exec["compiler_info_fail"] = CompilerInfoCache::instance()->NumFail();
     num_exec["compiler_info_miss"] = CompilerInfoCache::instance()->NumMiss();
+    num_exec["compiler_info_used"] = CompilerInfoCache::instance()->NumUsed();
+    num_exec["compiler_info_count"] = CompilerInfoCache::instance()->Count();
     num_exec["goma_finished"] = num_exec_goma_finished_;
     num_exec["goma_cache_hit"] = num_exec_goma_cache_hit_;
     num_exec["goma_aborted"] = num_exec_goma_aborted_;
@@ -734,6 +736,8 @@ void CompileService::DumpStats(std::ostringstream* ss) {
         << " fail=" << gstats.request_stats().compiler_proxy().fail()
         << std::endl;
   (*ss) << " compiler_info:"
+        << " count=" << gstats.request_stats().compiler_info().count()
+        << " used=" << gstats.request_stats().compiler_info().used()
         << " stores=" << gstats.request_stats().compiler_info().stores()
         << " store_dups=" << gstats.request_stats().compiler_info().store_dups()
         << " miss=" << gstats.request_stats().compiler_info().miss()
@@ -1557,6 +1561,10 @@ void CompileService::DumpCommonStatsUnlocked(GomaStats* stats) {
         CompilerInfoCache::instance()->NumMiss());
     request->mutable_compiler_info()->set_fail(
         CompilerInfoCache::instance()->NumFail());
+    request->mutable_compiler_info()->set_used(
+        CompilerInfoCache::instance()->NumUsed());
+    request->mutable_compiler_info()->set_count(
+        CompilerInfoCache::instance()->Count());
     request->mutable_compiler_info()->set_loaded_size_bytes(
         CompilerInfoCache::instance()->LoadedSize());
     request->mutable_goma()->set_finished(num_exec_goma_finished_);

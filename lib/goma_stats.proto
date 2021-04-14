@@ -39,7 +39,7 @@ message CompilerProxyStats {
 // Compiler info store contains caches of compiler info to be used for
 // listing up necessary files for compiles or dispatching compilers in
 // backend.
-// NEXT ID TO USE: 6
+// NEXT ID TO USE: 8
 message CompilerInfoStats {
   // Number of times new compiler info were stored to the cache.
   optional int64 stores = 1;
@@ -51,6 +51,10 @@ message CompilerInfoStats {
   // i.e. compiler can be found but failed to get compiler info.
   // e.g. not executable binary, unknown options are passed, etc.
   optional int64 fail = 4;
+  // Number of used compiler info entries.
+  optional int64 used = 6;
+  // Number of compiler info entries in the cache.
+  optional int64 count = 7;
   // The size of CompilerInfoCache loaded from disk.
   optional int64 loaded_size_bytes = 5;
 }

@@ -795,6 +795,7 @@ TEST_F(CompilerInfoCacheTest, RelativePathCompiler) {
 
   CompilerInfoCache::Init(tmpdir_util.tmpdir(), kCompilerInfoCache,
                           absl::Hours(1));
+  CompilerInfoCache::LoadIfEnabled();
   const std::vector<std::string> empty_env;
   CompilerInfoCache::Key key1, key2, key3;
 
@@ -855,6 +856,7 @@ TEST_F(CompilerInfoCacheTest, RelativePathCompiler) {
 
   CompilerInfoCache::Init(tmpdir_util.tmpdir(), kCompilerInfoCache,
                           absl::Hours(1));
+  CompilerInfoCache::LoadIfEnabled();
 
   EXPECT_NE(nullptr, CompilerInfoCache::instance()->Lookup(key1));
   EXPECT_NE(nullptr, CompilerInfoCache::instance()->Lookup(key2));

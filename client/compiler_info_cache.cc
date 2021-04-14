@@ -58,6 +58,15 @@ void CompilerInfoCache::Init(const std::string& cache_dir,
       cache_holding_time);
 }
 
+/* static */
+void CompilerInfoCache::LoadIfEnabled() {
+  if (instance()->cache_file_.Enabled()) {
+    instance()->Load();
+  } else {
+    LOG(INFO) << "compiler_info_cache: no cache file";
+  }
+}
+
 void CompilerInfoCache::Quit() {
   delete instance_;
   instance_ = nullptr;
@@ -65,20 +74,7 @@ void CompilerInfoCache::Quit() {
 
 CompilerInfoCache::CompilerInfoCache(const std::string& cache_filename,
                                      absl::Duration cache_holding_time)
-    : cache_file_(cache_filename),
-      cache_holding_time_(cache_holding_time),
-      validator_(new CompilerInfoCache::CompilerInfoValidator),
-      num_stores_(0),
-      num_store_dups_(0),
-      num_miss_(0),
-      num_fail_(0),
-      loaded_size_(0) {
-  if (cache_file_.Enabled()) {
-    Load();
-  } else {
-    LOG(INFO) << "compiler_info_cache: no cache file";
-  }
-}
+    : cache_file_(cache_filename), cache_holding_time_(cache_holding_time) {}
 
 CompilerInfoCache::~CompilerInfoCache() {
   if (cache_file_.Enabled()) {
@@ -401,6 +397,23 @@ int CompilerInfoCache::NumFail() const {
   return num_fail_;
 }
 
+int CompilerInfoCache::NumUsed() const {
+  AUTO_SHARED_LOCK(lock, &mu_);
+  int used = 0;
+  for (const auto& info : compiler_info_) {
+    CompilerInfoState* cis = info.second;
+    if (cis->info().last_used_at() > loaded_timestamp_) {
+      used++;
+    }
+  }
+  return used;
+}
+
+int CompilerInfoCache::Count() const {
+  AUTO_SHARED_LOCK(lock, &mu_);
+  return compiler_info_.size();
+}
+
 int CompilerInfoCache::LoadedSize() const {
   AUTO_SHARED_LOCK(lock, &mu_);
   return loaded_size_;
@@ -435,6 +448,7 @@ bool CompilerInfoCache::Load() {
   CompilerInfoDataTable table;
   if (!cache_file_.Load(&table)) {
     LOG(ERROR) << "failed to load cache file " << cache_file_.filename();
+    loaded_timestamp_ = absl::Now();
     return false;
   }
 
@@ -444,6 +458,7 @@ bool CompilerInfoCache::Load() {
                  << " mismatch built_revision: got=" << table.built_revision()
                  << " want=" << kBuiltRevisionString;
     ClearUnlocked();
+    loaded_timestamp_ = absl::Now();
     return false;
   }
 
@@ -453,7 +468,7 @@ bool CompilerInfoCache::Load() {
             << " loaded size " << loaded_size_;
 
   UpdateOlderCompilerInfoUnlocked();
-
+  loaded_timestamp_ = absl::Now();
   return true;
 }
 
@@ -487,17 +502,19 @@ void CompilerInfoCache::UpdateOlderCompilerInfoUnlocked() {
     }
 
     if (validator_->Validate(state->info(), abs_local_compiler_path)) {
-      LOG(INFO) << "valid compiler: " << abs_local_compiler_path;
+      LOG(INFO) << "valid compiler: " << abs_local_compiler_path
+                << " time_diff=" << time_diff;
       continue;
     }
 
     if (state->compiler_info_->UpdateFileStatIfHashMatch()) {
       LOG(INFO) << "compiler filestat didn't match, but hash matched: "
-                << abs_local_compiler_path;
+                << abs_local_compiler_path << " time_diff=" << time_diff;
       continue;
     }
 
-    LOG(INFO) << "compiler outdated: " << abs_local_compiler_path;
+    LOG(INFO) << "compiler outdated: " << abs_local_compiler_path
+              << " time_diff=" << time_diff;
     keys_to_remove.push_back(key);
   }
 

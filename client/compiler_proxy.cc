@@ -177,12 +177,6 @@ void DepsCacheInit() {
       FLAGS_DEPS_CACHE_MAX_PROTO_SIZE_IN_MB);
 }
 
-void CompilerInfoCacheInit() {
-  CompilerInfoCache::Init(
-      GetCacheDirectory(), FLAGS_COMPILER_INFO_CACHE_FILE,
-      absl::Seconds(FLAGS_COMPILER_INFO_CACHE_HOLDING_TIME_SEC));
-}
-
 }  // anonymous namespace
 
 }  // namespace devtools_goma
@@ -328,10 +322,14 @@ int main(int argc, char* argv[], const char* envp[]) {
       new devtools_goma::WorkerThreadRunner(
           &wm, FROM_HERE,
           devtools_goma::NewCallback(devtools_goma::DepsCacheInit)));
-  std::unique_ptr<devtools_goma::WorkerThreadRunner> init_compiler_info_cache(
+  devtools_goma::CompilerInfoCache::Init(
+      devtools_goma::GetCacheDirectory(), FLAGS_COMPILER_INFO_CACHE_FILE,
+      absl::Seconds(FLAGS_COMPILER_INFO_CACHE_HOLDING_TIME_SEC));
+  std::unique_ptr<devtools_goma::WorkerThreadRunner> load_compiler_info_cache(
       new devtools_goma::WorkerThreadRunner(
           &wm, FROM_HERE,
-          devtools_goma::NewCallback(devtools_goma::CompilerInfoCacheInit)));
+          devtools_goma::NewCallback(
+              devtools_goma::CompilerInfoCache::LoadIfEnabled)));
 
   devtools_goma::TrustedIpsManager trustedipsmanager;
   devtools_goma::InitTrustedIps(&trustedipsmanager);
@@ -380,7 +378,6 @@ int main(int argc, char* argv[], const char* envp[]) {
       FLAGS_LOCAL_OUTPUT_CACHE_THRESHOLD_ITEMS);
 
   init_deps_cache.reset();
-  init_compiler_info_cache.reset();
   // Show memory just before server loop to understand how much memory is
   // used for initialization.
   handler->TrackMemoryOneshot();
@@ -404,6 +401,7 @@ int main(int argc, char* argv[], const char* envp[]) {
   devtools_goma::SubProcessControllerClient::Get()->Quit();
   devtools_goma::LocalOutputCache::Quit();
 
+  load_compiler_info_cache.reset();
   // TODO: Remove this when b/118804052 is fixed.
   devtools_goma::CompilerInfoCache::instance()->Save();
 
