@@ -29,11 +29,13 @@ def main():
   env['CGO_ENABLED'] = '0'
   env['GOCACHE'] = args.cache_dir
   env['GOARCH'] = args.goarch
-  subprocess.check_call([
-      gopath, 'build', '-o', args.output,
-      os.path.join(_SCRIPT_DIR, 'proxy', 'proxy.go')
-  ],
-                        env=env)
+  args = [gopath, 'build', '-o', args.output]
+  args.append(os.path.join(_SCRIPT_DIR, 'proxy', 'proxy.go'))
+  if os.name == 'posix':
+    args.append(os.path.join(_SCRIPT_DIR, 'proxy', 'rlimit_posix.go'))
+  else:
+    args.append(os.path.join(_SCRIPT_DIR, 'proxy', 'rlimit_windows.go'))
+  subprocess.check_call(args, env=env)
   return 0
 
 
