@@ -135,16 +135,21 @@ def builder(name, os, bucket):
     if bucket == "ci":
         triggered_by = ["gitiles-trigger"]
 
+    caches = None
+    if os == os_type.MAC:
+        caches = [swarming.cache("osx_sdk")]
+
     return luci.builder(
         name = name,
         bucket = bucket,
         executable = luci.recipe(
             name = "goma_client",
             cipd_package = "infra/recipe_bundles/chromium.googlesource.com/" +
-	        "chromium/tools/build",
+                           "chromium/tools/build",
         ),
         service_account = "goma-client-ext-" + bucket + "-builders@" +
                           "chops-service-accounts.iam.gserviceaccount.com",
+        caches = caches,
         dimensions = {
             "cpu": "x86-64",
             "os": os,
