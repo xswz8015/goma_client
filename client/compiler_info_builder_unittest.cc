@@ -9,6 +9,7 @@
 #include "compiler_type_specific_collection.h"
 #include "cxx/cxx_compiler_info.h"
 #include "gtest/gtest.h"
+#include "list_dir_cache.h"
 #include "mypath.h"
 #include "path.h"
 #include "subprocess.h"
@@ -25,7 +26,10 @@ class CompilerInfoBuilderTest : public testing::Test {
     tmpdir_util_ =
         std::make_unique<TmpdirUtil>("compiler_info_builder_unittest");
     tmpdir_util_->SetCwd("");
+    ListDirCache::Init(1024);
   }
+
+  void TearDown() override { ListDirCache::Quit(); }
 
   void AppendPredefinedMacros(const std::string& macro, CompilerInfoData* cid) {
     cid->mutable_cxx()->set_predefined_macros(cid->cxx().predefined_macros() +

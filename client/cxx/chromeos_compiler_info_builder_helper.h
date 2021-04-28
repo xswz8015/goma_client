@@ -22,7 +22,6 @@ class ChromeOSCompilerInfoBuilderHelper {
   // Collects simple chrome toolchain resources for Arbitrary Toolchain Support.
   static bool CollectSimpleChromeClangResources(
       const std::string& cwd,
-      absl::string_view local_compiler_path,
       absl::string_view real_compiler_path,
       std::vector<std::string>* resource_paths);
 
@@ -46,6 +45,14 @@ class ChromeOSCompilerInfoBuilderHelper {
   static void SetAdditionalFlags(
       const std::string& abs_local_compiler_path,
       google::protobuf::RepeatedPtrField<std::string>* additional_flags);
+
+  // Returns an ELF executable of clang in the same directory.
+  // Or, returns |wrapper_path| if no such executable is found.
+  // An empty string is returned on error.
+  static std::string GetRealClangPath(const std::string& cwd,
+                                      const std::string& wrapper_path);
+
+  static bool IsValidRealClangName(bool is_cxx, absl::string_view path);
 };
 
 }  // namespace devtools_goma

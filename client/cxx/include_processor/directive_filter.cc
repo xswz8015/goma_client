@@ -89,6 +89,7 @@ int DirectiveFilter::CaptureRawStringLiteral(const char* pos, const char* end) {
   absl::string_view delimiter = s.substr(0, p);
   CHECK_EQ(s[p], '(');
   s = s.substr(p + 1);
+  int n = 0;
   while (!s.empty()) {
     p = s.find(')');
     if (p == absl::string_view::npos) {
@@ -96,11 +97,13 @@ int DirectiveFilter::CaptureRawStringLiteral(const char* pos, const char* end) {
     }
     CHECK_EQ(s[p], ')');
     absl::string_view r = s.substr(p + 1);
+    n += p;
     if (absl::ConsumePrefix(&r, delimiter) && !r.empty() && r[0] == '"') {
       // raw string literal ends.
-      return strlen("R\"") + delimiter.size() + strlen("(") + p + strlen(")") +
+      return strlen("R\"") + delimiter.size() + strlen("(") + n + strlen(")") +
              delimiter.size() + strlen("\"");
     }
+    n++;
     s = r;
   }
   return input.size();
@@ -184,6 +187,7 @@ size_t DirectiveFilter::RemoveComments(const char* src, const char* end,
     if (*src == 'R' && src + 1 < end && *(src + 1) == '\"') {
       int num = CaptureRawStringLiteral(src, end);
       const absl::string_view literal(src, num);
+      VLOG(5) << "raw string literal=" << literal;
       if (literal.find('#') != absl::string_view::npos) {
         src += num;
         continue;

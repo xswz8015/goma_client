@@ -27,8 +27,17 @@ TEST_F(DirectiveFilterTest, CaptureRawStringLiteral) {
       "  #include \"imp.h\"\n"
       " };\n"
       ")cpp\"";
-  std::string src =
-      absl::StrCat(kRawString1, "\n", kRawString2, "\n", kRawString3, "\n");
+  const std::string kRawString4 =
+      "R\"(#version 310 es\n"
+      "  #extension GL_EXT_geometry_shader : require\n"
+      "  layout (points) in;\n"
+      "  layout (invocations = 2, local_size_x = 15) in;\n"
+      "  layout (points, max_vertices = 2) out;\n"
+      "  void main()\n"
+      "  {\n"
+      "  })\"";
+  std::string src = absl::StrCat(kRawString1, "\n", kRawString2, "\n",
+                                 kRawString3, "\n", kRawString4, "\n");
   const char* pos = src.c_str();
   const char* end = src.c_str() + src.size();
 
@@ -46,6 +55,12 @@ TEST_F(DirectiveFilterTest, CaptureRawStringLiteral) {
   pos++;
   num = DirectiveFilter::CaptureRawStringLiteral(pos, end);
   EXPECT_EQ(kRawString3, absl::string_view(pos, num));
+  pos += num;
+  EXPECT_NE(pos, end);
+  EXPECT_EQ('\n', *pos);
+  pos++;
+  num = DirectiveFilter::CaptureRawStringLiteral(pos, end);
+  EXPECT_EQ(kRawString4, absl::string_view(pos, num));
   pos += num;
   EXPECT_NE(pos, end);
   EXPECT_EQ('\n', *pos);

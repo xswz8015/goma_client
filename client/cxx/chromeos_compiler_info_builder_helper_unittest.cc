@@ -58,4 +58,66 @@ TEST(ChromeOSCompilerInfoBuilderHelperTest, EstimateClangMajorVersion) {
       "../path/to/usr/bin/clangclang-7.elf", &version));
 }
 
+TEST(ChromeOSCompilerInfoBuilderHelperTest, IsValidRealClangName) {
+  // clang
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang-7.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang-11.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang-11.1.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang-11.12.13.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clangclang-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang-7"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang"));
+  // clang++ should not be valid for non cxx case.
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++-11.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++-11.1.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++-11.12.13.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clangclang++-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++-7"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      false, "../path/to/usr/bin/clang++"));
+
+  // clang++
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang-11.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang-11.1.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang-11.12.13.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clangclang-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang-7"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang"));
+  // clang++ should not be valid for non cxx case.
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang++-7.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang++-11.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang++-11.1.elf"));
+  EXPECT_TRUE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang++-11.12.13.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clangclang++-7.elf"));
+  EXPECT_FALSE(ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+      true, "../path/to/usr/bin/clang++-7"));
+}
+
 }  // namespace devtools_goma

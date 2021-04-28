@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "d7dd881ddc4dc1bae420ea9b9861863f1831c27c",
+     "clang_revision": "ba668f13d135f1d01faf9b03c9a05f5877ac3f51",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
@@ -44,7 +44,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@68a799af7f6aed15dfeedc26e5ae43ebce873a6a",
+     "https://boringssl.googlesource.com/boringssl@782d9b6cf7764f6aa2e5e5ffe470431a822c9cc1",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":
@@ -59,7 +59,7 @@ deps = {
      # nasm
      "client/third_party/nasm":
      Var("chromium_git") + "/chromium/deps/nasm.git@" +
-         "19f3fad68da99277b2882939d3b2fa4c4b8d51d9",
+         "e9be5fd6d723a435ca2da162f9e0ffcb688747c1",
 
      # chromium's buildtools containing libc++, libc++abi, clang_format and gn.
      "client/buildtools":

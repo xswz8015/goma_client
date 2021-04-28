@@ -70,7 +70,9 @@ if (is_linux) {
     ]
 
     deps = [
+      "//base",
       "//client:common",
+      "//client:compiler_proxy_base_lib",
       "//client:file_path_util_lib",
       "//client/binutils:elf_dep_parser_lib",
       "//client/binutils:elf_parser_lib",
@@ -223,6 +225,7 @@ executable("gcc_compiler_info_builder_unittest") {
     ":gcc_compiler_info_builder_lib",
     "//build/config:exe_and_shlib_deps",
     "//client:common",
+    "//client:compiler_proxy_base_lib",
     "//client:goma_test_lib",
     "//client:subprocess_lib",
     "//lib",

@@ -376,7 +376,7 @@ void GCCCompilerInfoBuilder::SetTypeSpecificCompilerInfo(
   if (ChromeOSCompilerInfoBuilderHelper::IsSimpleChromeClangCommand(
           local_compiler_path, data->real_compiler_path())) {
     if (!ChromeOSCompilerInfoBuilderHelper::CollectSimpleChromeClangResources(
-            flags.cwd(), local_compiler_path, data->real_compiler_path(),
+            flags.cwd(), data->real_compiler_path(),
             &resource_paths_to_collect)) {
       // HACK: we should not affect people not using ATS.
       if (FLAGS_SEND_COMPILER_BINARY_AS_INPUT) {
@@ -648,12 +648,8 @@ std::string GCCCompilerInfoBuilder::GetRealCompilerPath(
     // http://www.chromium.org/chromium-os/quick-start-guide
     //
     // Consider the clang is ChromeOS clang, which runs via a wrapper.
-    // TODO: more reliable ways?
-    std::string real_chromeos_clang_path = real_path + ".elf";
-    if (IsExecutable(cwd, real_chromeos_clang_path)) {
-      return real_chromeos_clang_path;
-    }
-    return real_path;
+    // TODO: handle empty return value as error.
+    return ChromeOSCompilerInfoBuilderHelper::GetRealClangPath(cwd, real_path);
 #endif
   }
 #endif

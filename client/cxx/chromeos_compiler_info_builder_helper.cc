@@ -15,13 +15,16 @@
 #include "binutils/elf_dep_parser.h"
 #include "binutils/elf_parser.h"
 #include "binutils/elf_util.h"
+#include "file_dir.h"
 #include "file_path_util.h"
+#include "file_stat.h"
 #include "glog/logging.h"
 #include "glog/stl_logging.h"
 #include "lib/cmdline_parser.h"
 #include "lib/file_helper.h"
 #include "lib/gcc_flags.h"
 #include "lib/path_resolver.h"
+#include "list_dir_cache.h"
 #include "path.h"
 #include "util.h"
 
@@ -142,6 +145,10 @@ std::vector<std::string> GetPythonDeps(const std::string& cwd,
   return {"/bin/sh", std::move(python_path), std::move(real_python_path)};
 }
 
+bool IsClangxx(absl::string_view compiler_path) {
+  return absl::StartsWith(file::Basename(compiler_path), "clang++");
+}
+
 }  // anonymous namespace
 
 // static
@@ -162,10 +169,9 @@ bool ChromeOSCompilerInfoBuilderHelper::IsSimpleChromeClangCommand(
 // static
 bool ChromeOSCompilerInfoBuilderHelper::CollectSimpleChromeClangResources(
     const std::string& cwd,
-    absl::string_view local_compiler_path,
     absl::string_view real_compiler_path,
     std::vector<std::string>* resource_paths) {
-  absl::string_view local_compiler_dir = file::Dirname(local_compiler_path);
+  absl::string_view real_compiler_dir = file::Dirname(real_compiler_path);
 
   int version;
   if (!EstimateClangMajorVersion(real_compiler_path, &version)) {
@@ -176,8 +182,8 @@ bool ChromeOSCompilerInfoBuilderHelper::CollectSimpleChromeClangResources(
 
   // Please see --library-path argument in simple Chrome's clang wrapper.
   const std::vector<std::string> search_paths = {
-      file::JoinPath(local_compiler_dir, "..", "..", "lib"),
-      file::JoinPath(local_compiler_dir, "..", "lib64"),
+      file::JoinPath(real_compiler_dir, "..", "..", "lib"),
+      file::JoinPath(real_compiler_dir, "..", "lib64"),
   };
   // Since the shell script wrapper has --inhibit-rpath '',
   // we should ignore RPATH and RUNPATH specified in ELF.
@@ -186,7 +192,6 @@ bool ChromeOSCompilerInfoBuilderHelper::CollectSimpleChromeClangResources(
   if (!edp.GetDeps(real_compiler_path, &deps)) {
     LOG(ERROR) << "failed to get library dependencies."
                << " cwd=" << cwd
-               << " local_compiler_path=" << local_compiler_path
                << " real_compiler_path=" << real_compiler_path;
     return false;
   }
@@ -440,6 +445,77 @@ void ChromeOSCompilerInfoBuilderHelper::SetAdditionalFlags(
     // we have to set -noccache.
     additional_flags->Add("-noccache");
   }
+}
+
+// static
+bool ChromeOSCompilerInfoBuilderHelper::IsValidRealClangName(
+    bool is_cxx,
+    absl::string_view path) {
+  // Returns true if path is clang-[0-9.]+.elf or clang++-[0-9.]+.elf.
+  path = file::Basename(path);
+  absl::string_view prefix;
+  if (is_cxx) {
+    prefix = "clang++-";
+  } else {
+    prefix = "clang-";
+  }
+  if (!absl::ConsumePrefix(&path, prefix)) {
+    VLOG(1) << "unexpected path prefix=" << path;
+    return false;
+  }
+  if (!absl::ConsumeSuffix(&path, ".elf")) {
+    VLOG(1) << "unexpected path suffix=" << path;
+    return false;
+  }
+  return path.find_first_not_of("0123456789.") == absl::string_view::npos;
+}
+
+// static
+std::string ChromeOSCompilerInfoBuilderHelper::GetRealClangPath(
+    const std::string& cwd,
+    const std::string& wrapper_path) {
+  // Search clang-[0-9.]+.elf or clang++-[0-9.]+.elf and choose the longest
+  // (crbug.com/1202522).
+  // We assume:
+  // a wrapper name "clang-12", and real clang path "clang-12.elf",
+  // a wrapper name "clang", and real clang path "clang-13.elf".
+  // a wrapper name "clang++", and real path "clang++-13.elf".
+  //
+  // We also accept the case like clang-12.13.14.elf upon the ChromeOS toolchain
+  // team request.  They may name the real clang like so.
+  //
+  // TODO: consider more reliable way to detect the real path.
+  std::vector<DirEntry> entries;
+  // candidates is valid only if |entries| is valid.
+  std::vector<absl::string_view> candidates;
+
+  bool is_cxx = IsClangxx(wrapper_path);
+  std::string dirname =
+      file::JoinPathRespectAbsolute(cwd, file::Dirname(wrapper_path));
+  FileStat dstat(dirname);
+  ListDirCache::instance()->GetDirEntries(dirname, dstat, &entries);
+  for (const auto& entry : entries) {
+    if (entry.is_dir) {
+      continue;
+    }
+    absl::string_view path = entry.name;
+    if (IsValidRealClangName(is_cxx, path) &&
+        ElfParser::IsElf(file::JoinPathRespectAbsolute(dirname, path))) {
+      candidates.push_back(path);
+    }
+  }
+  if (candidates.empty()) {
+    LOG(INFO) << "May not be a ChromeOS clang."
+              << " cwd=" << cwd << " wrapper_path=" << wrapper_path;
+    return wrapper_path;
+  }
+  if (candidates.size() != 1) {
+    LOG(ERROR) << "Mutiple candidates are found, which we do not support now."
+               << " Please file an issue."
+               << " candidates=" << candidates;
+    return std::string();
+  }
+  return file::JoinPath(file::Dirname(wrapper_path), candidates[0]);
 }
 
 }  // namespace devtools_goma

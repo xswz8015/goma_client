@@ -24,6 +24,7 @@
 #include "google/protobuf/repeated_field.h"
 #include "lib/path_resolver.h"
 #include "lib/path_util.h"
+#include "list_dir_cache.h"
 
 namespace devtools_goma {
 
@@ -140,7 +141,12 @@ bool AppendLibraries(const std::string& cwd,
 
 class GCCCompilerInfoBuilderTest : public testing::Test {
  protected:
-  void SetUp() override { CheckTempDirectory(GetGomaTmpDir()); }
+  void SetUp() override {
+    CheckTempDirectory(GetGomaTmpDir());
+    ListDirCache::Init(1024);
+  }
+
+  void TearDown() override { ListDirCache::Quit(); }
 
   void AppendPredefinedMacros(const std::string& macro, CompilerInfoData* cid) {
     cid->mutable_cxx()->set_predefined_macros(cid->cxx().predefined_macros() +
