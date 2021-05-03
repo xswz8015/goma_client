@@ -12,6 +12,9 @@ os_type = struct(
 # Enable LUCI Realms support.
 lucicfg.enable_experiment("crbug.com/1085650")
 
+# Launch 100% of Swarming tasks for builds in "realms-aware mode"
+luci.builder.defaults.experiments.set({"luci.use_realms": 100})
+
 luci.project(
     name = "goma-client",
     buildbucket = "cr-buildbucket.appspot.com",
