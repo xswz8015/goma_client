@@ -53,7 +53,6 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
       has_pipe_(false),
       has_ffreestanding_(false),
       has_fno_hosted_(false),
-      has_fno_sanitize_blacklist_(false),
       has_fsyntax_only_(false),
       has_ftime_trace_(false),
       has_wrapper_(false),
@@ -132,15 +131,16 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
   // -mllvm takes extra arg.
   // ASAN uses -mllvm -asan-blacklist=$FILE
   // TSAN uses -mllvm -tsan-blacklist=$FILE
+  // ASAN uses -mllvm -asan-ignorelist=$FILE
+  // TSAN uses -mllvm -tsan-ignorelist=$FILE
   std::vector<std::string> llvm_options;
   parser.AddFlag("mllvm")->SetOutput(&llvm_options);
   FlagParser::Flag* flag_fsanitize_blacklist =
       parser.AddFlag("fsanitize-blacklist");
+  FlagParser::Flag* flag_fsanitize_ignorelist =
+      parser.AddFlag("fsanitize-ignorelist");
   FlagParser::Flag* flag_fsanitize = parser.AddFlag("fsanitize");
   flag_fsanitize->SetOutput(&compiler_info_flags_);
-
-  parser.AddBoolFlag("fno-sanitize-blacklist")
-      ->SetSeenOutput(&has_fno_sanitize_blacklist_);
 
   FlagParser::Flag* flag_resource_dir = parser.AddFlag("resource-dir");
   flag_resource_dir->SetOutput(&compiler_info_flags_);
@@ -422,7 +422,11 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
 
     llvm_parser.AddFlag("asan-blacklist")
         ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
+    llvm_parser.AddFlag("asan-ignorelist")
+        ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
     llvm_parser.AddFlag("tsan-blacklist")
+        ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
+    llvm_parser.AddFlag("tsan-ignorelist")
         ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
     llvm_parser.Parse(llvm_options);
   }
@@ -434,6 +438,15 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
     const std::vector<std::string>& values = flag_fsanitize_blacklist->values();
     for (const auto& value : values) {
       // -fsanitize-blacklist doesn't affect system include dirs or
+      // predefined macros, so don't include it in compiler_info_flags_.
+      optional_input_filenames_.push_back(value);
+    }
+  }
+  if (flag_fsanitize_ignorelist->seen()) {
+    const std::vector<std::string>& values =
+        flag_fsanitize_ignorelist->values();
+    for (const auto& value : values) {
+      // -fsanitize-ignorelist doesn't affect system include dirs or
       // predefined macros, so don't include it in compiler_info_flags_.
       optional_input_filenames_.push_back(value);
     }

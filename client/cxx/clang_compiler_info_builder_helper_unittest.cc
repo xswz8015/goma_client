@@ -27,7 +27,7 @@ int FindValue(const absl::flat_hash_map<std::string, int>& map,
 
 #ifndef _WIN32
 
-TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputPosix) {
+TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputPosixLegacy) {
   static const char kDummyClangOutput[] =
       "Fuchsia clang version 7.0.0\n"
       "Target: x86_64-unknown-linux-gnu\n"
@@ -70,6 +70,75 @@ TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputPosix) {
       {"my_blacklist.txt", CompilerInfoData::CLANG_RESOURCE},
       {"/third_party/llvm-build/Release+Asserts/lib/clang"
        "/7.0.0/share/asan_blacklist.txt",
+       CompilerInfoData::CLANG_RESOURCE},
+      {"my_profilelist.txt", CompilerInfoData::CLANG_RESOURCE},
+  };
+  EXPECT_EQ(expected, resource);
+}
+
+TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputPosixIgnorelist) {
+  static const char kDummyClangOutput[] =
+      "clang version 13.0.0 (https://github.com/llvm/llvm-project/ "
+      "897d7bceb90f1ef4807c0f698eaff3c10b471cb9)\n"
+      "Target: x86_64-unknown-linux-gnu\n"
+      "Thread model: posix\n"
+      "InstalledDir: bin\n"
+      "Found candidate GCC installation: /usr/lib/gcc/i686-linux-gnu/8\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/10\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/6\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/6.5.0\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/7\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/7.5.0\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/8\n"
+      "Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/9\n"
+      "Selected GCC installation: gcc/x86_64-linux-gnu/4.6\n"
+      "Candidate multilib: .;@m64\n"
+      "Candidate multilib: 32;@m32\n"
+      "Candidate multilib: x32;@mx32\n"
+      "Selected multilib: .;@m64\n"
+      " (in-process)\n"
+      " \"bin/clang\" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj "
+      "-mrelax-all -disable-free -disable-llvm-verifier -discard-value-names "
+      "-main-file-name null -mrelocation-model static -mframe-pointer=all "
+      "-fmath-errno -fno-rounding-math -mconstructor-aliases -munwind-tables "
+      "-target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -v "
+      "-fcoverage-compilation-dir=/tmp/newclang -resource-dir lib/clang/13.0.0 "
+      "-internal-isystem lib/clang/13.0.0/include -internal-isystem "
+      "/usr/local/include -internal-isystem "
+      "/usr/lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/include "
+      "-internal-externc-isystem /usr/include/x86_64-linux-gnu "
+      "-internal-externc-isystem /include -internal-externc-isystem "
+      "/usr/include -fdebug-compilation-dir=/tmp/newclang -ferror-limit 19 "
+      "-fsanitize=address -fprofile-list=my_profilelist.txt "
+      "-fsanitize-ignorelist=my_ignorelist.txt "
+      "-fsanitize-system-ignorelist=lib/clang/13.0.0/share/asan_ignorelist.txt "
+      "-fsanitize-address-use-after-scope -fno-assume-sane-operator-new "
+      "-fgnuc-version=4.2.1 -fcolor-diagnostics -faddrsig "
+      "-D__GCC_HAVE_DWARF2_CFI_ASM=1 -o /dev/null -x c /dev/null\n"
+      "clang -cc1 version 13.0.0 based upon LLVM 13.0.0git default target "
+      "x86_64-unknown-linux-gnu\n"
+      "ignoring nonexistent directory "
+      "\"/usr/lib/gcc/x86_64-linux-gnu/10/../../../../x86_64-linux-gnu/"
+      "include\"\n"
+      "ignoring nonexistent directory \"/include\"\n"
+      "#include \"...\" search starts here:\n"
+      "#include <...> search starts here:\n"
+      " lib/clang/13.0.0/include\n"
+      " /usr/local/include\n"
+      " /usr/include/x86_64-linux-gnu\n"
+      " /usr/include\n"
+      "End of search list.\n";
+  TmpdirUtil tmpdir("parse_resource_output");
+  tmpdir.CreateEmptyFile("gcc/x86_64-linux-gnu/4.6/crtbegin.o");
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> resource;
+  EXPECT_EQ(ClangCompilerInfoBuilderHelper::ParseStatus::kSuccess,
+            ClangCompilerInfoBuilderHelper::ParseResourceOutput(
+                "/bin/clang", tmpdir.realcwd(), kDummyClangOutput, &resource));
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> expected = {
+      {"gcc/x86_64-linux-gnu/4.6/crtbegin.o",
+       CompilerInfoData::CLANG_GCC_INSTALLATION_MARKER},
+      {"my_ignorelist.txt", CompilerInfoData::CLANG_RESOURCE},
+      {"lib/clang/13.0.0/share/asan_ignorelist.txt",
        CompilerInfoData::CLANG_RESOURCE},
       {"my_profilelist.txt", CompilerInfoData::CLANG_RESOURCE},
   };
@@ -381,6 +450,37 @@ TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputWin) {
   EXPECT_EQ(expected, resource);
 }
 
+TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputWinIgnorelist) {
+  static const char kDummyClangOutput[] =
+      "clang version 7.0.0 (trunk 332838)\n"
+      "Target: x86_64-pc-windows-msvc\n"
+      "Thread model: posix\n"
+      "InstalledDir: c:\\third_party\\llvm-build\\Release+Asserts\\bin\n"
+      " \"c:\\\\third_party\\\\llvm-build\\\\Release+Asserts\\\\"
+      "bin\\\\clang-cl.exe\" \"-cc1\" \"-triple\" "
+      "\"x86_64-pc-windows-msvc19.11.0\" \"-emit-obj\" \"-mrelax-all\" "
+      "\"-mincremental-linker-compatible\" \"-disable-free\" "
+      "\"-ferror-limit\" \"19\" \"-fmessage-length\" \"89\" "
+      "\"-resource-dir\" \"c:\\\\third_party\\\\llvm-build\\\\"
+      "Release+Asserts\\\\lib\\\\clang\\\\7.0.0\" "
+      "\"-fsanitize=address\" \"-fsanitize-ignorelist=c:\\\\third_party"
+      "\\\\llvm-build\\\\Release+Asserts\\\\lib\\\\clang\\\\7.0.0"
+      "\\\\share\\\\asan_ignorelist.txt\" "
+      "\"-fsanitize-address-use-after-scope\""
+      "\"-fms-compatibility\" \"-fms-compatibility-version=19.11\"";
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> resource;
+  EXPECT_EQ(ClangCompilerInfoBuilderHelper::ParseStatus::kSuccess,
+            ClangCompilerInfoBuilderHelper::ParseResourceOutput(
+                "c:\\third_party\\llvm-build\\Release+Asserts\\"
+                "bin\\clang-cl.exe",
+                ".", kDummyClangOutput, &resource));
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> expected = {
+      {"c:\\\\third_party\\\\llvm-build\\\\Release+Asserts\\\\lib\\\\clang"
+       "\\\\7.0.0\\\\share\\\\asan_ignorelist.txt",
+       CompilerInfoData::CLANG_RESOURCE},
+  };
+  EXPECT_EQ(expected, resource);
+}
 TEST(ClangCompilerInfoBuilderHelperTest, GetResourceDirWinClangCl) {
   static const char kDummyClangOutput[] =
       "clang version 7.0.0 (trunk 332838)\n"

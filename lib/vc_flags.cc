@@ -183,8 +183,8 @@ VCFlags::VCFlags(const std::vector<std::string>& args, const std::string& cwd)
   FlagParser::Flag* flag_fsanitize = parser.AddFlag("fsanitize");
   FlagParser::Flag* flag_fthinlto_index =
       parser.AddPrefixFlag("fthinlto-index=");
-  FlagParser::Flag* flag_fno_sanitize_blacklist = nullptr;
   FlagParser::Flag* flag_fsanitize_blacklist = nullptr;
+  FlagParser::Flag* flag_fsanitize_ignorelist = nullptr;
   FlagParser::Flag* flag_fprofile_list = nullptr;
   FlagParser::Flag* flag_mllvm = parser.AddFlag("mllvm");
   FlagParser::Flag* flag_isystem = parser.AddFlag("isystem");
@@ -218,8 +218,8 @@ VCFlags::VCFlags(const std::vector<std::string>& args, const std::string& cwd)
     flag_fprofile_list = parser.AddPrefixFlag("fprofile-list=");
     flag_fsanitize->SetOutput(&compiler_info_flags_);
     // TODO: do we need to support more sanitize options?
-    flag_fno_sanitize_blacklist = parser.AddBoolFlag("fno-sanitize-blacklist");
     flag_fsanitize_blacklist = parser.AddFlag("fsanitize-blacklist=");
+    flag_fsanitize_ignorelist = parser.AddFlag("fsanitize-ignorelist=");
     flag_mllvm->SetOutput(&compiler_info_flags_);
     flag_isystem->SetOutput(&compiler_info_flags_);
     flag_imsvc->SetOutput(&compiler_info_flags_);
@@ -347,13 +347,21 @@ VCFlags::VCFlags(const std::vector<std::string>& args, const std::string& cwd)
     resource_dir_ = flag_resource_dir->GetLastValue();
   }
 
-  if (flag_fsanitize_blacklist && flag_fsanitize_blacklist->seen() &&
-      !flag_fno_sanitize_blacklist->seen()) {
-    // TODO: follow -fno-sanitize-blacklist spec.
-    // http://clang.llvm.org/docs/UsersManual.html:
-    // > -fno-sanitize-blacklist: don't use blacklist file,
-    // > if it was specified *earlier in the command line*.
+  // clang always checks existence of -fsanitize-ignorelist.
+  // We should always upload files or compile fails.
+  // https://github.com/llvm/llvm-project/blob/d7ec48d71bd67118e7996c45e9c7fb1b09d4f59a/clang/lib/Driver/SanitizerArgs.cpp#L178
+  if (flag_fsanitize_blacklist && flag_fsanitize_blacklist->seen()) {
     const std::vector<std::string>& values = flag_fsanitize_blacklist->values();
+    std::copy(values.begin(), values.end(),
+              back_inserter(optional_input_filenames_));
+  }
+
+  // clang always checks existence of -fsanitize-ignorelist.
+  // We should always upload files or compile fails.
+  // https://github.com/llvm/llvm-project/blob/d7ec48d71bd67118e7996c45e9c7fb1b09d4f59a/clang/lib/Driver/SanitizerArgs.cpp#L178
+  if (flag_fsanitize_ignorelist && flag_fsanitize_ignorelist->seen()) {
+    const std::vector<std::string>& values =
+        flag_fsanitize_ignorelist->values();
     std::copy(values.begin(), values.end(),
               back_inserter(optional_input_filenames_));
   }

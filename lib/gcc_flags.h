@@ -67,9 +67,6 @@ class GCCFlags : public CxxFlags {
   bool has_fcoverage_mapping() const { return has_fcoverage_mapping_; }
   bool has_ffreestanding() const { return has_ffreestanding_; }
   bool has_fno_hosted() const { return has_fno_hosted_; }
-  bool has_fno_sanitize_blacklist() const {
-    return has_fno_sanitize_blacklist_;
-  }
   bool has_fsyntax_only() const { return has_fsyntax_only_; }
   bool has_ftime_trace() const { return has_ftime_trace_; }
   bool has_resource_dir() const { return !resource_dir_.empty(); }
@@ -148,7 +145,6 @@ class GCCFlags : public CxxFlags {
   bool has_fcoverage_mapping_ = false;
   bool has_ffreestanding_;
   bool has_fno_hosted_;
-  bool has_fno_sanitize_blacklist_;
   bool has_fsyntax_only_;
   bool has_ftime_trace_;
   bool has_wrapper_;

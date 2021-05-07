@@ -1516,6 +1516,35 @@ TEST_F(VCFlagsTest, ClangClWithFsanitizeBlacklist) {
             flags->optional_input_filenames());
 }
 
+TEST_F(VCFlagsTest, ClangClWithFsanitizeIgnorelist) {
+  std::vector<std::string> args;
+  args.push_back("clang-cl.exe");
+  args.push_back("-fsanitize-ignorelist=ignorelist.txt");
+  args.push_back("-fsanitize-ignorelist=ignorelist2.txt");
+  args.push_back("/c");
+  args.push_back("hello.cc");
+  std::unique_ptr<CompilerFlags> flags(
+      CompilerFlagsParser::MustNew(args, "d:\\tmp"));
+  EXPECT_EQ(args, flags->args());
+  EXPECT_EQ(1U, flags->output_files().size());
+  EXPECT_EQ("hello.obj", flags->output_files()[0]);
+  EXPECT_EQ(1U, flags->input_filenames().size());
+  EXPECT_EQ("hello.cc", flags->input_filenames()[0]);
+  EXPECT_TRUE(flags->is_successful());
+  EXPECT_EQ("", flags->fail_message());
+  EXPECT_EQ("clang-cl", flags->compiler_name());
+  EXPECT_EQ(CompilerFlagType::Clexe, flags->type());
+  EXPECT_EQ("d:\\tmp", flags->cwd());
+
+  std::vector<std::string> expected_compiler_info_flags;
+  EXPECT_EQ(expected_compiler_info_flags, flags->compiler_info_flags());
+  std::vector<std::string> expected_optional_input_filenames;
+  expected_optional_input_filenames.push_back("ignorelist.txt");
+  expected_optional_input_filenames.push_back("ignorelist2.txt");
+  EXPECT_EQ(expected_optional_input_filenames,
+            flags->optional_input_filenames());
+}
+
 TEST_F(VCFlagsTest, ClangClWithFprofileList) {
   std::vector<std::string> args;
   args.push_back("clang-cl.exe");
@@ -1574,9 +1603,41 @@ TEST_F(VCFlagsTest, ClangClWithFsanitizeAndBlacklist) {
             flags->optional_input_filenames());
 }
 
+TEST_F(VCFlagsTest, ClangClWithFsanitizeAndIgnorelist) {
+  std::vector<std::string> args;
+  args.push_back("clang-cl.exe");
+  args.push_back("-fsanitize=address");
+  args.push_back("-fsanitize-ignorelist=ignorelist.txt");
+  args.push_back("/c");
+  args.push_back("hello.cc");
+  std::unique_ptr<CompilerFlags> flags(
+      CompilerFlagsParser::MustNew(args, "d:\\tmp"));
+  EXPECT_EQ(args, flags->args());
+  EXPECT_EQ(1U, flags->output_files().size());
+  EXPECT_EQ("hello.obj", flags->output_files()[0]);
+  EXPECT_EQ(1U, flags->input_filenames().size());
+  EXPECT_EQ("hello.cc", flags->input_filenames()[0]);
+  EXPECT_TRUE(flags->is_successful());
+  EXPECT_EQ("", flags->fail_message());
+  EXPECT_EQ("clang-cl", flags->compiler_name());
+  EXPECT_EQ(CompilerFlagType::Clexe, flags->type());
+  EXPECT_EQ("d:\\tmp", flags->cwd());
+
+  std::vector<std::string> expected_compiler_info_flags;
+  expected_compiler_info_flags.push_back("-fsanitize=address");
+  EXPECT_EQ(expected_compiler_info_flags, flags->compiler_info_flags());
+  std::vector<std::string> expected_optional_input_filenames;
+  expected_optional_input_filenames.push_back("ignorelist.txt");
+  EXPECT_EQ(expected_optional_input_filenames,
+            flags->optional_input_filenames());
+}
+
 TEST_F(VCFlagsTest, ClangClWithFNoSanitizeBlacklist) {
   std::vector<std::string> args;
   args.push_back("clang-cl.exe");
+  // Inspite of -fno-sanitize-blacklist, we should have all files
+  // specified with -fsanitize-blacklist.  Otherwise, remote compile
+  // should fail.
   args.push_back("-fno-sanitize-blacklist");
   args.push_back("-fsanitize-blacklist=blacklist.txt");
   args.push_back("/c");
@@ -1594,7 +1655,39 @@ TEST_F(VCFlagsTest, ClangClWithFNoSanitizeBlacklist) {
   EXPECT_EQ(CompilerFlagType::Clexe, flags->type());
   EXPECT_EQ("d:\\tmp", flags->cwd());
 
-  std::vector<std::string> expected_optional_input_filenames;
+  std::vector<std::string> expected_optional_input_filenames = {
+      "blacklist.txt",
+  };
+  EXPECT_EQ(expected_optional_input_filenames,
+            flags->optional_input_filenames());
+}
+
+TEST_F(VCFlagsTest, ClangClWithFNoSanitizeIgnorelist) {
+  std::vector<std::string> args;
+  args.push_back("clang-cl.exe");
+  // Inspite of -fno-sanitize-ignorelist, we should have all files
+  // specified with -fsanitize-ignorelist.  Otherwise, remote compile
+  // should fail.
+  args.push_back("-fno-sanitize-ignorelist");
+  args.push_back("-fsanitize-ignorelist=ignorelist.txt");
+  args.push_back("/c");
+  args.push_back("hello.cc");
+  std::unique_ptr<CompilerFlags> flags(
+      CompilerFlagsParser::MustNew(args, "d:\\tmp"));
+  EXPECT_EQ(args, flags->args());
+  EXPECT_EQ(1U, flags->output_files().size());
+  EXPECT_EQ("hello.obj", flags->output_files()[0]);
+  EXPECT_EQ(1U, flags->input_filenames().size());
+  EXPECT_EQ("hello.cc", flags->input_filenames()[0]);
+  EXPECT_TRUE(flags->is_successful());
+  EXPECT_EQ("", flags->fail_message());
+  EXPECT_EQ("clang-cl", flags->compiler_name());
+  EXPECT_EQ(CompilerFlagType::Clexe, flags->type());
+  EXPECT_EQ("d:\\tmp", flags->cwd());
+
+  std::vector<std::string> expected_optional_input_filenames = {
+      "ignorelist.txt",
+  };
   EXPECT_EQ(expected_optional_input_filenames,
             flags->optional_input_filenames());
 }
@@ -1630,6 +1723,7 @@ TEST_F(VCFlagsTest, ClShouldNotRecognizeAnyFsanitize) {
   args.push_back("cl.exe");
   args.push_back("-fsanitize=address");
   args.push_back("-fsanitize-blacklist=blacklist.txt");
+  args.push_back("-fsanitize-ignorelist=ignorelist.txt");
   args.push_back("/c");
   args.push_back("hello.cc");
   std::unique_ptr<CompilerFlags> flags(

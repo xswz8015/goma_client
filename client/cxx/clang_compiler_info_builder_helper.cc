@@ -351,16 +351,20 @@ ClangCompilerInfoBuilderHelper::ParseResourceOutput(
     if (!flag_parser) {
       return ParseStatus::kFail;
     }
-    std::vector<std::string> blacklist_paths;
+    std::vector<std::string> ignorelist_paths;
     flag_parser->AddFlag("fsanitize-blacklist")
-        ->SetValueOutputWithCallback(nullptr, &blacklist_paths);
+        ->SetValueOutputWithCallback(nullptr, &ignorelist_paths);
+    flag_parser->AddFlag("fsanitize-ignorelist")
+        ->SetValueOutputWithCallback(nullptr, &ignorelist_paths);
     flag_parser->AddFlag("fsanitize-system-blacklist")
-        ->SetValueOutputWithCallback(nullptr, &blacklist_paths);
+        ->SetValueOutputWithCallback(nullptr, &ignorelist_paths);
+    flag_parser->AddFlag("fsanitize-system-ignorelist")
+        ->SetValueOutputWithCallback(nullptr, &ignorelist_paths);
     std::vector<std::string> profilelist_paths;
     flag_parser->AddPrefixFlag("fprofile-list=")
         ->SetValueOutputWithCallback(nullptr, &profilelist_paths);
     flag_parser->Parse(argv);
-    for (std::string& path : blacklist_paths) {
+    for (std::string& path : ignorelist_paths) {
       paths->emplace_back(std::move(path), CompilerInfoData::CLANG_RESOURCE);
     }
     for (std::string& path : profilelist_paths) {

@@ -1355,6 +1355,9 @@ TEST_F(GCCFlagsTest, ClangSanitize) {
       "-fsanitize=address",
       "-fsanitize=thread",
       "-fsanitize-blacklist=dummy1.txt",
+      // Inspite of -fno-sanitize-blacklist, we should have all files
+      // specified with -fsanitize-blacklist.  Otherwise, remote compile
+      // should fail.
       "-fno-sanitize-blacklist",
       "-fsanitize-blacklist=dummy2.txt",
   };
@@ -1372,7 +1375,39 @@ TEST_F(GCCFlagsTest, ClangSanitize) {
   GCCFlags flags(args, ".");
   EXPECT_TRUE(flags.is_successful());
   EXPECT_EQ(expected_sanitize, flags.fsanitize());
-  EXPECT_TRUE(flags.has_fno_sanitize_blacklist());
+  EXPECT_EQ(expected_optional_input_files, flags.optional_input_filenames());
+}
+
+TEST_F(GCCFlagsTest, ClangSanitizeIgnoreList) {
+  const std::vector<std::string> args{
+      "clang++",
+      "-c",
+      "foo.cc",
+      "-o",
+      "foo.o",
+      "-fsanitize=address",
+      "-fsanitize=thread",
+      "-fsanitize-ignorelist=dummy1.txt",
+      // Inspite of -fno-sanitize-ignorelist, we should have all files
+      // specified with -fsanitize-ignorelist.  Otherwise, remote compile
+      // should fail.
+      "-fno-sanitize-ignorelist",
+      "-fsanitize-ignorelist=dummy2.txt",
+  };
+
+  std::set<std::string> expected_sanitize{
+      "address",
+      "thread",
+  };
+
+  std::vector<std::string> expected_optional_input_files{
+      "dummy1.txt",
+      "dummy2.txt",
+  };
+
+  GCCFlags flags(args, ".");
+  EXPECT_TRUE(flags.is_successful());
+  EXPECT_EQ(expected_sanitize, flags.fsanitize());
   EXPECT_EQ(expected_optional_input_files, flags.optional_input_filenames());
 }
 
@@ -1913,6 +1948,10 @@ TEST_F(GCCFlagsTest, ChromeASANCompileFlag) {
   args.push_back("-mllvm");
   args.push_back("-asan-blacklist="
                  "/usr/src/chrome/src/third_party/asan/asan_blacklist.txt");
+  args.push_back("-mllvm");
+  args.push_back(
+      "-asan-ignorelist="
+      "/usr/src/chrome/src/third_party/asan/asan_ignorelist.txt");
   args.push_back("-DNO_TCMALLOC");
   args.push_back("-Ithird_party/icu/public/common");
   args.push_back("-Werror");
@@ -1948,9 +1987,11 @@ TEST_F(GCCFlagsTest, ChromeASANCompileFlag) {
   EXPECT_EQ("out/Release/obj.target/base_unittests/"
             "base/message_loop_unittest.o base/message_loop_unittest.cc",
             flags->input_filenames()[0]);
-  EXPECT_EQ(1U, flags->optional_input_filenames().size());
+  EXPECT_EQ(2U, flags->optional_input_filenames().size());
   EXPECT_EQ("/usr/src/chrome/src/third_party/asan/asan_blacklist.txt",
             flags->optional_input_filenames()[0]);
+  EXPECT_EQ("/usr/src/chrome/src/third_party/asan/asan_ignorelist.txt",
+            flags->optional_input_filenames()[1]);
   EXPECT_EQ("clang++", flags->compiler_base_name());
   EXPECT_TRUE(flags->is_successful());
   EXPECT_EQ("", flags->fail_message());
@@ -1973,6 +2014,10 @@ TEST_F(GCCFlagsTest, ChromeASANCompileFlag) {
   compiler_info_flags.push_back(
       "-asan-blacklist="
       "/usr/src/chrome/src/third_party/asan/asan_blacklist.txt");
+  compiler_info_flags.push_back("-mllvm");
+  compiler_info_flags.push_back(
+      "-asan-ignorelist="
+      "/usr/src/chrome/src/third_party/asan/asan_ignorelist.txt");
   EXPECT_EQ(compiler_info_flags, gcc_flags->compiler_info_flags());
   EXPECT_EQ(devtools_goma::GCCFlags::COMPILE, gcc_flags->mode());
   EXPECT_TRUE(gcc_flags->is_cplusplus());
@@ -2013,6 +2058,10 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlag) {
   args.push_back("-mllvm");
   args.push_back("-tsan-blacklist="
                  "../../tools/valgrind/tsan_v2/ignores.txt");
+  args.push_back("-mllvm");
+  args.push_back(
+      "-tsan-ignorelist="
+      "../../tools/valgrind/tsan_v2/ignorelist.txt");
   args.push_back("-c");
   args.push_back("../../base/message_loop/message_loop_unittest.cc");
   args.push_back("-o");
@@ -2031,9 +2080,11 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlag) {
   EXPECT_EQ(1U, flags->input_filenames().size());
   EXPECT_EQ("../../base/message_loop/message_loop_unittest.cc",
             flags->input_filenames()[0]);
-  EXPECT_EQ(1U, flags->optional_input_filenames().size());
+  EXPECT_EQ(2U, flags->optional_input_filenames().size());
   EXPECT_EQ("../../tools/valgrind/tsan_v2/ignores.txt",
             flags->optional_input_filenames()[0]);
+  EXPECT_EQ("../../tools/valgrind/tsan_v2/ignorelist.txt",
+            flags->optional_input_filenames()[1]);
   EXPECT_EQ("clang++", flags->compiler_base_name());
   EXPECT_TRUE(flags->is_successful());
   EXPECT_EQ("", flags->fail_message());
@@ -2056,6 +2107,10 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlag) {
   compiler_info_flags.push_back(
       "-tsan-blacklist="
       "../../tools/valgrind/tsan_v2/ignores.txt");
+  compiler_info_flags.push_back("-mllvm");
+  compiler_info_flags.push_back(
+      "-tsan-ignorelist="
+      "../../tools/valgrind/tsan_v2/ignorelist.txt");
   EXPECT_EQ(compiler_info_flags, gcc_flags->compiler_info_flags());
   EXPECT_EQ(devtools_goma::GCCFlags::COMPILE, gcc_flags->mode());
   EXPECT_TRUE(gcc_flags->is_cplusplus());
@@ -2096,6 +2151,9 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlagWithSanitizeBlacklist) {
   args.push_back("-fPIC");
   args.push_back("-fsanitize-blacklist="
                  "../../tools/valgrind/tsan_v2/ignores.txt");
+  args.push_back(
+      "-fsanitize-ignorelist="
+      "../../tools/valgrind/tsan_v2/ignorelist.txt");
   args.push_back("-c");
   args.push_back("../../base/message_loop/message_loop_unittest.cc");
   args.push_back("-o");
@@ -2114,9 +2172,11 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlagWithSanitizeBlacklist) {
   EXPECT_EQ(1U, flags->input_filenames().size());
   EXPECT_EQ("../../base/message_loop/message_loop_unittest.cc",
             flags->input_filenames()[0]);
-  EXPECT_EQ(1U, flags->optional_input_filenames().size());
+  EXPECT_EQ(2U, flags->optional_input_filenames().size());
   EXPECT_EQ("../../tools/valgrind/tsan_v2/ignores.txt",
             flags->optional_input_filenames()[0]);
+  EXPECT_EQ("../../tools/valgrind/tsan_v2/ignorelist.txt",
+            flags->optional_input_filenames()[1]);
   EXPECT_EQ("clang++", flags->compiler_base_name());
   EXPECT_TRUE(flags->is_successful());
   EXPECT_EQ("", flags->fail_message());
