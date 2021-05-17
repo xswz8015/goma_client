@@ -26,6 +26,7 @@
 #include "options.h"
 #include "path.h"
 #include "path_util.h"
+#include "platform_thread.h"
 
 namespace devtools_goma {
 
@@ -887,6 +888,8 @@ unsigned __stdcall SpawnerWin::InputThread(void* thread_params) {
 
 /* static */
 unsigned __stdcall SpawnerWin::OutputThread(void* thread_params) {
+  PlatformThread::SetName(GetCurrentThread(), "output_thread");
+
   SpawnerWin* self = reinterpret_cast<SpawnerWin*>(thread_params);
   DCHECK(self);
 

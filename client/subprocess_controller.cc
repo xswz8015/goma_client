@@ -127,6 +127,9 @@ struct ServerParam {
 };
 
 unsigned __stdcall SubProcessController::StartServer(void* param) {
+#ifdef _WIN32
+  PlatformThread::SetName(GetCurrentThread(), "sub_process_controller_server");
+#endif
   std::unique_ptr<ServerParam> args(reinterpret_cast<ServerParam*>(param));
   std::unique_ptr<SubProcessControllerServer> server(
       new SubProcessControllerServer(args->sockfd_, args->options_));

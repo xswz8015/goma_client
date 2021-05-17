@@ -182,6 +182,10 @@ void DepsCacheInit() {
 }  // namespace devtools_goma
 
 int main(int argc, char* argv[], const char* envp[]) {
+#ifdef _WIN32
+  devtools_goma::PlatformThread::SetName(GetCurrentThread(), "main");
+#endif
+
   devtools_goma::Init(argc, argv, envp);
 
 #if HAVE_COUNTERZ
