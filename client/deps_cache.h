@@ -48,11 +48,15 @@ class DepsCache {
 
   // Initializes the DepsCache.
   // When |cache_filename| is empty, this won't be enabled.
-  // When |cache_filename| file exists, we load it.
+  // When |cache_filename| file exists, call LoadIfEnabled to load cache file.
   static void Init(const std::string& cache_filename,
                    absl::optional<absl::Duration> identifier_alive_duration,
                    size_t deps_table_size_threshold,
                    int max_proto_size_in_mega_bytes);
+  // Load cached data from cache_filename,
+  // when cache_filename is not empty.
+  // Do nothing if cache_filename is empty.
+  static void LoadIfEnabled();
 
   // Saves .goma_deps file is DepsCache is initialized.
   static void Quit();

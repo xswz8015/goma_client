@@ -185,7 +185,6 @@ int main(int argc, char* argv[], const char* envp[]) {
 #ifdef _WIN32
   devtools_goma::PlatformThread::SetName(GetCurrentThread(), "main");
 #endif
-
   devtools_goma::Init(argc, argv, envp);
 
 #if HAVE_COUNTERZ
@@ -322,12 +321,14 @@ int main(int argc, char* argv[], const char* envp[]) {
   devtools_goma::modulemap::Cache::Init(FLAGS_MAX_MODULEMAP_CACHE_ENTRIES);
   devtools_goma::ListDirCache::Init(FLAGS_MAX_LIST_DIR_CACHE_ENTRY_NUM);
 
-  std::unique_ptr<devtools_goma::WorkerThreadRunner> init_deps_cache(
+  devtools_goma::DepsCacheInit();
+  std::unique_ptr<devtools_goma::WorkerThreadRunner> load_deps_cache(
       new devtools_goma::WorkerThreadRunner(
           &wm, FROM_HERE,
-          devtools_goma::NewCallback(devtools_goma::DepsCacheInit)));
+          devtools_goma::NewCallback(devtools_goma::DepsCache::LoadIfEnabled)));
   devtools_goma::CompilerInfoCache::Init(
       devtools_goma::GetCacheDirectory(), FLAGS_COMPILER_INFO_CACHE_FILE,
+      FLAGS_COMPILER_INFO_CACHE_NUM_ENTRIES,
       absl::Seconds(FLAGS_COMPILER_INFO_CACHE_HOLDING_TIME_SEC));
   std::unique_ptr<devtools_goma::WorkerThreadRunner> load_compiler_info_cache(
       new devtools_goma::WorkerThreadRunner(
@@ -381,7 +382,6 @@ int main(int argc, char* argv[], const char* envp[]) {
       FLAGS_LOCAL_OUTPUT_CACHE_MAX_ITEMS,
       FLAGS_LOCAL_OUTPUT_CACHE_THRESHOLD_ITEMS);
 
-  init_deps_cache.reset();
   // Show memory just before server loop to understand how much memory is
   // used for initialization.
   handler->TrackMemoryOneshot();
@@ -405,6 +405,7 @@ int main(int argc, char* argv[], const char* envp[]) {
   devtools_goma::SubProcessControllerClient::Get()->Quit();
   devtools_goma::LocalOutputCache::Quit();
 
+  load_deps_cache.reset();
   load_compiler_info_cache.reset();
   // TODO: Remove this when b/118804052 is fixed.
   devtools_goma::CompilerInfoCache::instance()->Save();

@@ -452,6 +452,10 @@ GOMA_DEFINE_bool(ENABLE_GLOBAL_FILE_STAT_CACHE,
                  "Enable global file stat cache. "
                  "Do not enable this flag when any source file would be "
                  "changed between compilations.");
+GOMA_DEFINE_int32(COMPILER_INFO_CACHE_NUM_ENTRIES,
+                  10000,
+                  "Maximum number of entries of CompilerInfo in cache "
+                  "when saved to COMPILER_INFO_CACHE_FILE.");
 GOMA_DEFINE_int32(COMPILER_INFO_CACHE_HOLDING_TIME_SEC, 60 * 60 * 24 * 30,
                   "CompilerInfo is not evicted if it is used within "
                   "COMPILER_INFO_CACHE_HOLDING_TIME_SEC. "

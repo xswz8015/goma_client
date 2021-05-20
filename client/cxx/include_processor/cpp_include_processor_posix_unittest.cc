@@ -354,7 +354,7 @@ class CppIncludeProcessorPosixTest : public testing::Test {
  protected:
   static void SetUpTestCase() {
     // Does not load cache from file.
-    CompilerInfoCache::Init("", "", absl::Hours(1));
+    CompilerInfoCache::Init("", "", 10000, absl::Hours(1));
     IncludeCache::Init(5, true);
   };
 

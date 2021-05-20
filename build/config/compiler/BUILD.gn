@@ -511,6 +511,9 @@ config("no_goma_code") {
         "-Wno-unused-const-variable",
         "-Wno-unused-function",
         "-Wno-unused-variable",
+        "-Wno-null-pointer-arithmetic",  # TODO:
+                                         # Possibly reenable if the warning
+                                         # becomes usable again upstream.
       ]
     }
   }

@@ -27,6 +27,7 @@
 #include "util.h"
 
 namespace {
+const int kMaxNumEntries = 100;
 constexpr absl::Duration kCacheHoldingTime = absl::Hours(24 * 30);  // 30 days
 }
 
@@ -83,7 +84,7 @@ class HashCheckingCompilerInfoValidator
 class CompilerInfoCacheTest : public testing::Test {
  public:
   CompilerInfoCacheTest()
-      : cache_(new CompilerInfoCache("", kCacheHoldingTime)),
+      : cache_(new CompilerInfoCache("", kMaxNumEntries, kCacheHoldingTime)),
         validator_(new TestCompilerInfoValidator) {
     cache_->SetValidator(validator_);
   }
@@ -785,6 +786,30 @@ TEST_F(CompilerInfoCacheTest, NoLanguageExtension) {
 
 // TODO: add tests for Load and Save.
 
+TEST_F(CompilerInfoCacheTest, LimitTableEntriesTest) {
+  CompilerInfoDataTable table;
+  CompilerInfoDataTable::Entry* entry = table.add_compiler_info_data();
+  entry->add_keys("key1");
+  CompilerInfoData data;
+  data.set_last_used_at(1000);
+  *entry->mutable_data() = data;
+
+  entry = table.add_compiler_info_data();
+  entry->add_keys("key2");
+  data.set_last_used_at(2000);
+  *entry->mutable_data() = data;
+
+  entry = table.add_compiler_info_data();
+  entry->add_keys("key3");
+  data.set_last_used_at(3000);
+  *entry->mutable_data() = data;
+
+  CompilerInfoCache::LimitTableEntries(&table, 2);
+  ASSERT_EQ(2UL, table.compiler_info_data_size());
+  EXPECT_EQ("key3", table.compiler_info_data(0).keys(0));
+  EXPECT_EQ("key2", table.compiler_info_data(1).keys(0));
+}
+
 #ifdef __linux__
 TEST_F(CompilerInfoCacheTest, RelativePathCompiler) {
   InstallReadCommandOutputFunc(ReadCommandOutputByPopen);
@@ -794,7 +819,7 @@ TEST_F(CompilerInfoCacheTest, RelativePathCompiler) {
   static const char kCompilerInfoCache[] = "compiler_info_cache";
 
   CompilerInfoCache::Init(tmpdir_util.tmpdir(), kCompilerInfoCache,
-                          absl::Hours(1));
+                          kMaxNumEntries, absl::Hours(1));
   CompilerInfoCache::LoadIfEnabled();
   const std::vector<std::string> empty_env;
   CompilerInfoCache::Key key1, key2, key3;
@@ -855,7 +880,7 @@ TEST_F(CompilerInfoCacheTest, RelativePathCompiler) {
   ASSERT_TRUE(Chdir("/"));
 
   CompilerInfoCache::Init(tmpdir_util.tmpdir(), kCompilerInfoCache,
-                          absl::Hours(1));
+                          kMaxNumEntries, absl::Hours(1));
   CompilerInfoCache::LoadIfEnabled();
 
   EXPECT_NE(nullptr, CompilerInfoCache::instance()->Lookup(key1));
