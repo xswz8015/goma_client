@@ -19,6 +19,7 @@
 #include "basictypes.h"
 #include "cache_file.h"
 #include "compiler_info.h"
+#include "gtest/gtest_prod.h"
 #include "json/json.h"
 #include "lockhelper.h"
 
@@ -61,6 +62,7 @@ class CompilerInfoCache {
   // Call LoadIfEnabled to load cache file.
   static void Init(const std::string& cache_dir,
                    const std::string& cache_filename,
+                   int num_entries,
                    absl::Duration cache_holding_time);
   // Load cached data from
   // JoinPathRespectAbsolute(cache_dir, cache_filename),
@@ -122,7 +124,9 @@ class CompilerInfoCache {
   bool Save() LOCKS_EXCLUDED(mu_);
 
  private:
+  FRIEND_TEST(CompilerInfoCacheTest, LimitTableEntriesTest);
   CompilerInfoCache(const std::string& cache_filename,
+                    int num_entries,
                     absl::Duration cache_holding_time);
 
   static std::string HashKey(const CompilerInfoData& data);
@@ -131,6 +135,7 @@ class CompilerInfoCache {
   bool UnmarshalUnlocked(const CompilerInfoDataTable& table)
       EXCLUSIVE_LOCKS_REQUIRED(mu_);
   bool Marshal(CompilerInfoDataTable* table) LOCKS_EXCLUDED(mu_);
+  static void LimitTableEntries(CompilerInfoDataTable* table, int num_entries);
   bool MarshalUnlocked(CompilerInfoDataTable* table) SHARED_LOCKS_REQUIRED(mu_);
   void Clear() LOCKS_EXCLUDED(mu_);
   void ClearUnlocked() EXCLUSIVE_LOCKS_REQUIRED(mu_);
@@ -149,6 +154,7 @@ class CompilerInfoCache {
   static CompilerInfoCache* instance_;
 
   const CacheFile cache_file_;
+  const int max_num_entries_;
   const absl::Duration cache_holding_time_;
 
   std::unique_ptr<CompilerInfoValidator> validator_ GUARDED_BY(mu_) =

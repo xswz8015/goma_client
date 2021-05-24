@@ -5,11 +5,12 @@
 
 #include <memory>
 
+#include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
-#include "absl/time/clock.h"
 #include "absl/strings/str_join.h"
+#include "absl/time/clock.h"
 #include "autolock_timer.h"
 #include "compiler_flags.h"
 #include "compiler_info_state.h"
@@ -47,14 +48,15 @@ std::string CompilerInfoCache::Key::abs_local_compiler_path() const {
 /* static */
 void CompilerInfoCache::Init(const std::string& cache_dir,
                              const std::string& cache_filename,
+                             int num_entries,
                              absl::Duration cache_holding_time) {
   CHECK(instance_ == nullptr);
   if (cache_filename == "") {
-    instance_ = new CompilerInfoCache("", cache_holding_time);
+    instance_ = new CompilerInfoCache("", num_entries, cache_holding_time);
     return;
   }
   instance_ = new CompilerInfoCache(
-      file::JoinPathRespectAbsolute(cache_dir, cache_filename),
+      file::JoinPathRespectAbsolute(cache_dir, cache_filename), num_entries,
       cache_holding_time);
 }
 
@@ -73,8 +75,11 @@ void CompilerInfoCache::Quit() {
 }
 
 CompilerInfoCache::CompilerInfoCache(const std::string& cache_filename,
+                                     int num_entries,
                                      absl::Duration cache_holding_time)
-    : cache_file_(cache_filename), cache_holding_time_(cache_holding_time) {}
+    : cache_file_(cache_filename),
+      max_num_entries_(num_entries),
+      cache_holding_time_(cache_holding_time) {}
 
 CompilerInfoCache::~CompilerInfoCache() {
   if (cache_file_.Enabled()) {
@@ -548,6 +553,11 @@ bool CompilerInfoCache::UnmarshalUnlocked(const CompilerInfoDataTable& table) {
     std::unique_ptr<CompilerInfoData> cid(new CompilerInfoData);
     *cid = data;
     const std::string& hash = HashKey(*cid);
+    // http://b/188682224
+    if (!cid->found() || cid->error_message() != "") {
+      LOG(INFO) << "ignore negative entry " << cid->DebugString();
+      continue;
+    }
     ScopedCompilerInfoState state(new CompilerInfoState(std::move(cid)));
     for (const auto& key : *keys) {
       compiler_info_.insert(std::make_pair(key, state.get()));
@@ -584,6 +594,24 @@ bool CompilerInfoCache::Marshal(CompilerInfoDataTable* table) {
   return MarshalUnlocked(table);
 }
 
+bool last_used_desc(const CompilerInfoDataTable::Entry& a,
+                    const CompilerInfoDataTable::Entry& b) {
+  return a.data().last_used_at() > b.data().last_used_at();
+}
+
+/* static */
+void CompilerInfoCache::LimitTableEntries(CompilerInfoDataTable* table,
+                                          int num_entries) {
+  absl::c_sort(*table->mutable_compiler_info_data(), last_used_desc);
+  if (table->compiler_info_data_size() > num_entries) {
+    LOG(INFO) << "Too many compiler_info_data entries="
+              << table->compiler_info_data_size() << " truncate to "
+              << num_entries;
+    table->mutable_compiler_info_data()->DeleteSubrange(
+        num_entries, table->compiler_info_data_size() - num_entries);
+  }
+}
+
 bool CompilerInfoCache::MarshalUnlocked(CompilerInfoDataTable* table) {
   absl::flat_hash_map<std::string, CompilerInfoDataTable::Entry*> by_hash;
   for (const auto& it : compiler_info_) {
@@ -593,6 +621,11 @@ bool CompilerInfoCache::MarshalUnlocked(CompilerInfoDataTable* table) {
       continue;
     }
     const CompilerInfoData& data = state->info().data();
+    // http://b/188682224
+    if (!data.found() || data.error_message() != "") {
+      LOG(INFO) << "ignore negative entry " << data.DebugString();
+      continue;
+    }
     std::string hash = HashKey(data);
     CompilerInfoDataTable::Entry* entry = nullptr;
     auto p = by_hash.insert(std::make_pair(hash, entry));
@@ -603,6 +636,7 @@ bool CompilerInfoCache::MarshalUnlocked(CompilerInfoDataTable* table) {
     entry = p.first->second;
     entry->add_keys(info_key);
   }
+  LimitTableEntries(table, max_num_entries_);
   table->set_built_revision(kBuiltRevisionString);
   // TODO: can be void?
   return true;

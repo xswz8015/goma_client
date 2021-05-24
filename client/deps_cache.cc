@@ -103,7 +103,13 @@ void DepsCache::Init(const std::string& cache_filename,
   instance_ = new DepsCache(cache_filename, identifier_alive_duration,
                             deps_table_size_threshold,
                             max_proto_size_in_mega_bytes);
+}
 
+// static
+void DepsCache::LoadIfEnabled() {
+  if (!instance_) {
+    return;
+  }
   if (!instance_->LoadGomaDeps()) {
     // If deps cache is broken (or does not exist), clear all cache.
     LOG(INFO) << "couldn't load deps cache file. "

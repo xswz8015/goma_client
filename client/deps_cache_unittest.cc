@@ -50,6 +50,7 @@ class DepsCacheTest : public testing::Test {
                     kDepsCacheAliveDuration,
                     kDepsCacheThreshold,
                     kDepsCacheMaxProtoSizeInMB);
+    DepsCache::LoadIfEnabled();
     dc_ = DepsCache::instance();
     CHECK(dc_ != nullptr) << "dc_ == nullptr";
     identifier_count_ = 0;
@@ -470,6 +471,7 @@ TEST_F(DepsCacheTest, Restart) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // Second compile. We can utilize the dependency cache.
@@ -540,6 +542,7 @@ TEST_F(DepsCacheTest, RestartWithFileStatUpdate) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // DepsHashId will be updated to the latest one.
@@ -627,6 +630,7 @@ TEST_F(DepsCacheTest, RestartWithDirectiveHashUpdate) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // Since identifier1 was old, its entry will be garbage-collected.
@@ -684,6 +688,7 @@ TEST_F(DepsCacheTest, RestartWithOldIdentifier) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // Since last_used_time of identifier2 was old,
@@ -712,6 +717,7 @@ TEST_F(DepsCacheTest, RestartWithOldIdentifier) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // All identifiers are garbage-collected.
@@ -732,6 +738,7 @@ TEST_F(DepsCacheTest, RestartWithOldIdentifierWithNegativeAliveDuration) {
   DepsCache::Init(file::JoinPath(tmpdir_->tmpdir(), ".goma_deps"),
                   absl::nullopt, kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   const DepsCache::Identifier identifier1 = MakeFreshIdentifier();
@@ -766,6 +773,7 @@ TEST_F(DepsCacheTest, RestartWithOldIdentifierWithNegativeAliveDuration) {
   DepsCache::Init(file::JoinPath(tmpdir_->tmpdir(), ".goma_deps"),
                   absl::nullopt, kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // All identifiers should alive.
@@ -813,6 +821,7 @@ TEST_F(DepsCacheTest, RestartWithBuiltRevisionUpdate) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // All cache will be disposed.
@@ -863,6 +872,7 @@ TEST_F(DepsCacheTest, RestartWithMissingSha256) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // All cache will be disposed.
@@ -913,6 +923,7 @@ TEST_F(DepsCacheTest, RestartWithInvalidSha256) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   // All cache will be disposed.
@@ -976,6 +987,7 @@ TEST_F(DepsCacheTest, RestartWithUpdatedFilesInSomeIdentifier) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   {
@@ -1027,6 +1039,7 @@ TEST_F(DepsCacheTest, RestartWithLargeNumberIdentifiers) {
                   kDepsCacheAliveDuration,
                   kDepsCacheThreshold,
                   kDepsCacheMaxProtoSizeInMB);
+  DepsCache::LoadIfEnabled();
   dc_ = DepsCache::instance();
 
   EXPECT_EQ(kDepsCacheThreshold, DepsCacheSize());
