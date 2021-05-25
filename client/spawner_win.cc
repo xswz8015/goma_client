@@ -878,7 +878,7 @@ void SpawnerWin::Flush() {
 
 /* static */
 unsigned __stdcall SpawnerWin::InputThread(void* thread_params) {
-  PlatformThread::SetName(GetCurrentThread(), "output_thread");
+  PlatformThread::SetName(GetCurrentThread(), "input_thread");
   SpawnerWin* self = reinterpret_cast<SpawnerWin*>(thread_params);
   DCHECK(self);
 
@@ -889,6 +889,7 @@ unsigned __stdcall SpawnerWin::InputThread(void* thread_params) {
 
 /* static */
 unsigned __stdcall SpawnerWin::OutputThread(void* thread_params) {
+  PlatformThread::SetName(GetCurrentThread(), "output_thread");
   SpawnerWin* self = reinterpret_cast<SpawnerWin*>(thread_params);
   DCHECK(self);
 
