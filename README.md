@@ -6,6 +6,9 @@ Chromium and Android. It's some kind of replacement of distcc+ccache.
 NOTE: For non-Googler usage, please see
 [Goma for Chromium Contributors](doc/early-access-guide.md).
 
+Google employees interested in contributing to the goma client should use
+internal version. see http://go/ma-client-code
+
 [TOC]
 
 ## How Goma works
@@ -34,6 +37,7 @@ Goma client can be built on Linux, Mac, and Win.
 
 
 ```shell
+$ mkdir goma && cd goma
 $ gclient config https://chromium.googlesource.com/infra/goma/client
 $ gclient sync
 $ cd client
@@ -62,7 +66,7 @@ $ git config user.name 'Your Name'
 ```shell
 $ cd "${GOMA_SRC}/client"
 $ gclient sync
-$ gn gen --args='is_debug=false' out/Release
+$ gn gen --args="is_debug=false" out/Release
 $ ninja -C out/Release
 ```
 

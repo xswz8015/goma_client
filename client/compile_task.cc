@@ -858,17 +858,24 @@ int ShrinkExecReq(absl::string_view trace_id, ExecReq* req) {
 
   absl::c_shuffle(*req->mutable_input(), MyCryptographicSecureRNG());
   for (auto& input : *req->mutable_input()) {
+    if (!input.has_content()) {
+      continue;
+    }
+    if (!input.content().has_content()) {
+      continue;
+    }
+    size_t content_size = input.content().content().size();
     if (total_embedded_size >= kEmbeddedThreshold) {
-      input.clear_content();
       LOG(INFO) << trace_id << " embed:" << input.filename()
-                << " content cleared";
+                << " content cleared "
+                << " blob_type=" << input.content().blob_type()
+                << " size=" << content_size;
+      input.clear_content();
       ++cleared;
       continue;
     }
 
-    if (input.has_content() && input.content().has_content()) {
-      total_embedded_size += input.content().content().size();
-    }
+    total_embedded_size += content_size;
   }
 
   absl::c_sort(*req->mutable_input(),

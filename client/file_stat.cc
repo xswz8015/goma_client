@@ -19,29 +19,9 @@
 #include "absl/time/time.h"
 #include "counterz.h"
 #include "glog/logging.h"
+#include "scoped_fd.h"
 
 namespace devtools_goma {
-
-#ifdef _WIN32
-namespace {
-
-bool InitFromInfo(const WIN32_FILE_ATTRIBUTE_DATA& info, FileStat* file_stat) {
-  if (info.nFileSizeHigh != 0) {
-    LOG(ERROR) << "Goma won't handle a file whose size is larger than 4 GB.";
-    return false;
-  }
-
-  if (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-    file_stat->is_directory = true;
-  }
-
-  file_stat->size = static_cast<off_t>(info.nFileSizeLow);
-  file_stat->mtime = ConvertFiletimeToAbslTime(info.ftLastWriteTime);
-  return true;
-}
-
-}  // anonymous namespace
-#endif
 
 const off_t FileStat::kInvalidFileSize = -1;
 
@@ -56,12 +36,63 @@ FileStat::FileStat(const std::string& filename)
 #else
   WIN32_FILE_ATTRIBUTE_DATA fileinfo;
   if (GetFileAttributesExA(filename.c_str(), GetFileExInfoStandard,
-                           &fileinfo)) {
-    if (!InitFromInfo(fileinfo, this)) {
-      LOG(WARNING) << "Error in init file id."
-                   << " filename=" << filename;
-    }
+                           &fileinfo) == 0) {
+    // file not found?
+    LOG_SYSRESULT(GetLastError());
+    LOG(ERROR) << "Failed to get file attribute of " << filename;
+    return;
   }
+  if ((fileinfo.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0) {
+    // fast path.  not symlink.
+    if (fileinfo.nFileSizeHigh != 0) {
+      LOG(ERROR) << "Goma won't handle a file whose size is larger than "
+                 << "4 GB: " << filename;
+      return;
+    }
+    if (fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+      is_directory = true;
+    }
+    size = static_cast<off_t>(fileinfo.nFileSizeLow);
+    mtime = ConvertFiletimeToAbslTime(fileinfo.ftLastWriteTime);
+    return;
+  }
+  // file is a symbolic link.
+  // don't use GetFileAttributesExA here.
+  // GetFileAttributesExA acts like lstat, not stat.
+  ScopedFd h(CreateFileA(filename.c_str(), 0,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                         OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr));
+  if (!h.valid()) {
+    LOG_SYSRESULT(GetLastError());
+    LOG(ERROR) << "Failed to open " << filename << " for file stat";
+    return;
+  }
+  LARGE_INTEGER size_data;
+  if (GetFileSizeEx(h.handle(), &size_data) == 0) {
+    LOG_SYSRESULT(GetLastError());
+    LOG(ERROR) << "Failed to get file size of " << filename;
+    return;
+  }
+  if (size_data.u.HighPart != 0) {
+    LOG(ERROR) << "Goma won't handle a file whose size is larger than 4 GB: "
+               << filename;
+    return;
+  }
+  FILE_BASIC_INFO finfo;
+  if (GetFileInformationByHandleEx(h.handle(), FileBasicInfo, &finfo,
+                                   sizeof finfo) == 0) {
+    LOG_SYSRESULT(GetLastError());
+    LOG(ERROR) << "Failed to get file information of " << filename;
+    return;
+  }
+  if (finfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+    is_directory = true;
+  }
+  size = static_cast<off_t>(size_data.u.LowPart);
+  FILETIME last_write_time;
+  last_write_time.dwLowDateTime = finfo.LastWriteTime.u.LowPart;
+  last_write_time.dwHighDateTime = finfo.LastWriteTime.u.HighPart;
+  mtime = ConvertFiletimeToAbslTime(last_write_time);
 #endif
 }
 

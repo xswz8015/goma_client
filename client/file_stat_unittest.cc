@@ -7,7 +7,11 @@
 #include <gtest/gtest.h>
 #include <cstdio>
 
+#include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
+#include "file_helper.h"
+#include "glog/logging.h"
+#include "path.h"
 #include "scoped_tmp_file.h"
 
 namespace devtools_goma {
@@ -36,11 +40,12 @@ TEST(FileStatTest, InitFromDirectory) {
 
   FileStat dir_stat(dir.dirname());
 
-  EXPECT_TRUE(dir_stat.IsValid());
-  EXPECT_TRUE(dir_stat.is_directory);
+  EXPECT_TRUE(dir_stat.IsValid()) << dir_stat;
+  EXPECT_TRUE(dir_stat.is_directory) << dir_stat;
 
-  ASSERT_TRUE(dir_stat.mtime.has_value());
-  EXPECT_GE(*dir_stat.mtime, start_time - kFileStatMtimeMarginOfError);
+  ASSERT_TRUE(dir_stat.mtime.has_value()) << dir_stat;
+  EXPECT_GE(*dir_stat.mtime, start_time - kFileStatMtimeMarginOfError)
+      << dir_stat;
 }
 
 TEST(FileStatTest, InitFromEmptyFile) {
@@ -49,12 +54,13 @@ TEST(FileStatTest, InitFromEmptyFile) {
 
   FileStat file_stat(file.filename());
 
-  EXPECT_TRUE(file_stat.IsValid());
-  EXPECT_EQ(0, file_stat.size);
-  EXPECT_FALSE(file_stat.is_directory);
+  EXPECT_TRUE(file_stat.IsValid()) << file_stat;
+  EXPECT_EQ(0, file_stat.size) << file_stat;
+  EXPECT_FALSE(file_stat.is_directory) << file_stat;
 
-  EXPECT_TRUE(file_stat.mtime.has_value());
-  EXPECT_GE(*file_stat.mtime, start_time - kFileStatMtimeMarginOfError);
+  EXPECT_TRUE(file_stat.mtime.has_value()) << file_stat;
+  EXPECT_GE(*file_stat.mtime, start_time - kFileStatMtimeMarginOfError)
+      << file_stat;
 }
 
 TEST(FileStatTest, InitFromNonEmptyFile) {
@@ -65,12 +71,13 @@ TEST(FileStatTest, InitFromNonEmptyFile) {
 
   FileStat file_stat(file.filename());
 
-  EXPECT_TRUE(file_stat.IsValid());
-  EXPECT_EQ(kContents.size(), file_stat.size);
-  EXPECT_FALSE(file_stat.is_directory);
+  EXPECT_TRUE(file_stat.IsValid()) << file_stat;
+  EXPECT_EQ(kContents.size(), file_stat.size) << file_stat;
+  EXPECT_FALSE(file_stat.is_directory) << file_stat;
 
-  EXPECT_TRUE(file_stat.mtime.has_value());
-  EXPECT_GE(*file_stat.mtime, start_time - kFileStatMtimeMarginOfError);
+  EXPECT_TRUE(file_stat.mtime.has_value()) << file_stat;
+  EXPECT_GE(*file_stat.mtime, start_time - kFileStatMtimeMarginOfError)
+      << file_stat;
 }
 
 TEST(FileStatTest, ValidVersusInvalid) {
@@ -124,6 +131,37 @@ TEST(FileStatTest, DifferentTime) {
   // Empty time values should not match valid time values.
   EXPECT_NE(stat1, stat_notime1);
   EXPECT_NE(stat2, stat_notime2);
+}
+
+TEST(FileStatTest, Symlink) {
+  ScopedTmpDir dir("file_stat_symlink");
+  ASSERT_TRUE(dir.valid());
+  const absl::string_view data = "some data";
+  const std::string target_name = "file";
+  const std::string filename = file::JoinPath(dir.dirname(), target_name);
+  ASSERT_TRUE(WriteStringToFile(data, filename));
+  const std::string symlink_name =
+      file::JoinPath(dir.dirname(), "symlink_to_file");
+#ifndef _WIN32
+  int r = symlink(target_name.c_str(), symlink_name.c_str());
+  if (r != 0) {
+    PLOG(ERROR) << "Failed to symlink " << filename << " <- " << symlink_name;
+    ASSERT_EQ(r, 0);
+  }
+#else
+  DWORD r = CreateSymbolicLinkA(symlink_name.c_str(), target_name.c_str(), 0);
+  if (r == 0) {
+    LOG_SYSRESULT(GetLastError());
+    LOG(ERROR) << "Failed to symlink " << filename << " <- " << symlink_name;
+    ASSERT_NE(r, 0);
+  }
+#endif
+  FileStat file_stat(filename);
+  EXPECT_TRUE(file_stat.IsValid()) << file_stat;
+  FileStat symlink_stat(symlink_name);
+  EXPECT_TRUE(symlink_stat.IsValid()) << symlink_stat;
+  EXPECT_EQ(file_stat, symlink_stat);
+  EXPECT_EQ(symlink_stat.size, data.size());
 }
 
 }  // namespace devtools_goma
