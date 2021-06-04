@@ -37,8 +37,11 @@ FileStat::FileStat(const std::string& filename)
   WIN32_FILE_ATTRIBUTE_DATA fileinfo;
   if (GetFileAttributesExA(filename.c_str(), GetFileExInfoStandard,
                            &fileinfo) == 0) {
-    // file not found?
-    LOG_SYSRESULT(GetLastError());
+    DWORD err = GetLastError();
+    if (err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND) {
+      return;
+    }
+    LOG_SYSRESULT(err);
     LOG(ERROR) << "Failed to get file attribute of " << filename;
     return;
   }
