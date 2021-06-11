@@ -761,6 +761,7 @@ if (os == "win") {
       cflags = [
         "-Wno-reorder",
         "-Wno-missing-field-initializers",
+        "-Wno-unused-but-set-variable",
       ]
     }
   }
