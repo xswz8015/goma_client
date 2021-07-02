@@ -343,7 +343,7 @@ TEST_F(CompileTaskTest, UpdateStatsFinished) {
 TEST_F(CompileTaskTest, UpdateStatsFinishedCacheHit) {
   // Force-set |state_| to enable UpdateStats() to run.
   compile_task()->state_ = CompileTask::FINISHED;
-  compile_task()->mutable_stats()->set_cache_hit(true);
+  compile_task()->mutable_stats()->exec_log.set_cache_hit(true);
   compile_task()->UpdateStats();
 
   ASSERT_TRUE(compile_task()->resp_);

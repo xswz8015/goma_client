@@ -21,7 +21,7 @@ void StatsManager::Accumulate(const CommandSpec& command_spec,
                         command_spec.target(), command_spec.binary_hash()};
   auto& stats = per_compiler_stats_[key];
   const auto& task_duration = task_stats.total_rbe_execution_time;
-  if (task_stats.cache_hit()) {
+  if (task_stats.exec_log.cache_hit()) {
     ++stats.num_cached;
     stats.total_cached_exec_duration += task_duration;
   } else {

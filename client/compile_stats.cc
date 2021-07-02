@@ -76,8 +76,7 @@ void StoreArrayToJsonIfNotEmpty(const std::string& key, Iter begin, Iter end,
 }  // namespace
 
 CompileStats::CompileStats()
-    : ExecLog(),
-      gomacc_req_size(0),
+    : gomacc_req_size(0),
       gomacc_resp_size(0),
       input_file_rpc_size(0),
       input_file_rpc_raw_size(0),
@@ -189,22 +188,22 @@ std::string CompileStats::GetMajorFactorInfo() const {
 }
 
 void CompileStats::AddStatsFromHttpStatus(const HttpClient::Status& status) {
-  add_rpc_master_trace_id(status.master_trace_id);
+  exec_log.add_rpc_master_trace_id(status.master_trace_id);
 
   if (status.master_trace_id.empty() ||
       status.master_trace_id == status.trace_id) {
-    add_rpc_req_size(status.req_size);
-    add_rpc_resp_size(status.resp_size);
-    add_rpc_raw_req_size(status.raw_req_size);
-    add_rpc_raw_resp_size(status.raw_resp_size);
+    exec_log.add_rpc_req_size(status.req_size);
+    exec_log.add_rpc_resp_size(status.resp_size);
+    exec_log.add_rpc_raw_req_size(status.raw_req_size);
+    exec_log.add_rpc_raw_resp_size(status.raw_resp_size);
 
-    add_rpc_throttle_time(DurationToIntMs(status.throttle_time));
-    add_rpc_pending_time(DurationToIntMs(status.pending_time));
-    add_rpc_req_build_time(DurationToIntMs(status.req_build_time));
-    add_rpc_req_send_time(DurationToIntMs(status.req_send_time));
-    add_rpc_wait_time(DurationToIntMs(status.wait_time));
-    add_rpc_resp_recv_time(DurationToIntMs(status.resp_recv_time));
-    add_rpc_resp_parse_time(DurationToIntMs(status.resp_parse_time));
+    exec_log.add_rpc_throttle_time(DurationToIntMs(status.throttle_time));
+    exec_log.add_rpc_pending_time(DurationToIntMs(status.pending_time));
+    exec_log.add_rpc_req_build_time(DurationToIntMs(status.req_build_time));
+    exec_log.add_rpc_req_send_time(DurationToIntMs(status.req_send_time));
+    exec_log.add_rpc_wait_time(DurationToIntMs(status.wait_time));
+    exec_log.add_rpc_resp_recv_time(DurationToIntMs(status.resp_recv_time));
+    exec_log.add_rpc_resp_parse_time(DurationToIntMs(status.resp_parse_time));
 
     this->total_rpc_throttle_time += status.throttle_time;
     this->total_rpc_pending_time += status.pending_time;
@@ -225,12 +224,12 @@ void CompileStats::AddStatsFromExecResp(const ExecResp& response) {
 }
 
 void CompileStats::AddStatsFromOutputFileTask(const OutputFileTask& task) {
-  add_output_file_time(DurationToIntMs(task.timer().GetDuration()));
-  add_output_file_size(task.output().blob().file_size());
+  exec_log.add_output_file_time(DurationToIntMs(task.timer().GetDuration()));
+  exec_log.add_output_file_size(task.output().blob().file_size());
   output_file_rpc += task.num_rpc();
 
   const HttpClient::Status& http_status = task.http_status();
-  add_chunk_resp_size(http_status.resp_size);
+  exec_log.add_chunk_resp_size(http_status.resp_size);
   output_file_rpc_req_build_time += http_status.req_build_time;
   output_file_rpc_req_send_time += http_status.req_send_time;
   output_file_rpc_wait_time += http_status.wait_time;
@@ -248,44 +247,50 @@ void CompileStats::DumpToJson(Json::Value* json,
 
   if (LocalCacheHit()) {
     (*json)["cache"] = "local hit";
-  } else if (cache_hit()) {
+  } else if (exec_log.cache_hit()) {
     (*json)["cache"] = "hit";
   }
 
   StoreStringToJsonIfNotEmpty("major_factor", GetMajorFactorInfo(), json);
 
   StoreStringToJsonIfNotEmpty("command_version_mismatch",
-                              exec_command_version_mismatch(), json);
+                              exec_log.exec_command_version_mismatch(), json);
   StoreStringToJsonIfNotEmpty("command_binary_hash_mismatch",
-                              exec_command_binary_hash_mismatch(), json);
+                              exec_log.exec_command_binary_hash_mismatch(),
+                              json);
   StoreStringToJsonIfNotEmpty("command_subprograms_mismatch",
-                              exec_command_subprograms_mismatch(), json);
+                              exec_log.exec_command_subprograms_mismatch(),
+                              json);
 
-  StoreIntToJsonIfNotZero("exit", exec_exit_status(), json);
-  StoreIntToJsonIfNotZero("retry", exec_request_retry(), json);
-  StoreBooleanToJsonIfTrue("goma_error", goma_error(), json);
-  StoreBooleanToJsonIfTrue("compiler_proxy_error", compiler_proxy_error(),
-                           json);
+  StoreIntToJsonIfNotZero("exit", exec_log.exec_exit_status(), json);
+  StoreIntToJsonIfNotZero("retry", exec_log.exec_request_retry(), json);
+  StoreBooleanToJsonIfTrue("goma_error", exec_log.goma_error(), json);
+  StoreBooleanToJsonIfTrue("compiler_proxy_error",
+                           exec_log.compiler_proxy_error(), json);
 
   if (detail_level == DumpDetailLevel::kDetailed) {
     // TODO: Use absl::Time.
-    if (has_start_time()) {
-      (*json)["start_time"] = absl::FormatTime("%Y-%m-%d %H:%M:%S %z",
-                                               absl::FromTimeT(start_time()),
-                                               absl::LocalTimeZone());
+    if (exec_log.has_start_time()) {
+      (*json)["start_time"] = absl::FormatTime(
+          "%Y-%m-%d %H:%M:%S %z", absl::FromTimeT(exec_log.start_time()),
+          absl::LocalTimeZone());
     }
     StoreStringToJsonIfNotEmpty("latest_input_filename",
-                                latest_input_filename(), json);
+                                exec_log.latest_input_filename(), json);
     // TODO: Use absl::Time.
-    if (has_latest_input_mtime()) {
-      (*json)["input_wait"] = start_time() - latest_input_mtime();
+    if (exec_log.has_latest_input_mtime()) {
+      (*json)["input_wait"] =
+          exec_log.start_time() - exec_log.latest_input_mtime();
     }
 
-    StoreIntToJsonIfNotZero("total_input", num_total_input_file(), json);
+    StoreIntToJsonIfNotZero("total_input", exec_log.num_total_input_file(),
+                            json);
     StoreInt64ToJsonIfNotZero(
-        "uploading_input", SumRepeatedInt32(num_uploading_input_file()), json);
+        "uploading_input",
+        SumRepeatedInt32(exec_log.num_uploading_input_file()), json);
     StoreInt64ToJsonIfNotZero(
-        "missing_input", SumRepeatedInt32(num_missing_input_file()), json);
+        "missing_input", SumRepeatedInt32(exec_log.num_missing_input_file()),
+        json);
 
     StoreDurationToJsonIfNotZero("compiler_info_process_time",
                                  this->compiler_info_process_time, json);
@@ -294,11 +299,11 @@ void CompileStats::DumpToJson(Json::Value* json,
 
     // When depscache_used() is true, we ran include_preprocessor but its
     // processing time was 0ms. So, we'd like to show it.
-    if (depscache_used() &&
+    if (exec_log.depscache_used() &&
         this->include_preprocess_time == absl::ZeroDuration()) {
       (*json)["include_preprocess_time"] = "0";
     }
-    StoreBooleanToJsonIfTrue("depscache_used", depscache_used(), json);
+    StoreBooleanToJsonIfTrue("depscache_used", exec_log.depscache_used(), json);
 
     StoreDurationToJsonIfNotZero("include_fileload_time",
                                  this->include_fileload_time, json);
@@ -313,13 +318,13 @@ void CompileStats::DumpToJson(Json::Value* json,
 
     StoreInt64ToJsonIfNotZero("gomacc_req_size", this->gomacc_req_size, json);
     StoreInt64ToJsonIfNotZero("gomacc_resp_size", this->gomacc_resp_size, json);
-    StoreInt64ToJsonIfNotZero("exec_req_size", SumRepeatedInt32(rpc_req_size()),
-                              json);
+    StoreInt64ToJsonIfNotZero("exec_req_size",
+                              SumRepeatedInt32(exec_log.rpc_req_size()), json);
     StoreInt64ToJsonIfNotZero("exec_resp_size",
-                              SumRepeatedInt32(rpc_resp_size()), json);
-    StoreStringToJsonIfNotEmpty("exec_rpc_master",
-                                absl::StrJoin(rpc_master_trace_id(), " "),
-                                json);
+                              SumRepeatedInt32(exec_log.rpc_resp_size()), json);
+    StoreStringToJsonIfNotEmpty(
+        "exec_rpc_master", absl::StrJoin(exec_log.rpc_master_trace_id(), " "),
+        json);
 
     StoreDurationToJsonIfNotZero("exec_throttle_time",
                                  this->total_rpc_throttle_time, json);
@@ -337,22 +342,25 @@ void CompileStats::DumpToJson(Json::Value* json,
     StoreDurationToJsonIfNotZero("exec_resp_parse_time",
                                  this->total_rpc_resp_parse_time, json);
 
-    StoreStringToJsonIfNotEmpty("local_run_reason", local_run_reason(), json);
+    StoreStringToJsonIfNotEmpty("local_run_reason", exec_log.local_run_reason(),
+                                json);
     StoreDurationToJsonIfNotZero("local_delay_time", this->local_delay_time,
                                  json);
     StoreDurationToJsonIfNotZero("local_pending_time", this->local_pending_time,
                                  json);
     StoreDurationToJsonIfNotZero("local_run_time", this->local_run_time, json);
-    StoreIntToJsonIfNotZero("local_mem_kb", local_mem_kb(), json);
+    StoreIntToJsonIfNotZero("local_mem_kb", exec_log.local_mem_kb(), json);
     StoreDurationToJsonIfNotZero("local_output_file_time",
                                  this->total_local_output_file_time, json);
-    StoreInt64ToJsonIfNotZero("local_output_file_size",
-                              SumRepeatedInt32(local_output_file_size()), json);
+    StoreInt64ToJsonIfNotZero(
+        "local_output_file_size",
+        SumRepeatedInt32(exec_log.local_output_file_size()), json);
 
     StoreInt64ToJsonIfNotZero("output_file_size",
-                              SumRepeatedInt32(output_file_size()), json);
-    StoreInt64ToJsonIfNotZero("chunk_resp_size",
-                              SumRepeatedInt32(chunk_resp_size()), json);
+                              SumRepeatedInt32(exec_log.output_file_size()),
+                              json);
+    StoreInt64ToJsonIfNotZero(
+        "chunk_resp_size", SumRepeatedInt32(exec_log.chunk_resp_size()), json);
     StoreInt64ToJsonIfNotZero("output_file_rpc", this->output_file_rpc, json);
 
     StoreDurationToJsonIfNotZero("output_file_rpc_req_build_time",
@@ -370,11 +378,12 @@ void CompileStats::DumpToJson(Json::Value* json,
                                  this->total_rbe_execution_time, json);
 
     StoreArrayToJsonIfNotEmpty("exec_request_retry_reason",
-                               exec_request_retry_reason().begin(),
-                               exec_request_retry_reason().end(),
+                               exec_log.exec_request_retry_reason().begin(),
+                               exec_log.exec_request_retry_reason().end(),
                                json);
-    StoreStringToJsonIfNotEmpty("cwd", cwd(), json);
-    StoreArrayToJsonIfNotEmpty("env", env().begin(), env().end(), json);
+    StoreStringToJsonIfNotEmpty("cwd", exec_log.cwd(), json);
+    StoreArrayToJsonIfNotEmpty("env", exec_log.env().begin(),
+                               exec_log.env().end(), json);
   }
 }
 
@@ -403,8 +412,8 @@ void CompileStats::StoreStatsInExecResp(ExecResp* resp) const {
   resp->set_compiler_proxy_local_run_time(
       absl::ToDoubleSeconds(this->local_run_time));
 
-  resp->set_compiler_proxy_goma_error(goma_error());
-  resp->set_compiler_proxy_exec_request_retry(this->exec_request_retry());
+  resp->set_compiler_proxy_goma_error(exec_log.goma_error());
+  resp->set_compiler_proxy_exec_request_retry(exec_log.exec_request_retry());
 }
 
 }  // namespace devtools_goma

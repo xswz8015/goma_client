@@ -92,35 +92,36 @@ void InitCompileStatsForTask(const CompileService& service,
                              int task_id,
                              CompileStats* stats) {
   for (const auto& arg : req.arg())
-    stats->add_arg(arg);
+    stats->exec_log.add_arg(arg);
   for (const auto& env : req.env())
-    stats->add_env(env);
-  stats->set_cwd(req.cwd());
+    stats->exec_log.add_env(env);
+  stats->exec_log.set_cwd(req.cwd());
 
   if (service.CanSendUserInfo()) {
-    stats->set_username(service.username());
-    stats->set_nodename(service.nodename());
+    stats->exec_log.set_username(service.username());
+    stats->exec_log.set_nodename(service.nodename());
     const std::string& service_account_id = service.service_account_id();
     const std::string& oauth2_email = service.oauth2_email();
     if (!service_account_id.empty()) {
-      stats->set_service_account_id(service_account_id);
+      stats->exec_log.set_service_account_id(service_account_id);
     }
     if (!oauth2_email.empty()) {
-      stats->set_oauth2_email(oauth2_email);
+      stats->exec_log.set_oauth2_email(oauth2_email);
     }
   }
 
   if (req.requester_info().has_build_id()) {
-    stats->set_build_id(req.requester_info().build_id());
+    stats->exec_log.set_build_id(req.requester_info().build_id());
     LOG(INFO) << "Task:" << task_id << " build_id:"
               << req.requester_info().build_id();
   }
 
   stats->gomacc_req_size = rpc.gomacc_req_size();
-  stats->set_port(rpc.server_port());
+  stats->exec_log.set_port(rpc.server_port());
   // TODO: Convert field to protobuf/timestamp.
-  stats->set_compiler_proxy_start_time(absl::ToTimeT(service.start_time()));
-  stats->set_task_id(task_id);
+  stats->exec_log.set_compiler_proxy_start_time(
+      absl::ToTimeT(service.start_time()));
+  stats->exec_log.set_task_id(task_id);
 }
 
 }  // anonymous namespace
@@ -256,7 +257,7 @@ void CompileService::CheckLongActiveTasks() {
       LOG(INFO) << "long active task: " << task->trace_id()
                 << " state=" << task->state() << " abort=" << task->abort()
                 << " elapsed_time=" << elapsed_time
-                << " stats=" << task->stats().DebugString();
+                << " stats=" << task->stats().exec_log.DebugString();
     }
   }
 }
@@ -340,7 +341,7 @@ void CompileService::CompileTaskDone(CompileTask* task) {
   histogram_->UpdateCompileStat(task->stats());
   rbe_stats_mgr_.Accumulate(task);
   if (log_service_client_.get())
-    log_service_client_->SaveExecLog(task->stats());
+    log_service_client_->SaveExecLog(task->stats().exec_log);
 
   std::vector<CompileTask*> start_tasks;
   std::vector<CompileTask*> deref_tasks;
@@ -369,9 +370,9 @@ void CompileService::CompileTaskDone(CompileTask* task) {
       finished_tasks_.pop_back();
     }
     num_include_processor_total_files_ +=
-        task->stats().include_preprocess_total_files();
+        task->stats().exec_log.include_preprocess_total_files();
     num_include_processor_skipped_files_ +=
-        task->stats().include_preprocess_skipped_files();
+        task->stats().exec_log.include_preprocess_skipped_files();
     include_processor_total_wait_time_ +=
         task->stats().include_processor_wait_time;
     include_processor_total_run_time_ +=
@@ -394,19 +395,19 @@ void CompileService::CompileTaskDone(CompileTask* task) {
         ++num_exec_goma_aborted_;
         break;
     }
-    num_exec_goma_retry_ += task->stats().exec_request_retry();
+    num_exec_goma_retry_ += task->stats().exec_log.exec_request_retry();
 
-    num_file_requested_ += task->stats().num_total_input_file();
+    num_file_requested_ += task->stats().exec_log.num_total_input_file();
     num_file_uploaded_ +=
-        SumRepeatedInt32(task->stats().num_uploading_input_file());
+        SumRepeatedInt32(task->stats().exec_log.num_uploading_input_file());
     num_file_missed_ +=
-        SumRepeatedInt32(task->stats().num_missing_input_file());
+        SumRepeatedInt32(task->stats().exec_log.num_missing_input_file());
     num_file_dropped_ +=
-        SumRepeatedInt32(task->stats().num_dropped_input_file());
+        SumRepeatedInt32(task->stats().exec_log.num_dropped_input_file());
 
     if (task->local_run()) {
       ++num_exec_local_run_;
-      ++local_run_reason_[task->stats().local_run_reason()];
+      ++local_run_reason_[task->stats().exec_log.local_run_reason()];
     }
     if (task->local_killed()) {
       ++num_exec_local_killed_;
@@ -425,7 +426,7 @@ void CompileService::CompileTaskDone(CompileTask* task) {
           reached_max_active_fail_fallback_time_.reset();
         }
       }
-      if (task->stats().compiler_proxy_error())
+      if (task->stats().exec_log.compiler_proxy_error())
         ++num_exec_compiler_proxy_failure_;
       task->Ref();
       failed_tasks_.push_front(task);

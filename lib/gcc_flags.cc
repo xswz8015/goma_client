@@ -428,6 +428,11 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
         ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
     llvm_parser.AddFlag("tsan-ignorelist")
         ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
+    llvm_parser.AddFlag("enable-ml-inliner");
+    llvm_parser.AddFlag("training-log")
+        ->SetValueOutputWithCallback(nullptr, &output_files_);
+    llvm_parser.AddFlag("ml-inliner-model-under-training")
+        ->SetValueOutputWithCallback(nullptr, &optional_input_filenames_);
     llvm_parser.Parse(llvm_options);
   }
   // Any files specified by -fsanitize-blacklist must exist in goma server

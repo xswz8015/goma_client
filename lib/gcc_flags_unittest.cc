@@ -2992,6 +2992,30 @@ TEST_F(GCCFlagsTest, ClangCoveargeMapping) {
               testing::Not(testing::Contains("-fcoverage-mapping")));
 }
 
+TEST_F(GCCFlagsTest, ClangMLInlinerFlags) {
+  std::vector<std::string> args{
+      "clang++",
+      "-mllvm",
+      "-enable-ml-inliner=development",
+      "-mllvm",
+      "-training-log=traning.log",
+      "-mllvm",
+      "-ml-inliner-model-under-training=tf.policy",
+      "-c",
+      "hello.cc",
+      "-fdebug-compilation-dir",
+      ".",
+      "-no-canonical-prefixes",
+  };
+  GCCFlags flags(args, "/tmp");
+  EXPECT_TRUE(flags.is_successful());
+  EXPECT_EQ(std::vector<std::string>{"hello.cc"}, flags.input_filenames());
+  EXPECT_EQ(std::vector<std::string>{"tf.policy"},
+            flags.optional_input_filenames());
+  EXPECT_EQ((std::vector<std::string>{"hello.o", "traning.log"}),
+            flags.output_files());
+}
+
 TEST_F(GCCFlagsTest, ClangNoCoveargeMapping) {
   std::vector<std::string> args{
       "clang++",  "-c",

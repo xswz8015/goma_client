@@ -2,19 +2,16 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "aee8160f9ac4d833283a35f1088f94c17d523a16",
+     "clang_revision": "c4699251c482517d8ef49fdddc87bd72630cde5a",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
 deps = {
-     # protobuf > 3.9.1
+     # protobuf > 3.15.6
      # TODO: use released proto including
      # https://github.com/protocolbuffers/protobuf/blob/ee4f2492ea4e7ff120f68a792af870ee30435aa5/src/google/protobuf/io/zero_copy_stream.h#L122
-     # Note: When you update protobuf, you will need to update
-     # test/goma_data.pb.{h,cc}. Copying them from your output directory should
-     # work.
      "client/third_party/protobuf/protobuf":
-     "https://github.com/google/protobuf.git@7bff8393cab939bfbb9b5c69b3fe76b4d83c41ee",
+     "https://github.com/google/protobuf.git@6aa539bf0195f188ff86efe6fb8bfa2b676cdd46",
 
      # google-glog v0.4.0
      "client/third_party/glog":
@@ -44,7 +41,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@83a49939abb5a15508548ed1d33af8128d70cab5",
+     "https://boringssl.googlesource.com/boringssl@ae7c17868992ac2c64c46ba418d46cf75374054f",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":

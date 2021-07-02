@@ -28,16 +28,16 @@ TEST(StatsManager, Basic) {
   const auto spec1 = MakeCommandSpec("10.0");
   const auto spec2 = MakeCommandSpec("10.1");
   CompileStats stats1;
-  stats1.set_cache_hit(true);
+  stats1.exec_log.set_cache_hit(true);
   stats1.total_rbe_execution_time = absl::Seconds(1);
   CompileStats stats2;
-  stats2.set_cache_hit(false);
+  stats2.exec_log.set_cache_hit(false);
   stats2.total_rbe_execution_time = absl::Seconds(2);
   CompileStats stats3;
-  stats3.set_cache_hit(false);
+  stats3.exec_log.set_cache_hit(false);
   stats3.total_rbe_execution_time = absl::Seconds(3);
   CompileStats stats4;
-  stats4.set_cache_hit(false);
+  stats4.exec_log.set_cache_hit(false);
   stats4.total_rbe_execution_time = absl::Seconds(4);
 
   StatsManager stats_mgr;

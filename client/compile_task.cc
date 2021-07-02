@@ -323,8 +323,8 @@ CompileTask::CompileTask(CompileService* service, int id)
   ss << "Task:" << id_;
   trace_id_ = ss.str();
 
-  stats_->set_start_time(absl::ToTimeT(absl::Now()));
-  stats_->set_compiler_proxy_user_agent(kUserAgentString);
+  stats_->exec_log.set_start_time(absl::ToTimeT(absl::Now()));
+  stats_->exec_log.set_compiler_proxy_user_agent(kUserAgentString);
 }
 
 void CompileTask::Ref() {
@@ -373,7 +373,7 @@ void CompileTask::Start() {
   VLOG(1) << trace_id_ << " start";
   CHECK_EQ(INIT, state_);
   const absl::Duration pending_time = handler_timer_.GetDuration();
-  stats_->set_pending_time(DurationToIntMs(pending_time));
+  stats_->exec_log.set_pending_time(DurationToIntMs(pending_time));
   stats_->pending_time = pending_time;
 
   // We switched to new thread.
@@ -534,10 +534,12 @@ void CompileTask::Start() {
     RunSubProcess("gch hack");
     // we run both local and goma backend in parallel.
   } else if (!requester_env_.fallback()) {
-    stats_->set_local_run_reason("should not run under GOMA_FALLBACK=false");
+    stats_->exec_log.set_local_run_reason(
+        "should not run under GOMA_FALLBACK=false");
     LOG(INFO) << trace_id_ << " GOMA_FALLBACK=false";
   } else if (subproc_weight_ == SubProcessReq::HEAVY_WEIGHT) {
-    stats_->set_local_run_reason("should not start running heavy subproc.");
+    stats_->exec_log.set_local_run_reason(
+        "should not start running heavy subproc.");
   } else if (requester_env_.use_local()) {
     int num_pending_subprocs = SubProcessTask::NumPending();
     bool is_failed_input = false;
@@ -547,21 +549,23 @@ void CompileTask::Start() {
     const absl::Duration subproc_delay =
         service_->GetEstimatedSubprocessDelayTime();
     if (num_pending_subprocs == 0) {
-      stats_->set_local_run_reason("local idle");
+      stats_->exec_log.set_local_run_reason("local idle");
       SetupSubProcess();
     } else if (is_failed_input) {
-      stats_->set_local_run_reason("previous failed");
+      stats_->exec_log.set_local_run_reason("previous failed");
       SetupSubProcess();
       // TODO: RunSubProcess to run it soon?
     } else if (subproc_delay <= absl::ZeroDuration()) {
-      stats_->set_local_run_reason("slow goma");
+      stats_->exec_log.set_local_run_reason("slow goma");
       SetupSubProcess();
     } else if (!service_->http_client()->IsHealthyRecently()) {
-      stats_->set_local_run_reason("goma unhealthy");
+      stats_->exec_log.set_local_run_reason("goma unhealthy");
       SetupSubProcess();
     } else {
-      stats_->set_local_run_reason("should not run while delaying subproc");
-      stats_->set_local_delay_time(absl::ToInt64Milliseconds(subproc_delay));
+      stats_->exec_log.set_local_run_reason(
+          "should not run while delaying subproc");
+      stats_->exec_log.set_local_delay_time(
+          absl::ToInt64Milliseconds(subproc_delay));
       stats_->local_delay_time = subproc_delay;
       VLOG(1) << trace_id_ << " subproc_delay=" << subproc_delay;
       DCHECK(delayed_setup_subproc_ == nullptr) << trace_id_ << " subproc";
@@ -575,12 +579,14 @@ void CompileTask::Start() {
                   &CompileTask::SetupSubProcess));
     }
   } else {
-    stats_->set_local_run_reason("should not run under GOMA_USE_LOCAL=false");
+    stats_->exec_log.set_local_run_reason(
+        "should not run under GOMA_USE_LOCAL=false");
     LOG(INFO) << trace_id_ << " GOMA_USE_LOCAL=false";
   }
   if (subproc_ != nullptr && ShouldStopGoma()) {
     state_ = LOCAL_RUN;
-    stats_->set_local_run_reason("slow goma, local run started in INIT");
+    stats_->exec_log.set_local_run_reason(
+        "slow goma, local run started in INIT");
     return;
   }
   ProcessSetup();
@@ -653,7 +659,8 @@ void CompileTask::ProcessSetup() {
   state_ = SETUP;
   if (ShouldStopGoma()) {
     state_ = LOCAL_RUN;
-    stats_->set_local_run_reason("slow goma, local run started in SETUP");
+    stats_->exec_log.set_local_run_reason(
+        "slow goma, local run started in SETUP");
     return;
   }
   FillCompilerInfo();
@@ -685,7 +692,7 @@ void CompileTask::ProcessFileRequest() {
   const absl::Duration fileload_pending_time =
       file_request_timer_.GetDuration();
   stats_->include_fileload_pending_time += fileload_pending_time;
-  stats_->add_include_fileload_pending_time(
+  stats_->exec_log.add_include_fileload_pending_time(
       DurationToIntMs(fileload_pending_time));
   file_request_timer_.Start();
   if (abort_) {
@@ -702,7 +709,8 @@ void CompileTask::ProcessFileRequest() {
   if (ShouldStopGoma()) {
     ProcessPendingFileRequest();
     state_ = LOCAL_RUN;
-    stats_->set_local_run_reason("slow goma, local run started in FILE_REQ");
+    stats_->exec_log.set_local_run_reason(
+        "slow goma, local run started in FILE_REQ");
     return;
   }
   VLOG(1) << trace_id_
@@ -731,8 +739,8 @@ void CompileTask::ProcessFileRequest() {
   SetInputFileCallback();
   std::vector<OneshotClosure*> closures;
   const absl::Time now = absl::Now();
-  stats_->set_num_total_input_file(required_files_.size());
-  stats_->set_total_input_file_size(sum_of_required_file_size_);
+  stats_->exec_log.set_num_total_input_file(required_files_.size());
+  stats_->exec_log.set_total_input_file_size(sum_of_required_file_size_);
 
   for (const std::string& filename : required_files_) {
     ExecReq_Input* input = req_->add_input();
@@ -785,9 +793,9 @@ void CompileTask::ProcessFileRequest() {
       }
     }
     if (mtime.has_value() &&
-        *mtime > absl::FromTimeT(stats_->latest_input_mtime())) {
-      stats_->set_latest_input_filename(abs_filename);
-      stats_->set_latest_input_mtime(absl::ToTimeT(*mtime));
+        *mtime > absl::FromTimeT(stats_->exec_log.latest_input_mtime())) {
+      stats_->exec_log.set_latest_input_filename(abs_filename);
+      stats_->exec_log.set_latest_input_mtime(absl::ToTimeT(*mtime));
     }
     if (hash_key_is_ok) {
       input->set_hash_key(hash_key);
@@ -832,8 +840,8 @@ void CompileTask::ProcessFileRequest() {
     DCHECK_EQ(closures.size(), static_cast<size_t>(num_input_file_task_));
   }
   DCHECK_EQ(closures.size(), static_cast<size_t>(num_input_file_task_));
-  stats_->add_num_uploading_input_file(closures.size());
-  stats_->add_num_file_uploaded_during_exec_failure(
+  stats_->exec_log.add_num_uploading_input_file(closures.size());
+  stats_->exec_log.add_num_file_uploaded_during_exec_failure(
       interleave_uploaded_files_.size());
   if (closures.empty()) {
     MaybeRunInputFileCallback(false);
@@ -895,13 +903,14 @@ void CompileTask::ProcessFileRequestDone() {
   {
     int dropped = ShrinkExecReq(trace_id_, req_.get());
     if (dropped > 0) {
-      *stats_->mutable_num_uploading_input_file()->rbegin() -= dropped;
-      stats_->add_num_dropped_input_file(dropped);
+      *stats_->exec_log.mutable_num_uploading_input_file()->rbegin() -= dropped;
+      stats_->exec_log.add_num_dropped_input_file(dropped);
     }
   }
 
   const absl::Duration fileload_run_time = file_request_timer_.GetDuration();
-  stats_->add_include_fileload_run_time(DurationToIntMs(fileload_run_time));
+  stats_->exec_log.add_include_fileload_run_time(
+      DurationToIntMs(fileload_run_time));
   stats_->include_fileload_run_time += fileload_run_time;
 
   const absl::Duration include_fileload_time =
@@ -928,23 +937,25 @@ void CompileTask::ProcessFileRequestDone() {
       VLOG(1) << trace_id_ << " file request failed,"
               << " but subprocess running";
       state_ = LOCAL_RUN;
-      stats_->set_local_run_reason("fail goma, local run started in FILE_REQ");
+      stats_->exec_log.set_local_run_reason(
+          "fail goma, local run started in FILE_REQ");
       return;
     }
     AddErrorToResponse(TO_LOG, "Failed to process file request", true);
     if (service_->http_client()->IsHealthyRecently() &&
-        stats_->num_uploading_input_file_size() > 0 &&
-        stats_->num_uploading_input_file(
-            stats_->num_uploading_input_file_size() - 1) > 0) {
+        stats_->exec_log.num_uploading_input_file_size() > 0 &&
+        stats_->exec_log.num_uploading_input_file(
+            stats_->exec_log.num_uploading_input_file_size() - 1) > 0) {
       // TODO: don't retry for permanent error (no such file, etc).
-      stats_->set_exec_request_retry(stats_->exec_request_retry() + 1);
-      if (stats_->exec_request_retry() <= kMaxExecRetry) {
+      stats_->exec_log.set_exec_request_retry(
+          stats_->exec_log.exec_request_retry() + 1);
+      if (stats_->exec_log.exec_request_retry() <= kMaxExecRetry) {
         std::ostringstream ss;
         ss << "Failed to upload "
-           << stats_->num_uploading_input_file(
-               stats_->num_uploading_input_file_size() - 1)
+           << stats_->exec_log.num_uploading_input_file(
+                  stats_->exec_log.num_uploading_input_file_size() - 1)
            << " files";
-        stats_->add_exec_request_retry_reason(ss.str());
+        stats_->exec_log.add_exec_request_retry_reason(ss.str());
         LOG(INFO) << trace_id_ << " retry in FILE_REQ";
         resp_->clear_error_message();
 
@@ -981,8 +992,8 @@ void CompileTask::ProcessFileRequestDone() {
                                              resp_.get(),
                                              trace_id_)) {
       LOG(INFO) << trace_id_ << " lookup succeeded";
-      stats_->set_cache_hit(true);
-      stats_->set_cache_source(ExecLog::LOCAL_OUTPUT_CACHE);
+      stats_->exec_log.set_cache_hit(true);
+      stats_->exec_log.set_cache_source(ExecLog::LOCAL_OUTPUT_CACHE);
       ReleaseMemoryForExecReqInput(req_.get());
       state_ = LOCAL_OUTPUT;
       ProcessFileResponse();
@@ -1033,13 +1044,15 @@ void CompileTask::ProcessCallExec() {
   state_ = CALL_EXEC;
   if (ShouldStopGoma()) {
     state_ = LOCAL_RUN;
-    stats_->set_local_run_reason("slow goma, local run started in CALL_EXEC");
+    stats_->exec_log.set_local_run_reason(
+        "slow goma, local run started in CALL_EXEC");
     return;
   }
 
   if (req_->trace()) LOG(INFO) << trace_id_ << " requesting remote trace";
   rpc_call_timer_.Start();
-  req_->mutable_requester_info()->set_retry(stats_->exec_request_retry());
+  req_->mutable_requester_info()->set_retry(
+      stats_->exec_log.exec_request_retry());
   VLOG(2) << trace_id_
           << " request string to send:" << req_->DebugString();
   {
@@ -1065,7 +1078,7 @@ void CompileTask::ProcessCallExec() {
       (subproc_weight_ == SubProcessReq::HEAVY_WEIGHT) &&
       subproc_ == nullptr) {
     // now, it's ok to run subprocess.
-    stats_->set_local_run_reason("slow goma linking");
+    stats_->exec_log.set_local_run_reason("slow goma linking");
     SetupSubProcess();
   }
 }
@@ -1091,17 +1104,18 @@ void CompileTask::ProcessCallExecDone() {
   resp_->clear_error_message();
 
   const absl::Duration rpc_call_timer_duration = rpc_call_timer_.GetDuration();
-  stats_->add_rpc_call_time(DurationToIntMs(rpc_call_timer_duration));
+  stats_->exec_log.add_rpc_call_time(DurationToIntMs(rpc_call_timer_duration));
   stats_->total_rpc_call_time += rpc_call_timer_duration;
 
   stats_->AddStatsFromHttpStatus(*http_rpc_status_);
   stats_->AddStatsFromExecResp(*resp_);
 
-  stats_->set_cache_hit(resp_->cache_hit() == ExecResp::LOCAL_OUTPUT_CACHE ||
-                        (http_rpc_status_->finished && resp_->has_cache_hit() &&
-                         resp_->cache_hit() != ExecResp::NO_CACHE));
+  stats_->exec_log.set_cache_hit(
+      resp_->cache_hit() == ExecResp::LOCAL_OUTPUT_CACHE ||
+      (http_rpc_status_->finished && resp_->has_cache_hit() &&
+       resp_->cache_hit() != ExecResp::NO_CACHE));
 
-  if (stats_->cache_hit()) {
+  if (stats_->exec_log.cache_hit()) {
     if (resp_->cache_hit() == ExecResp::NO_CACHE) {
       LOG(ERROR) << trace_id_ << " cache_hit, but NO_CACHE";
     } else {
@@ -1110,7 +1124,7 @@ void CompileTask::ProcessCallExecDone() {
         LOG(ERROR) << trace_id_
                    << " unknown cache_source=" << resp_->cache_hit();
       }
-      stats_->set_cache_source(cache_source);
+      stats_->exec_log.set_cache_source(cache_source);
     }
   }
 
@@ -1127,7 +1141,7 @@ void CompileTask::ProcessCallExecDone() {
     return;
   }
 
-  stats_->set_network_failure_type(
+  stats_->exec_log.set_network_failure_type(
       CompileStats::GetNetworkFailureTypeFromHttpStatus(*http_rpc_status_));
 
   const int err = http_rpc_status_->err;
@@ -1141,7 +1155,8 @@ void CompileTask::ProcessCallExecDone() {
       // because the reponse will be replied from cache with high probability.
       LOG(WARNING) << trace_id_ << " goma failed, but subprocess running.";
       state_ = LOCAL_RUN;
-      stats_->set_local_run_reason("fail goma, local run started in CALL_EXEC");
+      stats_->exec_log.set_local_run_reason(
+          "fail goma, local run started in CALL_EXEC");
       return;
     }
     AddErrorToResponse(TO_LOG, "", true);
@@ -1184,14 +1199,14 @@ void CompileTask::ProcessCallExecDone() {
         << " but retry_reason set:" << retry_reason;
   } else if (!retry_reason.empty()) {
     if (service_->http_client()->IsHealthyRecently()) {
-      LOG(INFO) << trace_id_ << " exec retry:"
-                << stats_->exec_request_retry()
-                << " error=" << resp_->error()
-                << " " << retry_reason;
-      stats_->set_exec_request_retry(stats_->exec_request_retry() + 1);
-      if (stats_->exec_request_retry() <= kMaxExecRetry &&
+      LOG(INFO) << trace_id_
+                << " exec retry:" << stats_->exec_log.exec_request_retry()
+                << " error=" << resp_->error() << " " << retry_reason;
+      stats_->exec_log.set_exec_request_retry(
+          stats_->exec_log.exec_request_retry() + 1);
+      if (stats_->exec_log.exec_request_retry() <= kMaxExecRetry &&
           !(resp_->has_error() && IsFatalError(resp_->error()))) {
-        stats_->add_exec_request_retry_reason(retry_reason);
+        stats_->exec_log.add_exec_request_retry_reason(retry_reason);
         LOG(INFO) << trace_id_ << " retry in CALL_EXEC";
         resp_->clear_error_message();
         resp_->clear_error();
@@ -1221,18 +1236,16 @@ void CompileTask::ProcessCallExecDone() {
         AddErrorToResponse(
             TO_LOG,
             absl::StrCat("no retry: exec error=", resp_->error(),
-                         " retry=", stats_->exec_request_retry(),
-                         " reason=", retry_reason,
-                         " http=healthy"),
+                         " retry=", stats_->exec_log.exec_request_retry(),
+                         " reason=", retry_reason, " http=healthy"),
             false);
       }
     } else {
       AddErrorToResponse(
           TO_LOG,
           absl::StrCat("no retry: exec error=", resp_->error(),
-                       " retry=", stats_->exec_request_retry(),
-                       " reason=", retry_reason,
-                       " http=unhealthy"),
+                       " retry=", stats_->exec_log.exec_request_retry(),
+                       " reason=", retry_reason, " http=unhealthy"),
           false);
     }
     CheckNoMatchingCommandSpec(retry_reason);
@@ -1273,18 +1286,17 @@ void CompileTask::ProcessFileResponse() {
   state_ = FILE_RESP;
   if (ShouldStopGoma()) {
     state_ = LOCAL_RUN;
-    stats_->set_local_run_reason("slow goma, local run started in FILE_RESP");
+    stats_->exec_log.set_local_run_reason(
+        "slow goma, local run started in FILE_RESP");
     return;
   }
   file_response_timer_.Start();
   if (resp_->missing_input_size() > 0) {
-    stats_->add_num_missing_input_file(resp_->missing_input_size());
-    LOG(WARNING) << trace_id_
-                 << " request didn't have full content:"
-                 << resp_->missing_input_size()
-                 << " in "
+    stats_->exec_log.add_num_missing_input_file(resp_->missing_input_size());
+    LOG(WARNING) << trace_id_ << " request didn't have full content:"
+                 << resp_->missing_input_size() << " in "
                  << required_files_.size()
-                 << " : retry=" << stats_->exec_request_retry();
+                 << " : retry=" << stats_->exec_log.exec_request_retry();
     for (const auto& filename : resp_->missing_input()) {
       std::ostringstream ss;
       ss << "Required file not on goma cache:" << filename;
@@ -1308,7 +1320,8 @@ void CompileTask::ProcessFileResponse() {
     ProcessFileResponseDone();
     return;
   }
-  if (stats_->exec_request_retry() == 0 && service_->need_to_send_content()) {
+  if (stats_->exec_log.exec_request_retry() == 0 &&
+      service_->need_to_send_content()) {
     LOG(INFO) << trace_id_ << " no missing files."
               << " Turn off to force sending old file contents";
     service_->SetNeedToSendContent(false);
@@ -1375,7 +1388,7 @@ void CompileTask::ProcessFileResponse() {
 
     exec_output_files_.push_back(output_filename);
     std::string filename =
-        file::JoinPathRespectAbsolute(stats_->cwd(), output_filename);
+        file::JoinPathRespectAbsolute(stats_->exec_log.cwd(), output_filename);
     // TODO: check output paths matches with flag's output filenames?
     if (service_->enable_gch_hack() && absl::EndsWith(filename, ".gch"))
       filename += ".goma";
@@ -1434,7 +1447,7 @@ void CompileTask::ProcessFileResponse() {
                 &CompileTask::OutputFileTaskFinished,
                 std::move(output_file_task))));
   }
-  stats_->set_num_output_file(closures.size());
+  stats_->exec_log.set_num_output_file(closures.size());
   if (closures.empty()) {
     MaybeRunOutputFileCallback(-1, false);
   } else {
@@ -1452,7 +1465,7 @@ void CompileTask::ProcessFileResponseDone() {
 
   const absl::Duration file_response_time = file_response_timer_.GetDuration();
   stats_->file_response_time += file_response_time;
-  stats_->set_file_response_time(DurationToIntMs(file_response_time));
+  stats_->exec_log.set_file_response_time(DurationToIntMs(file_response_time));
 
   if (abort_) {
     ProcessFinished("aborted in file resp");
@@ -1471,16 +1484,16 @@ void CompileTask::ProcessFileResponseDone() {
         VLOG(1) << trace_id_ << " failed to process file response,"
                 << " but subprocess running";
         state_ = LOCAL_RUN;
-        stats_->set_local_run_reason(
+        stats_->exec_log.set_local_run_reason(
             "fail goma, local run started in FILE_RESP");
         return;
       }
 
       // For missing input error, we don't make it as error but warning
       // when this is the first try and we will retry it later.
-      bool should_error = stats_->exec_request_retry() > 0;
+      bool should_error = stats_->exec_log.exec_request_retry() > 0;
       std::ostringstream ss;
-      ss << "Try:" << stats_->exec_request_retry() << ": ";
+      ss << "Try:" << stats_->exec_log.exec_request_retry() << ": ";
       if (resp_->missing_input_size() > 0) {
         // goma server replied with missing inputs.
         // retry: use the list of missing files in response to fill in
@@ -1488,8 +1501,7 @@ void CompileTask::ProcessFileResponseDone() {
         ss << "Missing " << resp_->missing_input_size() << " input files.";
       } else {
         should_error = true;
-        ss << "Failed to download "
-           << stats_->num_output_file()
+        ss << "Failed to download " << stats_->exec_log.num_output_file()
            << " files"
            << " in " << (cache_hit() ? "cached" : "no-cached") << "result";
       }
@@ -1505,8 +1517,9 @@ void CompileTask::ProcessFileResponseDone() {
                         << " health_status="
                         << service_->http_client()->GetHealthStatusMessage();
       } else {
-        stats_->set_exec_request_retry(stats_->exec_request_retry() + 1);
-        do_retry = stats_->exec_request_retry() <= kMaxExecRetry;
+        stats_->exec_log.set_exec_request_retry(
+            stats_->exec_log.exec_request_retry() + 1);
+        do_retry = stats_->exec_log.exec_request_retry() <= kMaxExecRetry;
         if (!do_retry) {
           no_retry_reason << "too many retry";
         }
@@ -1525,7 +1538,7 @@ void CompileTask::ProcessFileResponseDone() {
         VLOG(2) << trace_id_
                 << " Failed to process file response (we will retry):"
                 << resp_->DebugString();
-        stats_->add_exec_request_retry_reason(ss.str());
+        stats_->exec_log.add_exec_request_retry_reason(ss.str());
         LOG(INFO) << trace_id_ << " retry in FILE_RESP";
         resp_->clear_error_message();
         TryProcessFileRequest();
@@ -1637,7 +1650,7 @@ void CompileTask::ProcessFinished(const std::string& msg) {
     } else {
       VLOG(1) << trace_id_ << " success or gomacc killed.";
     }
-    stats_->clear_local_run_reason();
+    stats_->exec_log.clear_local_run_reason();
     if (delayed_setup_subproc_ != nullptr) {
       delayed_setup_subproc_->Cancel();
       delayed_setup_subproc_ = nullptr;
@@ -2047,7 +2060,7 @@ void CompileTask::CommitOutput(bool use_remote) {
     // According to our measurement, this doesn't have
     // measureable performance penalty.
     // see b/24388745
-    if (use_remote && stats_->cache_hit() &&
+    if (use_remote && stats_->exec_log.cache_hit() &&
         flags_->type() == CompilerFlagType::Clexe) {
       // We should not rewrite coff if /Brepro or something similar is set.
       // See b/72768585
@@ -2134,14 +2147,14 @@ void CompileTask::ReplyResponse(const std::string& msg) {
 
   if (resp_->has_result()) {
     VLOG(1) << trace_id_ << " exit=" << resp_->result().exit_status();
-    stats_->set_exec_exit_status(resp_->result().exit_status());
+    stats_->exec_log.set_exec_exit_status(resp_->result().exit_status());
   } else {
     LOG(WARNING) << trace_id_ << " empty result";
-    stats_->set_exec_exit_status(-256);
+    stats_->exec_log.set_exec_exit_status(-256);
   }
   if (service_->local_run_for_failed_input() && flags_.get() != nullptr) {
     service_->RecordInputResult(flags_->input_filenames(),
-                                stats_->exec_exit_status() == 0);
+                                stats_->exec_log.exec_exit_status() == 0);
   }
   if (resp_->error_message_size() != 0) {
     std::vector<std::string> errs(resp_->error_message().begin(),
@@ -2167,9 +2180,9 @@ void CompileTask::ReplyResponse(const std::string& msg) {
         FROM_HERE,
         caller_thread_id_, done, WorkerThread::PRIORITY_IMMEDIATE);
   }
-  if (!canceled_ && stats_->exec_exit_status() != 0) {
+  if (!canceled_ && stats_->exec_log.exec_exit_status() != 0) {
     if (exit_status_ == 0 && subproc_exit_status_ == 0) {
-      stats_->set_compiler_proxy_error(true);
+      stats_->exec_log.set_compiler_proxy_error(true);
       LOG(ERROR) << trace_id_ << " compilation failure "
                  << "due to compiler_proxy error.";
     }
@@ -2184,11 +2197,11 @@ void CompileTask::ReplyResponse(const std::string& msg) {
   response_code_ = http_rpc_status_->http_return_code;
 
   stats_->handler_time = handler_timer_.GetDuration();
-  stats_->set_handler_time(DurationToIntMs(stats_->handler_time));
+  stats_->exec_log.set_handler_time(DurationToIntMs(stats_->handler_time));
   gomacc_pid_ = SubProcessState::kInvalidPid;
 
   if (stats_->handler_time > absl::Minutes(5)) {
-    ExecLog stats = *stats_;
+    ExecLog stats = stats_->exec_log;
     // clear non-stats fields.
     stats.clear_username();
     stats.clear_nodename();
@@ -2477,9 +2490,9 @@ bool CompileTask::FindLocalCompilerPath() {
       LOG(ERROR) << trace_id_ << " local_compiler_path should not be basename:"
                  << local_compiler;
     } else if (service_->FindLocalCompilerPath(
-                   requester_env_.gomacc_path(), local_compiler, stats_->cwd(),
-                   requester_env_.local_path(), pathext_, &local_compiler,
-                   &local_path_)) {
+                   requester_env_.gomacc_path(), local_compiler,
+                   stats_->exec_log.cwd(), requester_env_.local_path(),
+                   pathext_, &local_compiler, &local_path_)) {
       // Since compiler_info resolves relative path to absolute path,
       // we do not need to make local_comiler_path to absolute path
       // any more. (b/6340137, b/28088682)
@@ -2512,13 +2525,9 @@ bool CompileTask::FindLocalCompilerPath() {
 
   std::string local_compiler_path;
   if (service_->FindLocalCompilerPath(
-          requester_env_.gomacc_path(),
-          flags_->compiler_base_name(),
-          stats_->cwd(),
-          requester_env_.local_path(),
-          pathext_,
-          &local_compiler_path,
-          &local_path_)) {
+          requester_env_.gomacc_path(), flags_->compiler_base_name(),
+          stats_->exec_log.cwd(), requester_env_.local_path(), pathext_,
+          &local_compiler_path, &local_path_)) {
     req_->mutable_command_spec()->set_local_compiler_path(
           local_compiler_path);
     return true;
@@ -2628,7 +2637,7 @@ bool CompileTask::ShouldStopGoma() const {
     if (service_->local_run_preference() >= state_)
       return true;
   }
-  if (stats_->exec_request_retry() > 1) {
+  if (stats_->exec_log.exec_request_retry() > 1) {
     int num_pending = SubProcessTask::NumPending();
     // Prefer local when pendings are few.
     return num_pending <= service_->max_subprocs_pending();
@@ -2648,7 +2657,8 @@ void CompileTask::FillCompilerInfo() {
 
   compiler_info_timer_.Start();
 
-  std::vector<std::string> key_envs(stats_->env().begin(), stats_->env().end());
+  std::vector<std::string> key_envs(stats_->exec_log.env().begin(),
+                                    stats_->exec_log.env().end());
   std::vector<std::string> run_envs(key_envs);
   if (!local_path_.empty())
     run_envs.push_back("PATH=" + local_path_);
@@ -2689,7 +2699,8 @@ void CompileTask::FillCompilerInfoDone(
   CHECK_EQ(SETUP, state_);
 
   const absl::Duration compiler_info_time = compiler_info_timer_.GetDuration();
-  stats_->set_compiler_info_process_time(DurationToIntMs(compiler_info_time));
+  stats_->exec_log.set_compiler_info_process_time(
+      DurationToIntMs(compiler_info_time));
   stats_->compiler_info_process_time = compiler_info_time;
   std::ostringstream ss;
   ss << " cache_hit=" << param->cache_hit
@@ -2765,8 +2776,8 @@ void CompileTask::FillCompilerInfoDone(
   ModifyRequestEnvs();
   UpdateCommandSpec();
   UpdateRequesterInfo();
-  stats_->set_command_version(req_->command_spec().version());
-  stats_->set_command_target(req_->command_spec().target());
+  stats_->exec_log.set_command_version(req_->command_spec().version());
+  stats_->exec_log.set_command_target(req_->command_spec().target());
 
   UpdateRequiredFiles();
 }
@@ -2801,8 +2812,8 @@ void CompileTask::UpdateRequiredFilesDone(bool ok) {
     required_files_.insert(input_filename);
   }
   for (const auto& opt_input_filename: flags_->optional_input_filenames()) {
-    const std::string& abs_filename =
-        file::JoinPathRespectAbsolute(stats_->cwd(), opt_input_filename);
+    const std::string& abs_filename = file::JoinPathRespectAbsolute(
+        stats_->exec_log.cwd(), opt_input_filename);
     if (access(abs_filename.c_str(), R_OK) == 0) {
       required_files_.insert(opt_input_filename);
     } else {
@@ -2832,9 +2843,10 @@ void CompileTask::UpdateRequiredFilesDone(bool ok) {
   }
 
   const absl::Duration include_preprocess_time = include_timer_.GetDuration();
-  stats_->set_include_preprocess_time(DurationToIntMs(include_preprocess_time));
+  stats_->exec_log.set_include_preprocess_time(
+      DurationToIntMs(include_preprocess_time));
   stats_->include_preprocess_time = include_preprocess_time;
-  stats_->set_depscache_used(depscache_used_);
+  stats_->exec_log.set_depscache_used(depscache_used_);
 
   LOG_IF(WARNING, stats_->include_processor_run_time > absl::Seconds(1))
       << trace_id_ << " SLOW run IncludeProcessor"
@@ -2985,7 +2997,7 @@ static void FixSystemLibraryPath(const std::vector<std::string>& library_paths,
 void CompileTask::UpdateExpandedArgs() {
   for (const auto& expanded_arg : flags_->expanded_args()) {
     req_->add_expanded_arg(expanded_arg);
-    stats_->add_expanded_arg(expanded_arg);
+    stats_->exec_log.add_expanded_arg(expanded_arg);
   }
 }
 
@@ -3353,7 +3365,7 @@ void CompileTask::RunIncludeProcessor(
 
   const absl::Duration include_processor_wait_time =
       include_wait_timer_.GetDuration();
-  stats_->set_include_processor_wait_time(
+  stats_->exec_log.set_include_processor_wait_time(
       DurationToIntMs(include_processor_wait_time));
   stats_->include_processor_wait_time = include_processor_wait_time;
 
@@ -3384,7 +3396,7 @@ void CompileTask::RunIncludeProcessor(
           trace_id_, *flags_, compiler_info_state_.get()->info(),
           req_->command_spec(), request_param->file_stat_cache.get());
   const absl::Duration include_processor_run_time = include_timer.GetDuration();
-  stats_->set_include_processor_run_time(
+  stats_->exec_log.set_include_processor_run_time(
       DurationToIntMs(include_processor_run_time));
   stats_->include_processor_run_time = include_processor_run_time;
 
@@ -3421,11 +3433,11 @@ void CompileTask::RunIncludeProcessorDone(
   }
 
   if (response_param->result.total_files) {
-    stats_->set_include_preprocess_total_files(
+    stats_->exec_log.set_include_preprocess_total_files(
         *response_param->result.total_files);
   }
   if (response_param->result.skipped_files) {
-    stats_->set_include_preprocess_skipped_files(
+    stats_->exec_log.set_include_preprocess_skipped_files(
         *response_param->result.skipped_files);
   }
 
@@ -3494,9 +3506,9 @@ void CompileTask::InputFileTaskFinished(InputFileTask* input_file_task) {
   const absl::optional<absl::Time>& mtime = input_file_task->mtime();
   VLOG(1) << trace_id_ << " input done:" << filename;
   if (mtime.has_value() &&
-      *mtime > absl::FromTimeT(stats_->latest_input_mtime())) {
-    stats_->set_latest_input_filename(filename);
-    stats_->set_latest_input_mtime(absl::ToTimeT(*mtime));
+      *mtime > absl::FromTimeT(stats_->exec_log.latest_input_mtime())) {
+    stats_->exec_log.set_latest_input_filename(filename);
+    stats_->exec_log.set_latest_input_mtime(absl::ToTimeT(*mtime));
   }
   if (!input_file_task->success()) {
     AddErrorToResponse(TO_LOG, "Create file blob failed for:" + filename, true);
@@ -3505,9 +3517,9 @@ void CompileTask::InputFileTaskFinished(InputFileTask* input_file_task) {
     return;
   }
   DCHECK(!hash_key.empty()) << filename;
-  stats_->add_input_file_time(
+  stats_->exec_log.add_input_file_time(
       DurationToIntMs(input_file_task->timer().GetDuration()));
-  stats_->add_input_file_size(file_size);
+  stats_->exec_log.add_input_file_size(file_size);
   if (!input_file_task->UpdateInputInTask(this)) {
     LOG(ERROR) << trace_id_ << " bad input data "
                << filename;
@@ -3566,7 +3578,7 @@ void CompileTask::CheckCommandSpec() {
        << " local:" << req_command_spec.name()
        << " remote:" << resp_command_spec.name();
     AddErrorToResponse(TO_LOG, ss.str(), false);
-    stats_->set_exec_command_name_mismatch(message_on_mismatch);
+    stats_->exec_log.set_exec_command_name_mismatch(message_on_mismatch);
   }
   if (req_command_spec.target() != resp_command_spec.target()) {
     is_target_mismatch = true;
@@ -3575,21 +3587,21 @@ void CompileTask::CheckCommandSpec() {
        << " local:" << req_command_spec.target()
        << " remote:" << resp_command_spec.target();
     AddErrorToResponse(TO_LOG, ss.str(), false);
-    stats_->set_exec_command_target_mismatch(message_on_mismatch);
+    stats_->exec_log.set_exec_command_target_mismatch(message_on_mismatch);
   }
   if (req_command_spec.binary_hash() != resp_command_spec.binary_hash()) {
     is_binary_hash_mismatch = true;
     LOG(WARNING) << trace_id_ << " compiler binary hash mismatch:"
                  << " local:" << req_command_spec.binary_hash()
                  << " remote:" << resp_command_spec.binary_hash();
-    stats_->set_exec_command_binary_hash_mismatch(message_on_mismatch);
+    stats_->exec_log.set_exec_command_binary_hash_mismatch(message_on_mismatch);
   }
   if (req_command_spec.version() != resp_command_spec.version()) {
     is_version_mismatch = true;
     LOG(WARNING) << trace_id_ << " compiler version mismatch:"
                  << " local:" << req_command_spec.version()
                  << " remote:" << resp_command_spec.version();
-    stats_->set_exec_command_version_mismatch(message_on_mismatch);
+    stats_->exec_log.set_exec_command_version_mismatch(message_on_mismatch);
   }
   if (!IsSameSubprograms(*req_, *resp_)) {
     is_subprograms_mismatch = true;
@@ -3605,7 +3617,7 @@ void CompileTask::CheckCommandSpec() {
        << " subprogram:" << local_subprograms.str()
        << " but remote:" << CreateCommandVersionString(resp_command_spec)
        << " subprogram:" << remote_subprograms.str();
-    stats_->set_exec_command_subprograms_mismatch(ss.str());
+    stats_->exec_log.set_exec_command_subprograms_mismatch(ss.str());
   }
 
   if (service_->hermetic()) {
@@ -3666,9 +3678,9 @@ void CompileTask::CheckCommandSpec() {
     std::string error_message;
     bool set_error = false;
     if (service_->RecordCommandSpecBinaryHashMismatch(
-            stats_->exec_command_binary_hash_mismatch())) {
+            stats_->exec_log.exec_command_binary_hash_mismatch())) {
       error_message = "compiler binary hash mismatch: " +
-          stats_->exec_command_binary_hash_mismatch();
+                      stats_->exec_log.exec_command_binary_hash_mismatch();
     }
     if (service_->command_check_level() == "checksum") {
       set_error = true;
@@ -3679,7 +3691,7 @@ void CompileTask::CheckCommandSpec() {
         AddErrorToResponse(TO_LOG, "", true);
         resp_->mutable_result()->set_stderr_buffer(
             "compiler binary hash mismatch: " +
-            stats_->exec_command_binary_hash_mismatch() + "\n" +
+            stats_->exec_log.exec_command_binary_hash_mismatch() + "\n" +
             resp_->mutable_result()->stderr_buffer());
       }
       // ignore when other verify command mode.
@@ -3693,9 +3705,9 @@ void CompileTask::CheckCommandSpec() {
     std::string error_message;
     bool set_error = false;
     if (service_->RecordCommandSpecVersionMismatch(
-            stats_->exec_command_version_mismatch())) {
+            stats_->exec_log.exec_command_version_mismatch())) {
       error_message = "compiler version mismatch: " +
-                      stats_->exec_command_version_mismatch();
+                      stats_->exec_log.exec_command_version_mismatch();
     }
     if (service_->command_check_level() == "version") {
       set_error = true;
@@ -3706,7 +3718,7 @@ void CompileTask::CheckCommandSpec() {
         AddErrorToResponse(TO_LOG, "", true);
         resp_->mutable_result()->set_stderr_buffer(
             "compiler version mismatch: " +
-            stats_->exec_command_version_mismatch() + "\n" +
+            stats_->exec_log.exec_command_version_mismatch() + "\n" +
             resp_->mutable_result()->stderr_buffer());
       }
       // ignore when other verify command mode.
@@ -3822,7 +3834,7 @@ void CompileTask::CheckNoMatchingCommandSpec(const std::string& retry_reason) {
     ss << CreateCommandVersionString(resp_->result().command_spec());
   }
   ss << " subprogram: " << remote_subprograms.str();
-  stats_->set_exec_command_not_found(ss.str());
+  stats_->exec_log.set_exec_command_not_found(ss.str());
 
   if (service_->hermetic() && !what_missing.str().empty()) {
     std::ostringstream msg;
@@ -4104,12 +4116,12 @@ void CompileTask::LocalOutputFileTaskFinished(
   }
   const absl::Duration local_output_file_task_duration =
       local_output_file_task->timer().GetDuration();
-  stats_->add_local_output_file_time(
+  stats_->exec_log.add_local_output_file_time(
       DurationToIntMs(local_output_file_task_duration));
   stats_->total_local_output_file_time += local_output_file_task_duration;
 
   const FileStat& file_stat = local_output_file_task->file_stat();
-  stats_->add_local_output_file_size(file_stat.size);
+  stats_->exec_log.add_local_output_file_size(file_stat.size);
 }
 
 void CompileTask::MaybeRunLocalOutputFileCallback(bool task_finished) {
@@ -4177,9 +4189,10 @@ void CompileTask::SaveInfoFromInputOutput() {
   }
   // arg, env and expanded_arg are used for dumping ExecReq.
   // We should keep what we actually used instead of what came from gomacc.
-  *stats_->mutable_arg() = std::move(*req_->mutable_arg());
-  *stats_->mutable_env() = std::move(*req_->mutable_env());
-  *stats_->mutable_expanded_arg() = std::move(*req_->mutable_expanded_arg());
+  *stats_->exec_log.mutable_arg() = std::move(*req_->mutable_arg());
+  *stats_->exec_log.mutable_env() = std::move(*req_->mutable_env());
+  *stats_->exec_log.mutable_expanded_arg() =
+      std::move(*req_->mutable_expanded_arg());
   req_.reset();
   resp_.reset();
   flags_.reset();
@@ -4194,8 +4207,8 @@ void CompileTask::SetupSubProcess() {
           << SubProcessReq::Weight_Name(subproc_weight_);
   CHECK(BelongsToCurrentThread());
   CHECK(subproc_ == nullptr) << trace_id_ << " " << StateName(state_)
-                          << " pid=" << subproc_->started().pid()
-                          << stats_->local_run_reason();
+                             << " pid=" << subproc_->started().pid()
+                             << stats_->exec_log.local_run_reason();
   CHECK(!req_->command_spec().local_compiler_path().empty())
       << req_->DebugString();
   if (delayed_setup_subproc_ != nullptr) {
@@ -4205,8 +4218,8 @@ void CompileTask::SetupSubProcess() {
 
   std::vector<const char*> argv;
   argv.push_back(req_->command_spec().local_compiler_path().c_str());
-  for (int i = 1; i < stats_->arg_size(); ++i) {
-    argv.push_back(stats_->arg(i).c_str());
+  for (int i = 1; i < stats_->exec_log.arg_size(); ++i) {
+    argv.push_back(stats_->exec_log.arg(i).c_str());
   }
   argv.push_back(nullptr);
 
@@ -4240,7 +4253,7 @@ void CompileTask::SetupSubProcess() {
     subproc_stderr_ = file::JoinPath(service_->tmp_dir(), filenamebuf.str());
     req->set_stderr_filename(subproc_stderr_);
   }
-  for (const auto& env : stats_->env()) {
+  for (const auto& env : stats_->exec_log.env()) {
     req->add_env(env);
   }
   if (local_path_.empty()) {
@@ -4272,7 +4285,7 @@ void CompileTask::RunSubProcess(const std::string& reason) {
     LOG(WARNING) << trace_id_ << " subproc already finished.";
     return;
   }
-  stats_->set_local_run_reason(reason);
+  stats_->exec_log.set_local_run_reason(reason);
   subproc_->RequestRun();
   VLOG(1) << trace_id_ << " Run " << reason << " "
           << subproc_->req().DebugString();
@@ -4290,16 +4303,16 @@ void CompileTask::KillSubProcess() {
           << "->" << SubProcessState::State_Name(subproc_->state());
   if (local_killed_) {
     if (service_->dont_kill_subprocess()) {
-      stats_->set_local_run_reason("fast goma, but wait for local.");
+      stats_->exec_log.set_local_run_reason("fast goma, but wait for local.");
     } else {
-      stats_->set_local_run_reason("killed by fast goma");
+      stats_->exec_log.set_local_run_reason("killed by fast goma");
     }
   } else if (subproc_->started().pid() != SubProcessState::kInvalidPid) {
     // subproc was signaled but not waited yet.
-    stats_->set_local_run_reason("fast goma, local signaled");
+    stats_->exec_log.set_local_run_reason("fast goma, local signaled");
   } else {
     // subproc was initialized, but not yet started.
-    stats_->set_local_run_reason("fast goma, local not started");
+    stats_->exec_log.set_local_run_reason("fast goma, local not started");
   }
 }
 
@@ -4331,7 +4344,7 @@ void CompileTask::FinishSubProcess() {
       subproc_exit_status_ = subproc->terminated().status();
       // something failed after start of subproc. e.g. kill failed.
       if (subproc_exit_status_ < 0) {
-        stats_->set_compiler_proxy_error(true);
+        stats_->exec_log.set_compiler_proxy_error(true);
         LOG(ERROR) << trace_id_ << " subproc exec failure by goma"
                    << " pid=" << subproc->started().pid()
                    << " status=" << subproc_exit_status_
@@ -4343,14 +4356,14 @@ void CompileTask::FinishSubProcess() {
         local_run_failed = true;
       }
     }
-    stats_->set_local_pending_time(subproc->started().pending_ms());
+    stats_->exec_log.set_local_pending_time(subproc->started().pending_ms());
     stats_->local_pending_time =
         absl::Milliseconds(subproc->started().pending_ms());
 
-    stats_->set_local_run_time(subproc->terminated().run_ms());
+    stats_->exec_log.set_local_run_time(subproc->terminated().run_ms());
     stats_->local_run_time = absl::Milliseconds(subproc->terminated().run_ms());
 
-    stats_->set_local_mem_kb(subproc->terminated().mem_kb());
+    stats_->exec_log.set_local_mem_kb(subproc->terminated().mem_kb());
     VLOG(1) << trace_id_ << " subproc finished"
             << " pid=" << subproc->started().pid();
   } else {
@@ -4390,7 +4403,7 @@ void CompileTask::FinishSubProcess() {
   CHECK(result != nullptr) << trace_id_ << " state=" << state_;
   if (fail_fallback_ && local_run_ &&
       result->exit_status() != subproc->terminated().status())
-    stats_->set_goma_error(true);
+    stats_->exec_log.set_goma_error(true);
   result->set_exit_status(subproc->terminated().status());
   if (subproc->terminated().has_term_signal()) {
     std::ostringstream ss;
@@ -4415,7 +4428,7 @@ void CompileTask::FinishSubProcess() {
   if (fail_fallback_ && local_run_ &&
       !IsSameErrorMessage(orig_stdout, stdout_buffer, orig_stderr,
                           stderr_buffer)) {
-    stats_->set_goma_error(true);
+    stats_->exec_log.set_goma_error(true);
   }
 
   result->set_stdout_buffer(stdout_buffer);
@@ -4504,7 +4517,7 @@ void CompileTask::FinishSubProcess() {
 // ----------------------------------------------------------------
 
 bool CompileTask::failed() const {
-  return stats_->exec_exit_status() != 0;
+  return stats_->exec_log.exec_exit_status() != 0;
 }
 
 bool CompileTask::canceled() const {
@@ -4512,7 +4525,7 @@ bool CompileTask::canceled() const {
 }
 
 bool CompileTask::cache_hit() const {
-  return stats_->cache_hit();
+  return stats_->exec_log.cache_hit();
 }
 
 bool CompileTask::local_cache_hit() const {
@@ -4553,9 +4566,10 @@ CommandSpec CompileTask::DumpCommandSpec() const {
   command_spec.set_local_compiler_path(local_compiler_path_);
   if (compiler_info_state_.get() != nullptr) {
     const CompilerInfo& compiler_info = compiler_info_state_.get()->info();
-    std::vector<std::string> args(stats_->arg().begin(), stats_->arg().end());
+    std::vector<std::string> args(stats_->exec_log.arg().begin(),
+                                  stats_->exec_log.arg().end());
     std::unique_ptr<CompilerFlags> flags(
-        CompilerFlagsParser::New(std::move(args), stats_->cwd()));
+        CompilerFlagsParser::New(std::move(args), stats_->exec_log.cwd()));
     FixCommandSpec(compiler_info, *flags, &command_spec);
     FixSystemLibraryPath(system_library_paths_, &command_spec);
   }
@@ -4574,9 +4588,10 @@ std::string CompileTask::DumpRequest() const {
   *req.mutable_command_spec() = DumpCommandSpec();
   if (compiler_info_state_.get() != nullptr) {
     const CompilerInfo& compiler_info = compiler_info_state_.get()->info();
-    std::vector<std::string> args(stats_->arg().begin(), stats_->arg().end());
+    std::vector<std::string> args(stats_->exec_log.arg().begin(),
+                                  stats_->exec_log.arg().end());
     std::unique_ptr<CompilerFlags> flags(
-        CompilerFlagsParser::New(args, stats_->cwd()));
+        CompilerFlagsParser::New(args, stats_->exec_log.cwd()));
     MayFixSubprogramSpec(req.mutable_subprogram());
     if (service_->send_compiler_binary_as_input()) {
       SetToolchainSpecs(&req, compiler_info);
@@ -4592,13 +4607,13 @@ std::string CompileTask::DumpRequest() const {
   }
 
   // stats_ contains modified version of args, env.
-  for (const auto& arg : stats_->arg())
+  for (const auto& arg : stats_->exec_log.arg())
     req.add_arg(arg);
-  for (const auto& env : stats_->env())
+  for (const auto& env : stats_->exec_log.env())
     req.add_env(env);
-  for (const auto& expanded_arg : stats_->expanded_arg())
+  for (const auto& expanded_arg : stats_->exec_log.expanded_arg())
     req.add_expanded_arg(expanded_arg);
-  req.set_cwd(stats_->cwd());
+  req.set_cwd(stats_->exec_log.cwd());
   *req.mutable_requester_info() = requester_info_;
   if (compiler_info_state_.get() != nullptr) {
     FixRequesterInfo(compiler_info_state_.get()->info(),

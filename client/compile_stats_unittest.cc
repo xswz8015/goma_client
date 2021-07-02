@@ -135,14 +135,14 @@ TEST(CompileStatsTest, AddStatsFromHttpStatusMasterTraceIdOnly) {
   CompileStats stats;
   stats.AddStatsFromHttpStatus(status);
 
-  ASSERT_EQ(1, stats.rpc_master_trace_id().size());
-  EXPECT_EQ("master trace", stats.rpc_master_trace_id()[0]);
+  ASSERT_EQ(1, stats.exec_log.rpc_master_trace_id().size());
+  EXPECT_EQ("master trace", stats.exec_log.rpc_master_trace_id()[0]);
 
   // Make sure no size fields were added.
-  EXPECT_EQ(stats.rpc_req_size().size(), 0);
-  EXPECT_EQ(stats.rpc_resp_size().size(), 0);
-  EXPECT_EQ(stats.rpc_raw_req_size().size(), 0);
-  EXPECT_EQ(stats.rpc_raw_resp_size().size(), 0);
+  EXPECT_EQ(stats.exec_log.rpc_req_size().size(), 0);
+  EXPECT_EQ(stats.exec_log.rpc_resp_size().size(), 0);
+  EXPECT_EQ(stats.exec_log.rpc_raw_req_size().size(), 0);
+  EXPECT_EQ(stats.exec_log.rpc_raw_resp_size().size(), 0);
 }
 
 TEST(CompileStatsTest, AddStatsFromHttpStatusMatchingTraceId) {
@@ -157,18 +157,18 @@ TEST(CompileStatsTest, AddStatsFromHttpStatusMatchingTraceId) {
   CompileStats stats;
   stats.AddStatsFromHttpStatus(status);
 
-  ASSERT_EQ(1, stats.rpc_master_trace_id().size());
-  EXPECT_EQ("master trace", stats.rpc_master_trace_id()[0]);
+  ASSERT_EQ(1, stats.exec_log.rpc_master_trace_id().size());
+  EXPECT_EQ("master trace", stats.exec_log.rpc_master_trace_id()[0]);
 
-  ASSERT_EQ(stats.rpc_req_size().size(), 1);
-  ASSERT_EQ(stats.rpc_resp_size().size(), 1);
-  ASSERT_EQ(stats.rpc_raw_req_size().size(), 1);
-  ASSERT_EQ(stats.rpc_raw_resp_size().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_req_size().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_resp_size().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_raw_req_size().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_raw_resp_size().size(), 1);
 
-  EXPECT_EQ(1, stats.rpc_req_size()[0]);
-  EXPECT_EQ(2, stats.rpc_resp_size()[0]);
-  EXPECT_EQ(3, stats.rpc_raw_req_size()[0]);
-  EXPECT_EQ(4, stats.rpc_raw_resp_size()[0]);
+  EXPECT_EQ(1, stats.exec_log.rpc_req_size()[0]);
+  EXPECT_EQ(2, stats.exec_log.rpc_resp_size()[0]);
+  EXPECT_EQ(3, stats.exec_log.rpc_raw_req_size()[0]);
+  EXPECT_EQ(4, stats.exec_log.rpc_raw_resp_size()[0]);
 }
 
 TEST(CompileStatsTest, AddStatsFromHttpStatusTimesSingle) {
@@ -184,21 +184,21 @@ TEST(CompileStatsTest, AddStatsFromHttpStatusTimesSingle) {
   CompileStats stats;
   stats.AddStatsFromHttpStatus(status);
 
-  ASSERT_EQ(stats.rpc_throttle_time().size(), 1);
-  ASSERT_EQ(stats.rpc_pending_time().size(), 1);
-  ASSERT_EQ(stats.rpc_req_build_time().size(), 1);
-  ASSERT_EQ(stats.rpc_req_send_time().size(), 1);
-  ASSERT_EQ(stats.rpc_wait_time().size(), 1);
-  ASSERT_EQ(stats.rpc_resp_recv_time().size(), 1);
-  ASSERT_EQ(stats.rpc_resp_parse_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_throttle_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_pending_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_req_build_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_req_send_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_wait_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_resp_recv_time().size(), 1);
+  ASSERT_EQ(stats.exec_log.rpc_resp_parse_time().size(), 1);
 
-  EXPECT_EQ(100, stats.rpc_throttle_time()[0]);
-  EXPECT_EQ(120, stats.rpc_pending_time()[0]);
-  EXPECT_EQ(140, stats.rpc_req_build_time()[0]);
-  EXPECT_EQ(160, stats.rpc_req_send_time()[0]);
-  EXPECT_EQ(180, stats.rpc_wait_time()[0]);
-  EXPECT_EQ(200, stats.rpc_resp_recv_time()[0]);
-  EXPECT_EQ(220, stats.rpc_resp_parse_time()[0]);
+  EXPECT_EQ(100, stats.exec_log.rpc_throttle_time()[0]);
+  EXPECT_EQ(120, stats.exec_log.rpc_pending_time()[0]);
+  EXPECT_EQ(140, stats.exec_log.rpc_req_build_time()[0]);
+  EXPECT_EQ(160, stats.exec_log.rpc_req_send_time()[0]);
+  EXPECT_EQ(180, stats.exec_log.rpc_wait_time()[0]);
+  EXPECT_EQ(200, stats.exec_log.rpc_resp_recv_time()[0]);
+  EXPECT_EQ(220, stats.exec_log.rpc_resp_parse_time()[0]);
 
   EXPECT_EQ(absl::Milliseconds(100), stats.total_rpc_throttle_time);
   EXPECT_EQ(absl::Milliseconds(120), stats.total_rpc_pending_time);
@@ -232,29 +232,29 @@ TEST(CompileStatsTest, AddStatsFromHttpStatusTimesMultiple) {
   stats.AddStatsFromHttpStatus(status1);
   stats.AddStatsFromHttpStatus(status2);
 
-  ASSERT_EQ(stats.rpc_throttle_time().size(), 2);
-  ASSERT_EQ(stats.rpc_pending_time().size(), 2);
-  ASSERT_EQ(stats.rpc_req_build_time().size(), 2);
-  ASSERT_EQ(stats.rpc_req_send_time().size(), 2);
-  ASSERT_EQ(stats.rpc_wait_time().size(), 2);
-  ASSERT_EQ(stats.rpc_resp_recv_time().size(), 2);
-  ASSERT_EQ(stats.rpc_resp_parse_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_throttle_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_pending_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_req_build_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_req_send_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_wait_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_resp_recv_time().size(), 2);
+  ASSERT_EQ(stats.exec_log.rpc_resp_parse_time().size(), 2);
 
-  EXPECT_EQ(100, stats.rpc_throttle_time()[0]);
-  EXPECT_EQ(120, stats.rpc_pending_time()[0]);
-  EXPECT_EQ(140, stats.rpc_req_build_time()[0]);
-  EXPECT_EQ(160, stats.rpc_req_send_time()[0]);
-  EXPECT_EQ(180, stats.rpc_wait_time()[0]);
-  EXPECT_EQ(200, stats.rpc_resp_recv_time()[0]);
-  EXPECT_EQ(220, stats.rpc_resp_parse_time()[0]);
+  EXPECT_EQ(100, stats.exec_log.rpc_throttle_time()[0]);
+  EXPECT_EQ(120, stats.exec_log.rpc_pending_time()[0]);
+  EXPECT_EQ(140, stats.exec_log.rpc_req_build_time()[0]);
+  EXPECT_EQ(160, stats.exec_log.rpc_req_send_time()[0]);
+  EXPECT_EQ(180, stats.exec_log.rpc_wait_time()[0]);
+  EXPECT_EQ(200, stats.exec_log.rpc_resp_recv_time()[0]);
+  EXPECT_EQ(220, stats.exec_log.rpc_resp_parse_time()[0]);
 
-  EXPECT_EQ(300, stats.rpc_throttle_time()[1]);
-  EXPECT_EQ(320, stats.rpc_pending_time()[1]);
-  EXPECT_EQ(340, stats.rpc_req_build_time()[1]);
-  EXPECT_EQ(360, stats.rpc_req_send_time()[1]);
-  EXPECT_EQ(380, stats.rpc_wait_time()[1]);
-  EXPECT_EQ(400, stats.rpc_resp_recv_time()[1]);
-  EXPECT_EQ(420, stats.rpc_resp_parse_time()[1]);
+  EXPECT_EQ(300, stats.exec_log.rpc_throttle_time()[1]);
+  EXPECT_EQ(320, stats.exec_log.rpc_pending_time()[1]);
+  EXPECT_EQ(340, stats.exec_log.rpc_req_build_time()[1]);
+  EXPECT_EQ(360, stats.exec_log.rpc_req_send_time()[1]);
+  EXPECT_EQ(380, stats.exec_log.rpc_wait_time()[1]);
+  EXPECT_EQ(400, stats.exec_log.rpc_resp_recv_time()[1]);
+  EXPECT_EQ(420, stats.exec_log.rpc_resp_parse_time()[1]);
 
   EXPECT_EQ(absl::Milliseconds(400), stats.total_rpc_throttle_time);
   EXPECT_EQ(absl::Milliseconds(440), stats.total_rpc_pending_time);
@@ -275,14 +275,14 @@ TEST(CompileStatsTest, DumpToJsonEmpty) {
   EXPECT_EQ(absl::ZeroDuration(), stats.handler_time);
   EXPECT_EQ(absl::ZeroDuration(), stats.include_processor_wait_time);
 
-  EXPECT_EQ("", stats.exec_command_version_mismatch());
-  EXPECT_EQ("", stats.exec_command_binary_hash_mismatch());
-  EXPECT_EQ("", stats.exec_command_subprograms_mismatch());
+  EXPECT_EQ("", stats.exec_log.exec_command_version_mismatch());
+  EXPECT_EQ("", stats.exec_log.exec_command_binary_hash_mismatch());
+  EXPECT_EQ("", stats.exec_log.exec_command_subprograms_mismatch());
 
-  EXPECT_EQ(0, stats.exec_exit_status());
-  EXPECT_EQ(0, stats.exec_request_retry());
-  EXPECT_EQ(0, stats.goma_error());
-  EXPECT_EQ(0, stats.compiler_proxy_error());
+  EXPECT_EQ(0, stats.exec_log.exec_exit_status());
+  EXPECT_EQ(0, stats.exec_log.exec_request_retry());
+  EXPECT_EQ(0, stats.exec_log.goma_error());
+  EXPECT_EQ(0, stats.exec_log.compiler_proxy_error());
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kDetailed);
@@ -296,16 +296,18 @@ TEST(CompileStatsTest, DumpToJsonBasic) {
   stats.handler_time = absl::Milliseconds(1400);
   stats.include_processor_wait_time = absl::Milliseconds(308);
 
-  stats.set_exec_command_version_mismatch("command version mismatch");
-  stats.set_exec_command_binary_hash_mismatch("command binary hash mismatch");
-  stats.set_exec_command_subprograms_mismatch("command subprograms mismatch");
+  stats.exec_log.set_exec_command_version_mismatch("command version mismatch");
+  stats.exec_log.set_exec_command_binary_hash_mismatch(
+      "command binary hash mismatch");
+  stats.exec_log.set_exec_command_subprograms_mismatch(
+      "command subprograms mismatch");
 
-  stats.set_exec_exit_status(10);
-  stats.set_exec_request_retry(20);
+  stats.exec_log.set_exec_exit_status(10);
+  stats.exec_log.set_exec_request_retry(20);
   // These two are boolean fields. Explicitly set them to values >1 to test that
   // booleans are properly handled and dumped as "1" if set.
-  stats.set_goma_error(100);
-  stats.set_compiler_proxy_error(200);
+  stats.exec_log.set_goma_error(100);
+  stats.exec_log.set_compiler_proxy_error(200);
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kNotDetailed);
@@ -372,8 +374,8 @@ TEST(CompileStatsTest, DumpToJsonBasic) {
 
 TEST(CompileStatsTest, DumpToJsonCacheHit) {
   CompileStats stats_cache_hit;
-  stats_cache_hit.set_cache_hit(true);
-  stats_cache_hit.set_cache_source(ExecLog::STORAGE_CACHE);
+  stats_cache_hit.exec_log.set_cache_hit(true);
+  stats_cache_hit.exec_log.set_cache_source(ExecLog::STORAGE_CACHE);
 
   Json::Value json;
   stats_cache_hit.DumpToJson(&json,
@@ -390,8 +392,8 @@ TEST(CompileStatsTest, DumpToJsonCacheHit) {
 
 TEST(CompileStatsTest, DumpToJsonLocalCacheHit) {
   CompileStats stats_local_cache_hit;
-  stats_local_cache_hit.set_cache_hit(true);
-  stats_local_cache_hit.set_cache_source(ExecLog::LOCAL_OUTPUT_CACHE);
+  stats_local_cache_hit.exec_log.set_cache_hit(true);
+  stats_local_cache_hit.exec_log.set_cache_source(ExecLog::LOCAL_OUTPUT_CACHE);
 
   Json::Value json;
   stats_local_cache_hit.DumpToJson(&json,
@@ -407,8 +409,8 @@ TEST(CompileStatsTest, DumpToJsonLocalCacheHit) {
 
 TEST(CompileStatsTest, DumpToJsonNoCacheHit) {
   CompileStats stats_no_cache_hit;
-  stats_no_cache_hit.set_cache_hit(false);
-  stats_no_cache_hit.set_cache_source(ExecLog::MEM_CACHE);
+  stats_no_cache_hit.exec_log.set_cache_hit(false);
+  stats_no_cache_hit.exec_log.set_cache_source(ExecLog::MEM_CACHE);
 
   Json::Value json;
   stats_no_cache_hit.DumpToJson(&json,
@@ -420,17 +422,17 @@ TEST(CompileStatsTest, DumpToJsonNoCacheHit) {
 TEST(CompileStatsTest, DumpToJsonDetailedStartStats) {
   CompileStats stats;
 
-  stats.set_start_time(60);  // One minute after Unix Epoch.
-  stats.set_latest_input_filename("foo.cc");
-  stats.set_latest_input_mtime(30);  // 30 sec after Unix Epoch.
-  stats.set_num_total_input_file(250);
+  stats.exec_log.set_start_time(60);  // One minute after Unix Epoch.
+  stats.exec_log.set_latest_input_filename("foo.cc");
+  stats.exec_log.set_latest_input_mtime(30);  // 30 sec after Unix Epoch.
+  stats.exec_log.set_num_total_input_file(250);
 
-  stats.add_num_uploading_input_file(20);
-  stats.add_num_uploading_input_file(100);
-  stats.add_num_uploading_input_file(120);
+  stats.exec_log.add_num_uploading_input_file(20);
+  stats.exec_log.add_num_uploading_input_file(100);
+  stats.exec_log.add_num_uploading_input_file(120);
 
-  stats.add_num_missing_input_file(5);
-  stats.add_num_missing_input_file(13);
+  stats.exec_log.add_num_missing_input_file(5);
+  stats.exec_log.add_num_missing_input_file(13);
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kDetailed);
@@ -479,17 +481,17 @@ TEST(CompileStatsTest, DumpToJsonDetailedRpcExecStats) {
   stats.gomacc_req_size = 35e9L;
   stats.gomacc_resp_size = 65e9L;
 
-  stats.add_rpc_req_size(36000);
-  stats.add_rpc_req_size(47000);
-  stats.add_rpc_req_size(33000);
+  stats.exec_log.add_rpc_req_size(36000);
+  stats.exec_log.add_rpc_req_size(47000);
+  stats.exec_log.add_rpc_req_size(33000);
 
-  stats.add_rpc_resp_size(166000);
-  stats.add_rpc_resp_size(99000);
-  stats.add_rpc_resp_size(1000);
+  stats.exec_log.add_rpc_resp_size(166000);
+  stats.exec_log.add_rpc_resp_size(99000);
+  stats.exec_log.add_rpc_resp_size(1000);
 
-  stats.add_rpc_master_trace_id("hello");
-  stats.add_rpc_master_trace_id("goodbye");
-  stats.add_rpc_master_trace_id("thanks");
+  stats.exec_log.add_rpc_master_trace_id("hello");
+  stats.exec_log.add_rpc_master_trace_id("goodbye");
+  stats.exec_log.add_rpc_master_trace_id("thanks");
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kDetailed);
@@ -614,7 +616,7 @@ TEST(CompileStatsTest, DumpToJsonDetailedDurations) {
 
 TEST(CompileStatsTest, DumpToJsonDepsCacheUsed) {
   CompileStats stats;
-  stats.set_depscache_used(true);
+  stats.exec_log.set_depscache_used(true);
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kDetailed);
@@ -635,12 +637,12 @@ TEST(CompileStatsTest, DumpToJsonDepsCacheUsed) {
 
 TEST(CompileStatsTest, DumpToJsonLocalRunStats) {
   CompileStats stats;
-  stats.set_local_run_reason("foobar");
-  stats.set_local_mem_kb(999);
+  stats.exec_log.set_local_run_reason("foobar");
+  stats.exec_log.set_local_mem_kb(999);
 
-  stats.add_local_output_file_size(1000000);
-  stats.add_local_output_file_size(1500000);
-  stats.add_local_output_file_size(3500000);
+  stats.exec_log.add_local_output_file_size(1000000);
+  stats.exec_log.add_local_output_file_size(1500000);
+  stats.exec_log.add_local_output_file_size(3500000);
 
   stats.local_delay_time = absl::Milliseconds(1250);
   stats.local_pending_time = absl::Milliseconds(3450);
@@ -696,15 +698,15 @@ TEST(CompileStatsTest, DumpToJsonLocalRunStats) {
 TEST(CompileStatsTest, DumpToJsonOutputFileStats) {
   CompileStats stats;
 
-  stats.add_output_file_size(10000);
-  stats.add_output_file_size(20000);
-  stats.add_output_file_size(40000);
-  stats.add_output_file_size(80000);
+  stats.exec_log.add_output_file_size(10000);
+  stats.exec_log.add_output_file_size(20000);
+  stats.exec_log.add_output_file_size(40000);
+  stats.exec_log.add_output_file_size(80000);
 
-  stats.add_chunk_resp_size(3000);
-  stats.add_chunk_resp_size(5000);
-  stats.add_chunk_resp_size(11000);
-  stats.add_chunk_resp_size(9000);
+  stats.exec_log.add_chunk_resp_size(3000);
+  stats.exec_log.add_chunk_resp_size(5000);
+  stats.exec_log.add_chunk_resp_size(11000);
+  stats.exec_log.add_chunk_resp_size(9000);
 
   stats.output_file_rpc = 5;
 
@@ -735,18 +737,18 @@ TEST(CompileStatsTest, DumpToJsonOutputFileStats) {
 TEST(CompileStatsTest, DumpToJsonEndStats) {
   CompileStats stats;
 
-  stats.add_exec_request_retry_reason("the");
-  stats.add_exec_request_retry_reason("quick");
-  stats.add_exec_request_retry_reason("brown");
-  stats.add_exec_request_retry_reason("fox");
+  stats.exec_log.add_exec_request_retry_reason("the");
+  stats.exec_log.add_exec_request_retry_reason("quick");
+  stats.exec_log.add_exec_request_retry_reason("brown");
+  stats.exec_log.add_exec_request_retry_reason("fox");
 
-  stats.add_env("jumps");
-  stats.add_env("over");
-  stats.add_env("the");
-  stats.add_env("lazy");
-  stats.add_env("dog");
+  stats.exec_log.add_env("jumps");
+  stats.exec_log.add_env("over");
+  stats.exec_log.add_env("the");
+  stats.exec_log.add_env("lazy");
+  stats.exec_log.add_env("dog");
 
-  stats.set_cwd("/dev/null");
+  stats.exec_log.set_cwd("/dev/null");
 
   Json::Value json;
   stats.DumpToJson(&json, CompileStats::DumpDetailLevel::kDetailed);
@@ -827,8 +829,8 @@ TEST(CompileStatsTest, StoreStatsInExecRespNonEmpty) {
   stats.local_pending_time = absl::Milliseconds(1500);
   stats.local_run_time = absl::Milliseconds(1625);
 
-  stats.set_goma_error(true);
-  stats.set_exec_request_retry(44);
+  stats.exec_log.set_goma_error(true);
+  stats.exec_log.set_exec_request_retry(44);
 
   ExecResp resp;
   stats.StoreStatsInExecResp(&resp);

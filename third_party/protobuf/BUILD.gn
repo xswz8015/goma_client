@@ -29,6 +29,9 @@ config("protobuf_warnings") {
 
       # This is for `friend class DynamicMessage` in map_field.h
       "-Wno-microsoft-unqualified-friend",
+
+      # descriptor_ is not used in csharp_source_generator_base.h
+      "-Wno-unused-private-field",
     ]
   }
 }
@@ -80,7 +83,6 @@ nobase_include_headers = [
   "protobuf/src/google/protobuf/stubs/bytestream.h",
   "protobuf/src/google/protobuf/stubs/casts.h",
   "protobuf/src/google/protobuf/stubs/common.h",
-  "protobuf/src/google/protobuf/stubs/fastmem.h",
   "protobuf/src/google/protobuf/stubs/hash.h",
   "protobuf/src/google/protobuf/stubs/logging.h",
   "protobuf/src/google/protobuf/stubs/macros.h",
@@ -177,6 +179,8 @@ nobase_include_headers = [
 protobuf_lite_sources = [
   "protobuf/src/google/protobuf/any_lite.cc",
   "protobuf/src/google/protobuf/arena.cc",
+  "protobuf/src/google/protobuf/arenastring.cc",
+  "protobuf/src/google/protobuf/arenastring.h",
   "protobuf/src/google/protobuf/extension_set.cc",
   "protobuf/src/google/protobuf/generated_message_table_driven_lite.cc",
   "protobuf/src/google/protobuf/generated_message_table_driven_lite.h",
@@ -185,7 +189,11 @@ protobuf_lite_sources = [
   "protobuf/src/google/protobuf/io/coded_stream.cc",
   "protobuf/src/google/protobuf/io/zero_copy_stream.cc",
   "protobuf/src/google/protobuf/io/zero_copy_stream_impl_lite.cc",
+  "protobuf/src/google/protobuf/map.cc",
+  "protobuf/src/google/protobuf/map.h",
   "protobuf/src/google/protobuf/message_lite.cc",
+  "protobuf/src/google/protobuf/parse_context.cc",
+  "protobuf/src/google/protobuf/parse_context.h",
   "protobuf/src/google/protobuf/repeated_field.cc",
   "protobuf/src/google/protobuf/stubs/bytestream.cc",
   "protobuf/src/google/protobuf/stubs/bytestream.h",
@@ -299,8 +307,6 @@ static_library("protobuf_full") {
     "protobuf/src/google/protobuf/service.cc",
     "protobuf/src/google/protobuf/source_context.pb.cc",
     "protobuf/src/google/protobuf/struct.pb.cc",
-    "protobuf/src/google/protobuf/stubs/mathlimits.cc",
-    "protobuf/src/google/protobuf/stubs/mathlimits.h",
     "protobuf/src/google/protobuf/stubs/substitute.cc",
     "protobuf/src/google/protobuf/stubs/substitute.h",
     "protobuf/src/google/protobuf/text_format.cc",

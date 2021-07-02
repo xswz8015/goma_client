@@ -26,7 +26,7 @@ namespace devtools_goma {
 class ExecResp;
 class OutputFileTask;
 
-class CompileStats : public ExecLog {
+class CompileStats {
  public:
   enum class DumpDetailLevel {
     kNotDetailed,
@@ -58,8 +58,11 @@ class CompileStats : public ExecLog {
   void StoreStatsInExecResp(ExecResp* resp) const;
 
   bool LocalCacheHit() const {
-    return has_cache_source() && cache_source() == ExecLog::LOCAL_OUTPUT_CACHE;
+    return exec_log.has_cache_source() &&
+           exec_log.cache_source() == ExecLog::LOCAL_OUTPUT_CACHE;
   }
+
+  ExecLog exec_log;
 
   size_t gomacc_req_size;
   size_t gomacc_resp_size;
