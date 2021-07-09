@@ -13,8 +13,8 @@ action("gen_jquery") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("jquery.min.js"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("jquery.min.js", root_build_dir),
   ]
 }
 

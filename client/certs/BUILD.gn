@@ -17,8 +17,8 @@ if (os != "win") {
     args = [
       "--prefix=certs_",
       "--out-dir",
-      rebase_path("$target_gen_dir"),
-      rebase_path("$roots.pem"),
+      rebase_path("$target_gen_dir", root_build_dir),
+      rebase_path("$roots.pem", root_build_dir),
     ]
   }
 
@@ -32,8 +32,8 @@ if (os != "win") {
     args = [
       "--prefix=certs_",
       "--out-dir",
-      rebase_path("$target_gen_dir"),
-      rebase_path("DST_Root_CA_X3.pem"),
+      rebase_path("$target_gen_dir", root_build_dir),
+      rebase_path("DST_Root_CA_X3.pem", root_build_dir),
     ]
   }
 

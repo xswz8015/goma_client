@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -1815,7 +1815,7 @@ class GomaEnv(object):
     return out
 
   def WriteFile(self, filename, content):
-    with open(filename, 'wb') as f:
+    with open(filename, 'w') as f:
       f.write(content)
 
   def CopyFile(self, from_file, to_file):

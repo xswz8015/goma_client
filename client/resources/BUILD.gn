@@ -17,8 +17,8 @@ action("gen_compiler_proxy_status_html5") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compiler_proxy_status_html5.html"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compiler_proxy_status_html5.html", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -32,8 +32,8 @@ action("gen_legend_help") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("legend_help.html"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("legend_help.html", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -47,8 +47,8 @@ action("gen_compiler_proxy_status_script") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compiler_proxy_status_script.js"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compiler_proxy_status_script.js", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -62,8 +62,8 @@ action("gen_compiler_proxy_contentionz_script") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compiler_proxy_contentionz_script.js"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compiler_proxy_contentionz_script.js", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -77,8 +77,8 @@ action("gen_compiler_proxy_status_style") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compiler_proxy_status_style.css"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compiler_proxy_status_style.css", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -92,8 +92,8 @@ action("gen_compilerz_html") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compilerz_html.html"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compilerz_html.html", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -107,8 +107,8 @@ action("gen_compilerz_script") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compilerz_script.js"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compilerz_script.js", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -122,8 +122,8 @@ action("gen_compilerz_style") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compilerz_style.css"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compilerz_style.css", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -137,8 +137,8 @@ action("gen_compiler_proxy_status_logo") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("compiler_proxy_status_logo.png"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("compiler_proxy_status_logo.png", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }

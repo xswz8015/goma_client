@@ -198,7 +198,7 @@ action("gen_compiler_proxy_info") {
   outputs = [ "$target_gen_dir/compiler_proxy_info.h" ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
+    rebase_path("$target_gen_dir", root_build_dir),
   ]
   public_configs = [ ":include_target_gen_dir" ]
 }
@@ -1018,18 +1018,18 @@ if (os != "win") {
       outputs = [ "$root_out_dir/sha256.json" ]
       args = [
         "--output",
-        rebase_path("$root_out_dir/sha256.json"),
-        rebase_path("$root_out_dir/compiler_proxy"),
-        rebase_path("$root_out_dir/compiler_proxy.sym"),
-        rebase_path("$root_out_dir/diagnose_goma_log.py"),
-        rebase_path("$root_out_dir/goma_auth.py"),
-        rebase_path("$root_out_dir/gomacc"),
-        rebase_path("$root_out_dir/gomacc.sym"),
-        rebase_path("$root_out_dir/goma_ctl.py"),
-        rebase_path("$root_out_dir/.vpython"),
-        rebase_path("$root_out_dir/goma_fetch"),
-        rebase_path("$root_out_dir/report_env.sh"),
-        rebase_path("$root_out_dir/LICENSE"),
+        rebase_path("$root_out_dir/sha256.json", root_build_dir),
+        rebase_path("$root_out_dir/compiler_proxy", root_build_dir),
+        rebase_path("$root_out_dir/compiler_proxy.sym", root_build_dir),
+        rebase_path("$root_out_dir/diagnose_goma_log.py", root_build_dir),
+        rebase_path("$root_out_dir/goma_auth.py", root_build_dir),
+        rebase_path("$root_out_dir/gomacc", root_build_dir),
+        rebase_path("$root_out_dir/gomacc.sym", root_build_dir),
+        rebase_path("$root_out_dir/goma_ctl.py", root_build_dir),
+        rebase_path("$root_out_dir/.vpython", root_build_dir),
+        rebase_path("$root_out_dir/goma_fetch", root_build_dir),
+        rebase_path("$root_out_dir/report_env.sh", root_build_dir),
+        rebase_path("$root_out_dir/LICENSE", root_build_dir),
       ]
     }
   }
@@ -1056,11 +1056,11 @@ if (os != "win") {
       outputs = [ "$root_out_dir/gomacc.sym" ]
       args = [
         "--dump_syms",
-        rebase_path("$root_out_dir/dump_syms.exe"),
+        rebase_path("$root_out_dir/dump_syms.exe", root_build_dir),
         "--input",
-        rebase_path("$root_out_dir/gomacc.exe"),
+        rebase_path("$root_out_dir/gomacc.exe", root_build_dir),
         "--output",
-        rebase_path("$root_out_dir/gomacc.sym"),
+        rebase_path("$root_out_dir/gomacc.sym", root_build_dir),
       ]
     }
 
@@ -1073,11 +1073,11 @@ if (os != "win") {
       outputs = [ "$root_out_dir/compiler_proxy.sym" ]
       args = [
         "--dump_syms",
-        rebase_path("$root_out_dir/dump_syms.exe"),
+        rebase_path("$root_out_dir/dump_syms.exe", root_build_dir),
         "--input",
-        rebase_path("$root_out_dir/compiler_proxy.exe"),
+        rebase_path("$root_out_dir/compiler_proxy.exe", root_build_dir),
         "--output",
-        rebase_path("$root_out_dir/compiler_proxy.sym"),
+        rebase_path("$root_out_dir/compiler_proxy.sym", root_build_dir),
       ]
     }
 
@@ -1100,23 +1100,23 @@ if (os != "win") {
       outputs = [ "$root_out_dir/sha256.json" ]
       args = [
         "--output",
-        rebase_path("$root_out_dir/sha256.json"),
-        rebase_path("$root_out_dir/compiler_proxy.exe"),
-        rebase_path("$root_out_dir/compiler_proxy.exe.pdb"),
-        rebase_path("$root_out_dir/compiler_proxy.sym"),
-        rebase_path("$root_out_dir/diagnose_goma_log.py"),
-        rebase_path("$root_out_dir/goma_auth.py"),
-        rebase_path("$root_out_dir/gomacc.exe"),
-        rebase_path("$root_out_dir/gomacc.exe.pdb"),
-        rebase_path("$root_out_dir/gomacc.sym"),
-        rebase_path("$root_out_dir/goma_ctl.bat"),
-        rebase_path("$root_out_dir/goma_ctl.py"),
-        rebase_path("$root_out_dir/.vpython"),
-        rebase_path("$root_out_dir/goma_fetch.exe"),
-        rebase_path("$root_out_dir/goma_fetch.exe.pdb"),
-        rebase_path("$root_out_dir/vcflags.exe"),
-        rebase_path("$root_out_dir/vcflags.exe.pdb"),
-        rebase_path("$root_out_dir/LICENSE"),
+        rebase_path("$root_out_dir/sha256.json", root_build_dir),
+        rebase_path("$root_out_dir/compiler_proxy.exe", root_build_dir),
+        rebase_path("$root_out_dir/compiler_proxy.exe.pdb", root_build_dir),
+        rebase_path("$root_out_dir/compiler_proxy.sym", root_build_dir),
+        rebase_path("$root_out_dir/diagnose_goma_log.py", root_build_dir),
+        rebase_path("$root_out_dir/goma_auth.py", root_build_dir),
+        rebase_path("$root_out_dir/gomacc.exe", root_build_dir),
+        rebase_path("$root_out_dir/gomacc.exe.pdb", root_build_dir),
+        rebase_path("$root_out_dir/gomacc.sym", root_build_dir),
+        rebase_path("$root_out_dir/goma_ctl.bat", root_build_dir),
+        rebase_path("$root_out_dir/goma_ctl.py", root_build_dir),
+        rebase_path("$root_out_dir/.vpython", root_build_dir),
+        rebase_path("$root_out_dir/goma_fetch.exe", root_build_dir),
+        rebase_path("$root_out_dir/goma_fetch.exe.pdb", root_build_dir),
+        rebase_path("$root_out_dir/vcflags.exe", root_build_dir),
+        rebase_path("$root_out_dir/vcflags.exe.pdb", root_build_dir),
+        rebase_path("$root_out_dir/LICENSE", root_build_dir),
       ]
     }
   }

@@ -13,8 +13,8 @@ action("gen_chartjs") {
   ]
   args = [
     "--out-dir",
-    rebase_path("$target_gen_dir"),
-    rebase_path("chart.bundle.min.js"),
+    rebase_path("$target_gen_dir", root_build_dir),
+    rebase_path("chart.bundle.min.js", root_build_dir),
   ]
 }
 

@@ -47,7 +47,7 @@ template("fuzzer_test") {
           "--output",
           rebase_path(out),
           "--fuzzer",
-          rebase_path("$root_build_dir/$target_name"),
+          rebase_path("$root_build_dir/$target_name", root_build_dir),
         ]
 
         outputs = [ out ]
@@ -79,7 +79,7 @@ template("fuzzer_test") {
         if (defined(invoker.dict)) {
           args += [
             "--dict",
-            rebase_path("$root_build_dir/" + invoker.target_name + ".dict"),
+            rebase_path("$root_build_dir/" + invoker.target_name + ".dict", root_build_dir),
           ]
         }
 
