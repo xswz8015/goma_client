@@ -180,9 +180,10 @@ TEST(MyPath, GetCurrentDirNameOrDie) {
     std::string cwd = GetCurrentDirNameOrDie();
     EXPECT_EQ(cwd, newpath);
 
-    // Need to unlink symlink. Otherwise. TmpdirUtil will recursively delete
+    // Need to delete symlink. Otherwise. TmpdirUtil will recursively delete
     // the current working directory. Awful (>x<).
-    ASSERT_EQ(unlink(newpath.c_str()), 0);
+    ::util::Status status = file::Delete(newpath, file::Defaults());
+    ASSERT_TRUE(status.ok());
   }
 
   // Don't confused with different dir with same mtime. http://b/122976726

@@ -73,14 +73,6 @@ namespace {
 // Timeout value in seconds for LoadCacheEntries().
 constexpr absl::Duration kLoadCacheEntriesTimeout = absl::Seconds(1);
 
-bool DeleteFile(const char* path) {
-#ifndef _WIN32
-  return unlink(path) == 0;
-#else
-  return DeleteFileA(path) != FALSE;
-#endif
-}
-
 }  // anonymous namespace
 
 namespace devtools_goma {
@@ -242,7 +234,8 @@ void LocalOutputCache::LoadCacheEntries() {
       if (!SHA256HashValue::ConvertFromHexString(key_entry.name, &key)) {
         LOG(WARNING) << "Invalid filename found. remove: filename="
                      << cache_file_path;
-        if (!DeleteFile(cache_file_path.c_str())) {
+        ::util::Status status = file::Delete(cache_file_path, file::Defaults());
+        if (!status.ok()) {
           LOG(ERROR) << "failed to remove: " << cache_file_path;
         }
         continue;
@@ -459,7 +452,8 @@ void LocalOutputCache::RunGarbageCollection(GarbageCollectionStat* stat) {
     std::string key_string = entries_.front().first.ToHexString();
 
     std::string cache_file_path = CacheFilePath(key_string);
-    if (!DeleteFile(cache_file_path.c_str())) {
+    ::util::Status status = file::Delete(cache_file_path, file::Defaults());
+    if (!status.ok()) {
       LOG(ERROR) << "failed to remove cache: path=" << cache_file_path;
       break;
     }
@@ -561,7 +555,7 @@ bool LocalOutputCache::SaveOutput(const std::string& key,
       LOG(ERROR) << trace_id << " failed to rename LocalOutputCacheEntry:"
                  << " path=" << cache_file_path
                  << " result=" << r;
-      (void)DeleteFile(cache_file_path.c_str());
+      (void)file::Delete(cache_file_path, file::Defaults());
       return false;
     }
 

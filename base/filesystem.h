@@ -12,6 +12,9 @@ namespace file {
 
 class Options;
 
+// Delete the given path.
+::util::Status Delete(absl::string_view path, const file::Options& options);
+
 // Returns ok if dirname and its children are successfully deleted.
 ::util::Status RecursivelyDelete(absl::string_view path,
                                  const Options& options);

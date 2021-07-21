@@ -13,6 +13,7 @@
 #endif
 
 #include <fstream>
+#include <string>
 
 #include "file_dir.h"
 #include "glog/logging.h"
@@ -21,10 +22,19 @@
 
 namespace file {
 
+::util::Status Delete(absl::string_view path, const file::Options& options) {
+  std::string name(path);
 #ifdef _WIN32
-// unlink is deprecated on Win. Use _unlink.
-#define unlink _unlink
+  if (DeleteFileA(name.c_str()) == FALSE) {
+    return ::util::Status(false);
+  }
+#else
+  if (unlink(name.c_str()) != 0) {
+    return ::util::Status(false);
+  }
 #endif  // _WIN32
+  return ::util::Status(true);
+}
 
 ::util::Status RecursivelyDelete(absl::string_view path,
                                  const file::Options& options) {
@@ -36,8 +46,9 @@ namespace file {
     return ::util::Status(false);
   }
   if (entries.empty()) {
-    if (unlink(name.c_str()) != 0) {
-      return ::util::Status(false);
+    ::util::Status status = Delete(name, options);
+    if (!status.ok()) {
+      return status;
     }
   }
   for (const auto& ent : entries) {
@@ -51,8 +62,9 @@ namespace file {
         return status;
       }
     } else {
-      if (unlink(filename.c_str()) != 0) {
-        return ::util::Status(false);
+      ::util::Status status = Delete(filename, options);
+      if (!status.ok()) {
+        return status;
       }
     }
   }

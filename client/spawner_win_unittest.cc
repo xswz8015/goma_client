@@ -8,12 +8,14 @@
 #include "spawner_win.h"
 
 #include "compiler_specific.h"
+#include "filesystem.h"
 #include "path.h"
 MSVC_PUSH_DISABLE_WARNING_FOR_PROTO()
 #include "client/subprocess.pb.h"
 MSVC_POP_WARNING()
 #include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
+#include "options.h"
 #include "util.h"
 
 #include <glog/logging.h>
@@ -46,7 +48,7 @@ TEST(SpawnerWin, SpawnerAndLogToFile) {
 
   strcat_s(buffer, PATH_MAX, "\\");
   strcat_s(buffer, PATH_MAX, "dump_env.stdout.log");
-  _unlink(buffer);
+  file::Delete(buffer, file::Defaults());
 
   devtools_goma::SpawnerWin spawner;
   spawner.SetFileRedirection("", stdout_filename, stderr_filename,

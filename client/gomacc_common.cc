@@ -41,12 +41,14 @@
 #include "file_helper.h"
 #include "file_path_util.h"
 #include "file_stat.h"
+#include "filesystem.h"
 #include "gcc_flags.h"
 #include "glog/logging.h"
 #include "goma_ipc_addr.h"
 #include "gomacc_argv.h"
 #include "ioutil.h"
 #include "mypath.h"
+#include "options.h"
 #include "path.h"
 #include "platform_thread.h"
 #include "scoped_fd.h"
@@ -509,7 +511,7 @@ GomaClient::~GomaClient() {
   for (const auto& it : rsp_files_) {
     ScopedFd* fd = it.second;
     delete fd;
-    DeleteFileA(it.first.c_str());
+    file::Delete(it.first, file::Defaults());
   }
   for (const auto* fd : optional_files_) {
     delete fd;

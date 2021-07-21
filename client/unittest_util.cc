@@ -77,11 +77,7 @@ void TmpdirUtil::CreateEmptyFile(const std::string& path) {
 }
 
 void TmpdirUtil::RemoveTmpFile(const std::string& path) {
-#ifndef _WIN32
-  unlink(FullPath(path).c_str());
-#else
-  DeleteFileA(FullPath(path).c_str());
-#endif
+  file::Delete(FullPath(path), file::Defaults());
 }
 
 void TmpdirUtil::MkdirForPath(const std::string& path, bool is_dir) {

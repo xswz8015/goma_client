@@ -9,9 +9,11 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_split.h"
 #include "base/file_dir.h"
+#include "base/filesystem.h"
 #include "file_helper.h"
 #include "glog/logging.h"
 #include "glog/stl_logging.h"
+#include "options.h"
 #include "path.h"
 #include "util.h"
 
@@ -32,6 +34,12 @@ bool AnalyzeDepsFile(absl::string_view filename,
   std::string deps_info;
   if (!ReadFileToString(filename, &deps_info)) {
     LOG(ERROR) << "failed to open " << filename;
+    return false;
+  }
+
+  ::util::Status status = file::Delete(filename, file::Defaults());
+  if (!status.ok()) {
+    PLOG(ERROR) << "failed to delete deps_info file \"" << filename << "\"";
     return false;
   }
 
