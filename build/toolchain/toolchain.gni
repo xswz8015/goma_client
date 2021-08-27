@@ -58,9 +58,10 @@ declare_args() {
 
 # in chromium's build_overrides/build.gni
 if (host_os == "mac" && use_system_xcode == "") {
-  _result = exec_script("//build/mac/should_use_hermetic_xcode.py",
-                        [ target_os ],
-                        "value")
+  _result = exec_script(
+          "//third_party/chromium_build/mac/should_use_hermetic_xcode.py",
+          [ target_os ],
+          "value")
 
   # TODO: Re-enable this check once hermetic toolchain
   # runs on latest macOS release [Mojave].
@@ -81,7 +82,7 @@ if (generate_linker_map) {
 declare_args() {
   if (is_clang) {
     # Clang compiler version. Clang files are placed at version-dependent paths.
-    clang_version = "13.0.0"
+    clang_version = "14.0.0"
   }
 }
 

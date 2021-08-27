@@ -1,13 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 """Tests for goma_ctl."""
 
-from __future__ import print_function
-
 import imp
+import io
 import json
 import optparse
 import os
@@ -18,14 +17,6 @@ import sys
 import tempfile
 import time
 import unittest
-
-# TODO: remove this when we deprecate python2.
-if sys.version_info >= (3, 0):
-  import io
-  STRINGIO = io.StringIO
-else:
-  import cStringIO
-  STRINGIO = cStringIO.StringIO
 
 _GOMA_CTL = 'goma_ctl.py'
 
@@ -285,7 +276,7 @@ class GomaCtlTestCommon(unittest.TestCase):
     _ClearGomaEnv()
 
     # suppress stdout and make it available from test.
-    sys.stdout = STRINGIO()
+    sys.stdout = io.StringIO()
 
     mod_name, _ = os.path.splitext(_GOMA_CTL)
     # Copy GOMA client commands to a temporary directory.

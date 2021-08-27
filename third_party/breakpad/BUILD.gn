@@ -17,7 +17,7 @@
 import("//third_party/chromium_build/symlink.gni")
 
 if (os == "win") {
-  import("//build/config/win/visual_studio_version.gni")
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 }
 
 config("goma_breakpad_config") {

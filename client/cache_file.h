@@ -27,11 +27,10 @@ class CacheFile {
   ~CacheFile();
 
   bool Load(google::protobuf::Message* data) const;
-  // Load message with max limit. if |total_bytes_limit| < 0
-  // and warning_threshold < 0, the default limit will be used.
+  // Load message with max limit. if |total_bytes_limit| < 0,
+  // the default limit will be used.
   bool LoadWithMaxLimit(google::protobuf::Message* data,
-                        int total_bytes_limit,
-                        int warning_threshold) const;
+                        int total_bytes_limit) const;
   bool Save(const google::protobuf::Message& data) const;
 
   const std::string& filename() const { return filename_; }

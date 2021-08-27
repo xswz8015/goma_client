@@ -5,3 +5,5 @@ ukai@google.com
 yekuang@google.com
 yyanagisawa@chromium.org
 yyanagisawa@google.com
+
+per-file DEPS=chromium-internal-autoroll@skia-corp.google.com.iam.gserviceaccount.com

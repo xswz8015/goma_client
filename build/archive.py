@@ -1,11 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 """Creates goma client release archives."""
-
-from __future__ import print_function
 
 
 
@@ -143,6 +141,7 @@ def MkTarball(src, dst_tar_file):
     if info.name:
       print('Adding: %s' % info.name)
       return info
+    return None
 
   mode = 'w:gz'
   if os.path.splitext(dst_tar_file)[1] == '.tbz':
@@ -242,15 +241,15 @@ def main():
       if not os.path.exists(pdb):
         pdb = cmd + '.pdb'
       shutil.copy(pdb, distname)
-    for f in ('.vpython', 'goma_auth.py', 'goma_auth.bat', 'goma_ctl.py',
-              'goma_ctl.bat', 'diagnose_goma_log.py', 'compiler_proxy.sym',
-              'sha256.json', 'gomacc.sym', 'LICENSE', 'http_proxy.exe'):
+    for f in ('goma_auth.py', 'goma_auth.bat', 'goma_ctl.py', 'goma_ctl.bat',
+              'diagnose_goma_log.py', 'compiler_proxy.sym', 'sha256.json',
+              'gomacc.sym', 'LICENSE', 'http_proxy.exe'):
       shutil.copy(f, distname)
   else:
-    for f in ('.vpython', 'gomacc', 'compiler_proxy', 'goma_fetch',
-              'report_env.sh', 'diagnose_goma_log.py', 'compiler_proxy.sym',
-              'goma_auth.py', 'goma_auth', 'goma_ctl.py', 'sha256.json',
-              'gomacc.sym', 'LICENSE', 'http_proxy'):
+    for f in ('gomacc', 'compiler_proxy', 'goma_fetch', 'report_env.sh',
+              'diagnose_goma_log.py', 'compiler_proxy.sym', 'goma_auth.py',
+              'goma_auth', 'goma_ctl.py', 'sha256.json', 'gomacc.sym',
+              'LICENSE', 'http_proxy'):
       shutil.copy(f, distname)
     CreatePlatformGomacc(distname, options.platform)
     InstallPlatformFiles(distname, options.platform)

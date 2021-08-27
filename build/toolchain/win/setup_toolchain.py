@@ -21,7 +21,10 @@ import re
 import subprocess
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+sys.path.append(
+    os.path.join(
+        os.path.dirname(__file__), os.pardir, os.pardir, os.pardir,
+        'third_party', 'chromium_build'))
 import gn_helpers
 
 SCRIPT_DIR = os.path.dirname(__file__)

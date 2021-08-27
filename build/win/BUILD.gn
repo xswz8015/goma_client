@@ -16,7 +16,7 @@ windows_manifest("default_exe_manifest") {
 
 if (os == "win") {
   action("copy_cdb_to_output") {
-    script = "//build/win/copy_cdb_to_output.py"
+    script = "//third_party/chromium_build/win/copy_cdb_to_output.py"
     inputs = [ script ]
     outputs = [
       "$root_out_dir/cdb/cdb.exe",

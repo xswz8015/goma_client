@@ -20,6 +20,5 @@ lss
 markupsafe
 nasm
 protobuf/protobuf
-subprocess32
 xz
 zlib

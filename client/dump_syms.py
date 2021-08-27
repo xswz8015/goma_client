@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2015 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -73,7 +73,7 @@ class MacDumpSyms(DumpSyms):
         r'|^.*: the DIE at offset 0x[a-f\d]+ has a DW_AT_.*$' +
         r'|^.*: warning: failed to demangle [\.\w]+$' +
         r'|^.*: in compilation unit .* \(offset 0x[a-f\d]+\):$')
-      for line in stderr_data.split('\n'):
+      for line in stderr_data.decode('utf-8').splitlines():
         if line != '' and not filter_re.match(line):
           print(line, file=sys.stderr)
 

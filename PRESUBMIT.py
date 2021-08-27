@@ -118,10 +118,14 @@ def CheckChangeOnUpload(input_api, output_api):
   def license_header_filter(x):
     if x.LocalPath().endswith(".md"):
       return False
+    if input_api.os_path.basename(x.LocalPath()) == 'OWNERS':
+      return False
     return source_file_filter(x)
 
   def long_line_filter(x):
     if x.LocalPath().endswith(".go"):
+      return False
+    if input_api.os_path.basename(x.LocalPath()) == 'OWNERS':
       return False
     return source_file_filter(x)
 

@@ -2227,7 +2227,7 @@ class GomaEnvWin(GomaEnv):
 
     name_buffer = ctypes.create_unicode_buffer(size.contents.value)
     GetUserNameEx(NameSamCompatible, name_buffer, size)
-    return name_buffer.value.encode('utf-8')
+    return name_buffer.value
 
 
 class GomaEnvPosix(GomaEnv):
@@ -2271,7 +2271,12 @@ class GomaEnvPosix(GomaEnv):
     return image_name in output
 
   def _CreateDetachedProcess(self, cmd, **kwargs):
-    return PopenWithCheck(cmd, **kwargs)
+    # Connect stdin/out/err to /dev/null if not specified by the caller
+    # so that the process stops using the current tty.
+    kwargs.setdefault('stdin', subprocess.DEVNULL)
+    kwargs.setdefault('stdout', subprocess.DEVNULL)
+    kwargs.setdefault('stderr', subprocess.DEVNULL)
+    return PopenWithCheck(cmd, start_new_session=True, **kwargs)
 
   def _ExecCompilerProxy(self):
     if _IsFlagTrue('GOMA_COMPILER_PROXY_DAEMON_MODE'):

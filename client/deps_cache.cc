@@ -66,7 +66,7 @@ DepsCache* DepsCache::instance_;
 
 DepsCache::DepsCache(const std::string& cache_filename,
                      absl::optional<absl::Duration> identifier_alive_duration,
-                     size_t deps_table_size_threshold,
+                     int deps_table_size_threshold,
                      int max_proto_size_in_mega_bytes)
     : cache_file_(cache_filename),
       identifier_alive_duration_(identifier_alive_duration),
@@ -81,7 +81,7 @@ DepsCache::~DepsCache() {}
 // static
 void DepsCache::Init(const std::string& cache_filename,
                      absl::optional<absl::Duration> identifier_alive_duration,
-                     size_t deps_table_size_threshold,
+                     int deps_table_size_threshold,
                      int max_proto_size_in_mega_bytes) {
   if (cache_filename.empty()) {
     LOG(INFO) << "DepsCache is disabled.";
@@ -357,12 +357,15 @@ bool DepsCache::LoadGomaDeps() {
   }
   GomaDeps goma_deps;
 
-  const int total_bytes_limit = max_proto_size_in_mega_bytes_ * 1024 * 1024;
-  const int warning_threshold = total_bytes_limit * 3 / 4;
+  int total_bytes_limit = max_proto_size_in_mega_bytes_ * 1024 * 1024;
+  if (max_proto_size_in_mega_bytes_ < 0) {
+    // use the default limit.
+    // See:
+    // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.coded_stream#CodedInputStream.SetTotalBytesLimit.details
+    total_bytes_limit = -1;
+  }
 
-  if (!cache_file_.LoadWithMaxLimit(&goma_deps,
-                                    total_bytes_limit,
-                                    warning_threshold)) {
+  if (!cache_file_.LoadWithMaxLimit(&goma_deps, total_bytes_limit)) {
     LOG(ERROR) << "failed to load cache file " << cache_file_.filename();
     return false;
   }
@@ -502,7 +505,8 @@ bool DepsCache::SaveGomaDeps() {
 
   // Checks the size of DepsTable. If it exceeds threshold, we'd like to remove
   // older identifiers.
-  if (deps_table_.size() > deps_table_size_threshold_) {
+  if (deps_table_size_threshold_ >= 0 &&
+      deps_table_.size() > deps_table_size_threshold_) {
     LOG(INFO) << "DepsTable size " << deps_table_.size()
               << " exceeds the threshold " << deps_table_size_threshold_
               << ". Older cache will be deleted";

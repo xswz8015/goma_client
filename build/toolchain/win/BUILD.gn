@@ -5,8 +5,8 @@
 # found in the LICENSE file.
 
 import("//build/config/clang/clang.gni")
-import("//build/config/win/visual_studio_version.gni")
 import("//build/toolchain/goma.gni")
+import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
 # Should only be running on Windows.
 assert(os == "win")
@@ -39,7 +39,7 @@ if (current_toolchain == default_toolchain) {
   } else {
     configuration_name = "Release"
   }
-  exec_script("../../vs_toolchain.py",
+  exec_script("//third_party/chromium_build/vs_toolchain.py",
               [
                 "copy_dlls",
                 rebase_path(root_build_dir),

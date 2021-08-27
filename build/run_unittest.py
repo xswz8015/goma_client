@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -7,28 +7,15 @@
 Use -h to see its usage.
 """
 
-from __future__ import print_function
-
 
 
 import argparse
 import find_depot_tools
 import os
+import subprocess
 import sys
 
 SCRIPT_DIR = os.path.dirname(__file__)
-
-# use subprocess on python3 as recommended by
-# third_party/subprocess32/README.md
-# but windows needs to use subprocess32 too (for timeout keyword argument)
-if sys.version_info[0] < 3:
-  sys.path.append(
-      os.path.join(SCRIPT_DIR, os.pardir, "third_party", "subprocess32"))
-  import subprocess32 as subprocess
-else:
-  import subprocess
-
-
 CLIENT_ABS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '..'))
 OUT_ABS_DIR = os.path.abspath(os.path.join(CLIENT_ABS_DIR, 'out'))
 
@@ -86,7 +73,7 @@ def RunTest(build_dir, target, case_opt, non_stop):
 
   for case_key in TEST_DIRS:
     case_names = TestNames(case_key)
-    if case_opt != "all" and case_opt != case_key:
+    if case_opt not in ("all", case_key):
       continue
     expected_passes += len(case_names)
     for case in case_names:

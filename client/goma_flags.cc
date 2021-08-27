@@ -436,13 +436,17 @@ GOMA_DEFINE_int32(DEPS_CACHE_IDENTIFIER_ALIVE_DURATION, 3 * 24 * 3600,
                   "Deps cache older than this value (in second) will be "
                   "removed in saving/loading. If negative, any cache won't be "
                   "removed.");
-GOMA_DEFINE_int32(DEPS_CACHE_TABLE_THRESHOLD, 70000,
+GOMA_DEFINE_int32(DEPS_CACHE_TABLE_THRESHOLD,
+                  -1,
                   "The max size of DepsCache table threshold. If the number of "
                   "DepsCache table exceeds this value, older DepsCache entry "
-                  "will be removed in saving.");
-GOMA_DEFINE_int32(DEPS_CACHE_MAX_PROTO_SIZE_IN_MB, 128,
+                  "will be removed in saving."
+                  "If negative, we do not limit the table size.");
+GOMA_DEFINE_int32(DEPS_CACHE_MAX_PROTO_SIZE_IN_MB,
+                  -1,
                   "The max size of DepsCache file. If the file size exceeds "
-                  "this limit, loading will fail. Unit is MB.");
+                  "this limit, loading will fail. Unit is MB."
+                  "If negative, the default limit is used. i.e. INT_MAX");
 GOMA_DEFINE_string(COMPILER_INFO_CACHE_FILE, "compiler_info_cache",
                    "Filename of compiler_info's cache. "
                    "If empty, compiler_info cache file is not used. "

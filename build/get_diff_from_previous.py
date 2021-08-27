@@ -1,12 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2016 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 """Script to show diff from previous commit."""
-
-from __future__ import print_function
 
 import argparse
 import json
@@ -24,7 +22,7 @@ def main():
 
   git = 'git.bat' if os.name == 'nt' else 'git'
   out = subprocess.check_output([git, 'diff', '--name-only', 'HEAD~1'],
-                                cwd=SCRIPT_DIR)
+                                cwd=SCRIPT_DIR).decode('utf-8')
 
   if options.output_json:
     with open(options.output_json, 'w') as f:

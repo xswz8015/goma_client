@@ -7,8 +7,8 @@
 # with modification for goma client.
 # - remove import build/config/chrome_build.gni
 
-import("//build/config/mac/mac_sdk_overrides.gni")
 import("//build/toolchain/toolchain.gni")
+import("//third_party/chromium_build/config/mac/mac_sdk_overrides.gni")
 
 declare_args() {
   # The MACOSX_DEPLOYMENT_TARGET variable used when compiling. This partially
@@ -18,7 +18,7 @@ declare_args() {
   # additional code changes are required to be compliant with the availability
   # rules.
   # Must be of the form x.x.x for Info.plist files.
-  mac_deployment_target = "10.9.0"
+  mac_deployment_target = "10.11.0"
 
   # The value of the LSMinimmumSystemVersion in Info.plist files. This partially
   # controls the minimum supported version of macOS for Chromium by
@@ -26,7 +26,7 @@ declare_args() {
   # dropping support for older macOSes. This should be greater than or equal to
   # the mac_deployment_target version.
   # Must be of the form x.x.x for Info.plist files.
-  mac_min_system_version = "10.10.0"
+  mac_min_system_version = "10.11.0"
 
   # Path to a specific version of the Mac SDK, not including a slash at the end.
   # If empty, the path to the lowest version greater than or equal to
@@ -53,9 +53,10 @@ _verify_sdk = is_chrome_branded && is_official_build && target_os != "ios"
 # use_system_xcode = false.
 if (!use_system_xcode) {
   _hermetic_xcode_path =
-      rebase_path("//build/${target_os}_files/xcode_binaries",
-                  "",
-                  root_build_dir)
+      rebase_path(
+          "//third_party/chromium_build/${target_os}_files/xcode_binaries",
+          "",
+          root_build_dir)
 }
 
 find_sdk_args = [ "--print_sdk_path" ]
@@ -100,7 +101,7 @@ xcode_version = _mac_sdk_result.xcode_version
 xcode_build = _mac_sdk_result.xcode_build
 
 if (mac_sdk_version != mac_sdk_min &&
-    exec_script("//build/check_return_value.py",
+    exec_script("//third_party/chromium_build/check_return_value.py",
                 [
                   "test",
                   xcode_version,

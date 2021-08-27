@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -7,8 +7,6 @@
 
 The script uses the production servers.
 """
-
-from __future__ import print_function
 
 import glob
 import imp
@@ -21,16 +19,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-try:
-  import urllib.request, urllib.error
-  URLOPEN = urllib.request.urlopen
-  URLREQUEST = urllib.request.Request
-  HTTPERROR = urllib.error.HTTPError
-except ImportError:
-  import urllib2
-  URLOPEN = urllib2.urlopen
-  URLREQUEST = urllib2.Request
-  HTTPERROR = urllib2.HTTPError
+from urllib import request, error
 
 
 _GOMA_CTL = 'goma_ctl.py'
@@ -211,7 +200,7 @@ class SimpleTryTest(unittest.TestCase):
     for log in logs:
       with open(log) as f:
         print('log: %s:' % log)
-        print(f.read())
+        print(f.read().decode('utf-8'))
         print()
     self.assertEqual(len(logs), 0)
 
@@ -278,13 +267,13 @@ class SimpleTryTest(unittest.TestCase):
   def testDisabledShouldWork(self):
     stat_url = 'http://localhost:%s/statz' % (
         os.environ['GOMA_COMPILER_PROXY_PORT'])
-    stat_before = URLOPEN(stat_url).read()
+    stat_before = request.urlopen(stat_url).read().decode('utf-8')
     os.environ['GOMA_DISABLED'] = 'true'
     self.AssertSuccess([self.gomacc, self.local_cl, '/c', '/Fotest.obj',
                         os.path.join('test', 'hello.c')],
                        msg='remote compile')
     del os.environ['GOMA_DISABLED']
-    stat_after = URLOPEN(stat_url).read()
+    stat_after = request.urlopen(stat_url).read().decode('utf-8')
     request_line_before = '\n'.join(
         [line for line in stat_before.split('\n') if 'request' in line])
     request_line_after = '\n'.join(
@@ -297,13 +286,13 @@ class SimpleTryTest(unittest.TestCase):
   def testLocalFallbackShouldWork(self):
     stat_url = 'http://localhost:%s/statz' % (
         os.environ['GOMA_COMPILER_PROXY_PORT'])
-    stat_before = URLOPEN(stat_url).read()
+    stat_before = request.urlopen(stat_url).read().decode('utf-8')
     os.environ['GOMA_FALLBACK_INPUT_FILES'] = os.path.join('test', 'hello.c')
     self.AssertSuccess([self.gomacc, self.local_cl, '/c', '/Fotest.obj',
                         os.path.join('test', 'hello.c')],
                        msg='local fallback')
     del os.environ['GOMA_FALLBACK_INPUT_FILES']
-    stat_after = URLOPEN(stat_url).read()
+    stat_after = request.urlopen(stat_url).read().decode('utf-8')
     request_line_before = '\n'.join(
         [line for line in stat_before.split('\n') if 'fallback' in line])
     request_line_after = '\n'.join(
@@ -342,10 +331,10 @@ class SimpleTryTest(unittest.TestCase):
         os.environ['GOMA_COMPILER_PROXY_PORT'])
     with open(os.path.join('test', 'badreq.bin'), 'rb') as f:
       req_data = f.read()
-    req = URLREQUEST(url, req_data)
+    req = request.Request(url, req_data)
     req.add_header('Content-Type', 'binary/x-protocol-buffer')
-    with self.assertRaises(HTTPERROR) as cm:
-      URLOPEN(req)
+    with self.assertRaises(error.HTTPError) as cm:
+      request.urlopen(req)
     ec = cm.exception.getcode()
     self.assertEqual(ec, 401, msg=('response code=%d; want=401' % ec))
     self.AssertNoGomaccInfo()
@@ -481,7 +470,7 @@ def _SetupVSEnv():
     Error: if it cannot find cl.exe and cannot set proper env for cl.exe.
   """
   try:
-    where_cl = subprocess.check_output(['where', 'cl'])
+    where_cl = subprocess.check_output(['where', 'cl']).decode('utf-8')
     local_cl = where_cl.split('\n')[0].strip()
     if os.path.exists(local_cl):
       return
@@ -491,10 +480,11 @@ def _SetupVSEnv():
   # Cannot find cl.exe in PATH.  Let me set it in depot_tools.
   # The script also set INCLUDE, LIB, PATH at the same time.
   print('Going to use cl.exe in depot_tools.')
-  out = subprocess.check_output(['python',
-                                 os.path.join(_SCRIPT_DIR, '..', 'build',
-                                              'vs_toolchain.py'),
-                                 'get_toolchain_dir'])
+  out = subprocess.check_output([
+      sys.executable,
+      os.path.join(_SCRIPT_DIR, '..', 'third_party', 'chromium_build',
+                   'vs_toolchain.py'), 'get_toolchain_dir'
+  ]).decode('utf-8')
   vs_path_pattern = re.compile('^vs_path\s+=\s+"([^"]+)"')
   sdk_path_pattern = re.compile('^sdk_path\s+=\s+"([^"]+)"')
   vs_path = None
@@ -512,8 +502,9 @@ def _SetupVSEnv():
     raise Error('Do not know proper vs_path or sdk_path.')
   # Since clang-cl.exe generates x64 binary by default, we should use
   # x64 configs.
-  out = subprocess.check_output([os.path.join(sdk_path, 'bin/setenv.cmd'),
-                                 '/x64', '&&', 'set'])
+  out = subprocess.check_output(
+      [os.path.join(sdk_path, 'bin/setenv.cmd'), '/x64', '&&',
+       'set']).decode('utf-8')
   for line in out.splitlines():
     key, value = line.split('=')
     if key.upper() in ('INCLUDE', 'LIB', 'PATH'):

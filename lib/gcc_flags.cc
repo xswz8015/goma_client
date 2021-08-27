@@ -798,11 +798,19 @@ bool GCCFlags::IsServerImportantEnv(const char* env) const {
       "C_INCLUDE_PATH=",
       "CPLUS_INCLUDE_PATH=",
       "OBJC_INCLUDE_PATH=",
+      // TODO: remove this when python2 compatibility is removed
+      //                    from chromeos-chrome package build, and we do not
+      //                    need to set PNACLPYTHON as a workaround.
+      "PNACLPYTHON=",
       "DEPENDENCIES_OUTPUT=",
       "SUNPRO_DEPENDENCIES=",
       "MACOSX_DEPLOYMENT_TARGET=",
       "SDKROOT=",
       "PWD=",
+
+      // ChromeOS toolchain wrapper.
+      // http://b/197903824
+      "FORCE_DISABLE_WERROR",
   };
 
   for (const char* check_env : kCheckEnvs) {

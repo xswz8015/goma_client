@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "843b4269cfbceb108f3c7de5d28ec12c2b78087c",
+     "clang_revision": "5ab37cd7bdc39c0cbe420c8e048c58d254eebbcd",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
@@ -41,7 +41,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@7a817f48bafee508b2d23ad278f892ee1cb32b91",
+     "https://boringssl.googlesource.com/boringssl@c6d3fd1d0972d17b2b115f6b7482b62e50406f56",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":
@@ -61,7 +61,7 @@ deps = {
      # chromium's buildtools containing libc++, libc++abi, clang_format and gn.
      "client/buildtools":
      Var("chromium_git") + "/chromium/src/buildtools@" +
-         "69cc9b8a3ae010e0721c4bea12de7a352d9a93f9",
+         "37dc929ecb351687006a61744b116cda601753d7",
 
      # libFuzzer
      "client/third_party/libFuzzer/src":
@@ -99,18 +99,13 @@ deps = {
      "client/third_party/gflags/src":
      "https://github.com/gflags/gflags.git@46f73f88b18aee341538c0dfc22b1710a6abedef",
 
-     # subprocess32 3.5.3
-     "client/third_party/subprocess32":
-     "https://github.com/google/python-subprocess32@" +
-     "0a814da4a033875880534fd488770e2d97febe2f",
-
      # libyaml dist-0.2.2
      "client/third_party/libyaml/src":
      "https://github.com/yaml/libyaml.git@d407f6b1cccbf83ee182144f39689babcb220bd6",
 
      # chromium's build.
      "client/third_party/chromium_build":
-     "https://chromium.googlesource.com/chromium/src/build/@909847cd6faf918168fcd73880daf81b5a15ec0a",
+     "https://chromium.googlesource.com/chromium/src/build/@cb0fa26dea8407bb1d78433f0a26d4bd02a79155",
 
      'client/tools/clang/dsymutil': {
        'packages': [
@@ -128,7 +123,7 @@ deps = {
          'packages': [
              {
                  'package': 'infra/3pp/tools/go/${{platform}}',
-                 'version': 'version:2@1.16.6',
+                 'version': 'version:2@1.17',
              },
          ],
          'dep_type': 'cipd',
@@ -190,7 +185,7 @@ hooks = [
        'pattern': '.',
        'condition': 'checkout_linux',
        'action': [
-         'python',
+         'python3',
          ('client/third_party/chromium_build/linux/sysroot_scripts/'
           'install-sysroot.py'),
           '--arch=x64',
@@ -201,29 +196,24 @@ hooks = [
      {
        'name': 'win_toolchain',
        'pattern': '.',
-       'action': ['python', 'client/build/vs_toolchain.py', 'update'],
+       'action': [
+         'python3',
+         'client/third_party/chromium_build/vs_toolchain.py',
+         'update',
+       ],
      },
      {
        "name": "clang",
        "pattern": ".",
-       "action": ["python", "client/tools/clang/scripts/update.py"],
-     },
-
-     # Pull binutils for linux, it is used for simpletry test.
-     {
-       "name": "binutils",
-       "pattern": ".",
-       "action": [
-         "python",
-         "client/test/third_party/binutils/download.py",
-       ],
+       "action": ["python3", "client/tools/clang/scripts/update.py"],
      },
 
      {
        # Update LASTCHANGE.
        'name': 'lastchange',
        'pattern': '.',
-       'action': ['python', 'client/build/util/lastchange.py',
+       'action': ['python3',
+                  'client/third_party/chromium_build/util/lastchange.py',
                   '-o', 'client/build/util/LASTCHANGE'],
      },
 
@@ -266,7 +256,8 @@ hooks = [
        'name': 'mac_toolchain',
        'pattern': '.',
        'condition': 'checkout_ios or checkout_mac',
-       'action': ['python', 'client/build/mac_toolchain.py'],
+       'action': ['python3',
+                  'client/third_party/chromium_build/mac_toolchain.py'],
      },
 
      # Ensure that the DEPS'd "depot_tools" has its self-update capability
@@ -275,7 +266,7 @@ hooks = [
        'name': 'disable_depot_tools_selfupdate',
        'pattern': '.',
        'action': [
-         'python',
+         'python3',
          'client/third_party/depot_tools/update_depot_tools_toggle.py',
          '--disable',
        ],

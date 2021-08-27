@@ -57,6 +57,7 @@ static_library("nacl_compiler_info_builder_helper_lib") {
 
   deps = [
     "//base",
+    "//client:common",
     "//lib",
     "//third_party/abseil",
   ]

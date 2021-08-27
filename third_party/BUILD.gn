@@ -5,7 +5,7 @@
 if (os != "win") {
   config_h_dir = "config/glog/$os"
 } else {
-  import("//build/config/win/visual_studio_version.gni")
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
   config_h_dir = "glog/src/windows"
 }
 

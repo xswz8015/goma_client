@@ -22,12 +22,11 @@ CacheFile::CacheFile(std::string filename) : filename_(std::move(filename)) {}
 CacheFile::~CacheFile() {}
 
 bool CacheFile::Load(google::protobuf::Message* msg) const {
-  return LoadWithMaxLimit(msg, -1, -1);
+  return LoadWithMaxLimit(msg, -1);
 }
 
 bool CacheFile::LoadWithMaxLimit(google::protobuf::Message* msg,
-                                 int total_bytes_limit,
-                                 int warning_threshold) const {
+                                 int total_bytes_limit) const {
   const std::string sha256_path = filename_ + ".sha256";
   {
     // First, check *.sha256, so that it is not corrupted.
@@ -61,13 +60,11 @@ bool CacheFile::LoadWithMaxLimit(google::protobuf::Message* msg,
   // However, FileInputStream takes fd and we need to support Windows.
   google::protobuf::io::IstreamInputStream iis(&f);
   google::protobuf::io::CodedInputStream input(&iis);
-  if (total_bytes_limit >= 0 && warning_threshold >= 0) {
-    input.SetTotalBytesLimit(total_bytes_limit, warning_threshold);
-  } else if (total_bytes_limit >= 0 || warning_threshold >= 0) {
-    LOG(ERROR) << "only one of total_bytes_limit or warning_threshold"
-               << " is set. Set both."
-               << " total_bytes_limit=" << total_bytes_limit
-               << " warning_threshold=" << warning_threshold;
+  if (total_bytes_limit >= 0) {
+    input.SetTotalBytesLimit(total_bytes_limit);
+    LOG(INFO) << "set total bytes limit."
+              << " filename=" << filename_
+              << " total_bytes_limit=" << total_bytes_limit;
   }
 
   if (!msg->ParseFromCodedStream(&input)) {
@@ -82,6 +79,8 @@ bool CacheFile::Save(const google::protobuf::Message& msg) const {
   {
     std::string msg_buf;
     msg.SerializeToString(&msg_buf);
+    LOG(INFO) << "cache file: "
+              << " filename=" << filename_ << " size=" << msg_buf.size();
     if (!WriteStringToFile(msg_buf, filename_)) {
       LOG(ERROR) << "failed to write " << filename_;
       return false;

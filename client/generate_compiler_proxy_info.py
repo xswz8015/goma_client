@@ -28,17 +28,7 @@ import sys
 
 def GetUserName():
   """Obtain user ID string."""
-  try:
-    return getpass.getuser()
-  except Exception:
-    # TODO: Do we have better solution here?
-    # When using ninja on Windows, several envvars are dropped.
-    # So getpass.getuser() cannot estimate username correctly.
-    try:
-      import win32api  # pylint: disable=F0401
-      return win32api.GetUserName()
-    except ImportError:
-      return 'unknown'
+  return getpass.getuser()
 
 
 def GetHostName():

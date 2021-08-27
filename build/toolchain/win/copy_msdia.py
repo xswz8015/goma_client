@@ -6,8 +6,11 @@ import os
 import shutil
 import sys
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir))
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir,
+        os.pardir, 'third_party', 'chromium_build'))
 
 import vs_toolchain
 
@@ -30,4 +33,4 @@ def main(target_dir):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1]))
+  sys.exit(main(sys.argv[1]))

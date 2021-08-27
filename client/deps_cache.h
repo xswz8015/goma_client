@@ -51,7 +51,7 @@ class DepsCache {
   // When |cache_filename| file exists, call LoadIfEnabled to load cache file.
   static void Init(const std::string& cache_filename,
                    absl::optional<absl::Duration> identifier_alive_duration,
-                   size_t deps_table_size_threshold,
+                   int deps_table_size_threshold,
                    int max_proto_size_in_mega_bytes);
   // Load cached data from cache_filename,
   // when cache_filename is not empty.
@@ -132,7 +132,7 @@ class DepsCache {
 
   DepsCache(const std::string& cache_filename,
             absl::optional<absl::Duration> identifier_alive_duration,
-            size_t deps_table_size_threshold,
+            int deps_table_size_threshold,
             int max_proto_size_in_mega_bytes);
   ~DepsCache();
 
@@ -169,7 +169,7 @@ class DepsCache {
   const absl::optional<absl::Duration> identifier_alive_duration_;
   // When lots of DepsTable exist, we'd like to remove older DepsTable entry
   // when saving.
-  const size_t deps_table_size_threshold_;
+  const int deps_table_size_threshold_;
   // If the proto for cache exceeds this size, loading will fail.
   // In that case, cache is just ignored.
   const int max_proto_size_in_mega_bytes_;

@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 generate_compiler_proxy_info = "generate_compiler_proxy_info.py"
 
-import("//build/util/lastchange.gni")
 import("//testing/libfuzzer/fuzzer_test.gni")
+import("//third_party/chromium_build/util/lastchange.gni")
 import("//third_party/protobuf/proto_library.gni")
 
 group("client") {
@@ -919,11 +919,6 @@ copy("copy_goma_ctl_py") {
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
 }
 
-copy("copy_vpython") {
-  sources = [ "//.vpython" ]
-  outputs = [ "$root_out_dir/{{source_file_part}}" ]
-}
-
 copy("copy_diagnose_goma_log_py") {
   sources = [ "diagnose_goma_log.py" ]
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
@@ -1007,7 +1002,6 @@ if (os != "win") {
         ":copy_diagnose_goma_log_py",
         ":copy_goma_auth_py",
         ":copy_goma_ctl_py",
-        ":copy_vpython",
         ":dump_compiler_proxy_symbols",
         ":dump_gomacc_symbols",
         ":generate_license",
@@ -1026,7 +1020,6 @@ if (os != "win") {
         rebase_path("$root_out_dir/gomacc", root_build_dir),
         rebase_path("$root_out_dir/gomacc.sym", root_build_dir),
         rebase_path("$root_out_dir/goma_ctl.py", root_build_dir),
-        rebase_path("$root_out_dir/.vpython", root_build_dir),
         rebase_path("$root_out_dir/goma_fetch", root_build_dir),
         rebase_path("$root_out_dir/report_env.sh", root_build_dir),
         rebase_path("$root_out_dir/LICENSE", root_build_dir),
@@ -1088,7 +1081,6 @@ if (os != "win") {
         ":copy_diagnose_goma_log_py",
         ":copy_goma_auth_py",
         ":copy_goma_ctl_py",
-        ":copy_vpython",
         ":dump_compiler_proxy_symbols",
         ":dump_gomacc_symbols",
         ":generate_license",
@@ -1111,7 +1103,6 @@ if (os != "win") {
         rebase_path("$root_out_dir/gomacc.sym", root_build_dir),
         rebase_path("$root_out_dir/goma_ctl.bat", root_build_dir),
         rebase_path("$root_out_dir/goma_ctl.py", root_build_dir),
-        rebase_path("$root_out_dir/.vpython", root_build_dir),
         rebase_path("$root_out_dir/goma_fetch.exe", root_build_dir),
         rebase_path("$root_out_dir/goma_fetch.exe.pdb", root_build_dir),
         rebase_path("$root_out_dir/vcflags.exe", root_build_dir),

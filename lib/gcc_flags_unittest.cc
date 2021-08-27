@@ -1530,7 +1530,7 @@ TEST_F(GCCFlagsTest, ClangImportantEnv) {
   std::unique_ptr<CompilerFlags> flags(
       CompilerFlagsParser::MustNew(args, "/tmp"));
 
-  const size_t env_array_length = 8;
+  const size_t env_array_length = 9;
   const char** env =
       static_cast<const char**>(malloc(sizeof(const char*) * env_array_length));
   env[0] = strdup("PATH=/usr/bin:/bin");
@@ -1540,7 +1540,8 @@ TEST_F(GCCFlagsTest, ClangImportantEnv) {
   env[4] = strdup("MACOSX_DEPLOYMENT_TARGET=10.7");
   env[5] = strdup("SDKROOT=/tmp/path_to_root");
   env[6] = strdup("DEVELOPER_DIR=/tmp/path_to_developer_dir");
-  env[7] = nullptr;
+  env[7] = strdup("PNACLPYTHON=/usr/bin/python3");
+  env[8] = nullptr;
 
   std::vector<std::string> important_env;
   flags->GetClientImportantEnvs(env, &important_env);
@@ -1552,6 +1553,7 @@ TEST_F(GCCFlagsTest, ClangImportantEnv) {
   expected_env.push_back("MACOSX_DEPLOYMENT_TARGET=10.7");
   expected_env.push_back("SDKROOT=/tmp/path_to_root");
   expected_env.push_back("DEVELOPER_DIR=/tmp/path_to_developer_dir");
+  expected_env.push_back("PNACLPYTHON=/usr/bin/python3");
   EXPECT_EQ(expected_env, important_env);
 
   for (size_t i = 0; i < env_array_length; ++i) {
@@ -1577,6 +1579,7 @@ TEST_F(GCCFlagsTest, IsImportantEnvGCC) {
       {"MACOSX_DEPLOYMENT_TARGET=/tmp/to", true, true},
       {"SDKROOT=/tmp/to", true, true},
       {"PWD=/tmp/to", true, true},
+      {"PNACLPYTHON=/usr/bin/python3", true, true},
 
       {"DEVELOPER_DIR=/tmp/to", true, false},
 

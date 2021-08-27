@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 if (os == "win") {
-  import("//build/config/win/visual_studio_version.gni")
   import("//build/toolchain/goma.gni")
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 }
 
 import("//build/config/clang/clang.gni")
@@ -96,21 +96,6 @@ config("compiler") {
       cflags += sysroot_flags
       asmflags += sysroot_flags
       ldflags += sysroot_flags
-
-      # Need to get some linker flags out of the sysroot.
-      ld_paths = exec_script(
-              "//third_party/chromium_build/config/posix/sysroot_ld_path.py",
-              [
-                rebase_path(
-                    "//third_party/chromium_build/linux/sysroot_ld_path.sh",
-                    root_build_dir),
-                rebase_path(sysroot),
-              ],
-              "list lines")
-      foreach(ld_path, ld_paths) {
-        ld_path = rebase_path(ld_path, root_build_dir)
-        ldflags += [ "-L" + ld_path ]
-      }
     }
 
     if (use_lld) {
@@ -515,6 +500,7 @@ config("no_goma_code") {
         "-Wno-null-pointer-arithmetic",  # TODO:
                                          # Possibly reenable if the warning
                                          # becomes usable again upstream.
+        "-Wno-null-pointer-subtraction",
       ]
     }
   }
