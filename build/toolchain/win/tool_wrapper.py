@@ -31,14 +31,11 @@ def main(args):
 
 
 def ConvertToStr(inputstr):
-  """Convert byptes input to str on python3.  Leave this as-is on python2."""
-  if sys.version_info.major < 3:
-    return inputstr
-  else:
-    return inputstr.decode('utf-8')
+  """Convert byptes input to str on python3."""
+  return inputstr.decode('utf-8')
 
 
-class WinTool(object):
+class WinTool:
   """This class performs all the Windows tooling steps. The methods can either
   be executed directly, or dispatched from an argument list."""
 
@@ -98,7 +95,8 @@ class WinTool(object):
     """Emulation of rm -rf out && cp -af in out."""
     if os.path.exists(dest):
       if os.path.isdir(dest):
-        def _on_error(fn, path, dummy_excinfo):
+
+        def _on_error(fn, path, _):
           # The operation failed, possibly because the file is set to
           # read-only. If that's why, make it writable and try the op again.
           if not os.access(path, os.W_OK):
@@ -221,6 +219,7 @@ class WinTool(object):
             'Were /MANIFEST switches used in #pragma statements? ' % (
               intermediate_manifest, our_manifest, assert_manifest))
         return 1
+    return 0
 
   def ExecManifestWrapper(self, arch, *args):
     """Run manifest tool with environment set. Strip out undesirable warning
@@ -235,7 +234,7 @@ class WinTool(object):
         print(line)
     return popen.returncode
 
-  def ExecManifestToRc(self, dummy_arch, *args):
+  def ExecManifestToRc(self, _, *args):
     """Creates a resource file pointing a SxS assembly manifest.
     |args| is tuple containing path to resource file, path to manifest file
     and resource name which can be "1" (for executables) or "2" (for DLLs)."""
@@ -314,7 +313,7 @@ class WinTool(object):
     env = self._GetEnv(arch)
     # TODO: This is a temporary hack to get some specific variables
     # through to actions that are set after GN-time. http://crbug.com/333738.
-    for k, v in os.environ.iteritems():
+    for k, v in os.environ.items():
       if k not in env:
         env[k] = v
     args = open(rspfile).read()

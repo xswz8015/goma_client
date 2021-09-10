@@ -166,7 +166,8 @@ def CheckChangeOnUpload(input_api, output_api):
           r'out[\\/].*',
           r'third_party[\\/].*',
           r'tools[\\/].*',
-      ))
+      ),
+      version='2.6')
   results += input_api.canned_checks.CheckGNFormatted(input_api, output_api)
   results += CheckGNGenChecked(input_api, output_api)
   results += CheckLucicfg(input_api, output_api)

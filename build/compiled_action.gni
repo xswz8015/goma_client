@@ -100,7 +100,7 @@ template("compiled_action") {
       inputs = []
     }
 
-    script = "//build/gn_run_binary.py"
+    script = "//third_party/chromium_build/gn_run_binary.py"
 
     # Constuct the host toolchain version of the tool.
     host_tool = invoker.tool + "($host_toolchain)"
@@ -146,7 +146,7 @@ template("compiled_action_foreach") {
       inputs = []
     }
 
-    script = "//build/gn_run_binary.py"
+    script = "//third_party/chromium_build/gn_run_binary.py"
 
     # Constuct the host toolchain version of the tool.
     host_tool = invoker.tool + "($host_toolchain)"

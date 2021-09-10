@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copied from Chromium's build/ and modified for goma.
 # Copyright (c) 2011 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -11,8 +11,6 @@ imports breakpad.
 This can also be used as a standalone script to print out the depot_tools
 directory location.
 """
-
-from __future__ import print_function
 
 import os
 import sys

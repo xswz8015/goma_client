@@ -10,8 +10,6 @@
 It starts/stops compiler_proxy.exe or compiler_proxy.
 """
 
-from __future__ import print_function
-
 
 
 
@@ -37,18 +35,7 @@ import sys
 import tarfile
 import tempfile
 import time
-try:
-  import urllib.parse, urllib.request
-  URLJOIN = urllib.parse.urljoin
-  URLOPEN2 = urllib.request.urlopen
-  URLREQUEST = urllib.request.Request
-except ImportError:
-  import urllib
-  import urllib2
-  import urlparse
-  URLJOIN = urlparse.urljoin
-  URLOPEN2 = urllib2.urlopen
-  URLREQUEST = urllib2.Request
+import urllib.request
 import zipfile
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -115,9 +102,16 @@ def _SetGomaFlagDefaultValueIfEmpty(flag_name, default_value):
     os.environ[full_flag_name] = default_value
 
 
-def _DecodeBytesOnPython3(data):
-  """This function decodes bytes type on python3."""
-  if isinstance(data, bytes) and sys.version_info.major == 3:
+def _DecodeBytes(data):
+  """This function decodes bytes type to string.
+
+  Args:
+    data: arbitrary data type.  Can be None.
+
+  Returns:
+    returns utf-8 deocded data for bytes, otherwise return as-is.
+  """
+  if isinstance(data, bytes):
     return data.decode('utf-8')
   return data
 
@@ -131,7 +125,6 @@ def _ParseManifestContents(manifest):
   Returns:
     The dictionary of key and values in string.
   """
-  manifest = _DecodeBytesOnPython3(manifest)
   output = {}
   for line in manifest.splitlines():
     pair = line.strip().split('=', 1)
@@ -266,7 +259,6 @@ def _ParseLsof(data):
   Returns:
     a list of dictionaries parsed from data.
   """
-  data = _DecodeBytesOnPython3(data)
   pid = None
   uid = None
   contents = []
@@ -382,7 +374,6 @@ def _ParseFlagz(flagz):
   Returns:
     a dictionary of user-configured flags.
   """
-  flagz = _DecodeBytesOnPython3(flagz)
   envs = {}
   for line in flagz.splitlines():
     line = line.strip()
@@ -491,22 +482,22 @@ class CalledProcessError(Error):
 class Popen(subprocess.Popen):
   """subprocess.Popen with automatic bytes output to string conversion."""
 
-  def communicate(self, input=None):
+  def communicate(self, input=None, timeout=None):
     # pylint: disable=W0622
     # To keep the interface consisntent with subprocess.Popen,
     # we need to use |input| here.
-    stdout, stderr = super(Popen, self).communicate(input)
-    return _DecodeBytesOnPython3(stdout), _DecodeBytesOnPython3(stderr)
+    stdout, stderr = super().communicate(input, timeout)
+    return _DecodeBytes(stdout), _DecodeBytes(stderr)
 
 
 class PopenWithCheck(Popen):
   """subprocess.Popen with automatic exit status check on communicate."""
 
-  def communicate(self, input=None):
+  def communicate(self, input=None, timeout=None):
     # I do not think argument name |input| is good but this is from the original
     # communicate method.
     # pylint: disable=W0622
-    stdout, stderr = super(PopenWithCheck, self).communicate(input)
+    stdout, stderr = super().communicate(input, timeout)
     if self.returncode is None or self.returncode != 0:
       raise CalledProcessError(
           returncode=self.returncode,
@@ -527,7 +518,7 @@ def _CheckOutput(args, **kwargs):
                         **kwargs).communicate()[0]
 
 
-class HttpProxyDriver(object):
+class HttpProxyDriver:
   """Driver of http_proxy."""
 
   _PID_FILENAME = 'http_proxy.pid'
@@ -598,7 +589,7 @@ class HttpProxyDriver(object):
     return self._log_file
 
 
-class GomaDriver(object):
+class GomaDriver:
   """Driver of Goma control."""
 
   def __init__(self, env):
@@ -724,17 +715,16 @@ class GomaDriver(object):
       print('Now goma is ready!')
       print()
       return
-    else:
-      sys.stderr.write('Failed to start compiler_proxy.\n')
-      try:
-        subprocess.check_call(
-            [sys.executable,
-             os.path.join(self._env.GetScriptDir(), 'goma_auth.py'),
-             'info'])
-        sys.stderr.write('Temporary error?  try again\n')
-      except subprocess.CalledProcessError:
-        pass
-      sys.exit(1)
+    sys.stderr.write('Failed to start compiler_proxy.\n')
+    try:
+      subprocess.check_call([
+          sys.executable,
+          os.path.join(self._env.GetScriptDir(), 'goma_auth.py'), 'info'
+      ])
+      sys.stderr.write('Temporary error?  try again\n')
+    except subprocess.CalledProcessError:
+      pass
+    sys.exit(1)
 
   def _StartCompilerProxy(self):
     self._GenericStartCompilerProxy(ensure=False)
@@ -757,7 +747,6 @@ class GomaDriver(object):
     status = self._GetStatus()
     if not status:
       sys.exit(1)
-    return
 
   def _GetStatus(self):
     reply = self._env.ControlCompilerProxy('/healthz', need_pids=True)
@@ -767,10 +756,10 @@ class GomaDriver(object):
     return reply['status']
 
   def _ShutdownCompilerProxy(self):
+    self._http_proxy_driver.Stop()
     print('Killing compiler proxy.')
     reply = self._env.ControlCompilerProxy('/quitquitquit')
     print('compiler proxy status: %(url)s %(message)s' % reply)
-    self._http_proxy_driver.Stop()
 
   def _PrintVersion(self):
     """Print binary/running version of goma. """
@@ -1076,7 +1065,6 @@ class GomaDriver(object):
     """Audit files in the goma client package.  Exit failure on error."""
     if not self._Audit():
       sys.exit(1)
-    return
 
   def _Audit(self):
     """Audit files in the goma client package.
@@ -1257,7 +1245,7 @@ class GomaDriver(object):
       self._action_mappings.get(args[0], self._DefaultAction)()
 
 
-class GomaEnv(object):
+class GomaEnv:
   """Goma running environment."""
   # You must implement following protected variables in subclass.
   _GOMACC = ''
@@ -1372,7 +1360,7 @@ class GomaEnv(object):
         sys.stderr.write(ex.stderr + '\n')
       if ex.returncode == 1:
         sys.exit(1)
-      raise ConfigError('goma_auth.py config failed %s' % ex)
+      raise ConfigError('goma_auth.py config failed.') from ex
 
   def CheckAuthConfig(self):
     """Checks `goma_auth.py config` unless service accounts.
@@ -1483,7 +1471,7 @@ class GomaEnv(object):
     if port_error:
       print(port_error)
     if stderr:
-      sys.stderr.write(_DecodeBytesOnPython3(stderr))
+      sys.stderr.write(stderr.decode('utf-8'))
     e = Error('compiler_proxy is not ready?')
     self._GetDetailedFailureReason()
     if proc:
@@ -1525,8 +1513,8 @@ class GomaEnv(object):
       no_proxy_env = os.environ.get('no_proxy')
       os.environ['no_proxy'] = '*'
       try:
-        resp = URLOPEN2(url)
-        reply = resp.read()
+        resp = urllib.request.urlopen(url)
+        reply = _DecodeBytes(resp.read())
       finally:
         if no_proxy_env is None:
           del os.environ['no_proxy']
@@ -1535,18 +1523,14 @@ class GomaEnv(object):
 
       if need_pids:
         pids = ','.join(self._GetStakeholderPids())
-      reply = _DecodeBytesOnPython3(reply)
       return {'status': True, 'message': reply, 'url': url_prefix, 'pid': pids}
-    except (Error, IOError, OSError) as ex:
+    except (Error, OSError) as ex:
       # urllib.urlopen(url) may raise socket.error, such as [Errno 10054]
       # An existing connection was forcibly closed by the remote host.
-      # socket.error uses IOError as base class in python 2.6.
       # note: socket.error changed to an alias of OSError in python 3.3.
       #
       # for http error, such as 400 Not Found,
-      # python2: urlib2.urlopen(url) raises HTTPError, which is subclass
-      # of URLError, whis is subclass of IOError.
-      # python3: urllib.urlopen(url) raises HTTPError, which is subclass
+      # urllib.urlopen(url) raises HTTPError, which is subclass
       # of URLError, which is subclass of OSError.
       msg = repr(ex)
     return {'status': False, 'message': msg, 'url': url_prefix, 'pid': pids}
@@ -1580,8 +1564,8 @@ class GomaEnv(object):
     if sys.hexversion < 0x2070900:
       raise Error('Please use python version >= 2.7.9')
 
-    http_req = URLREQUEST(source_url)
-    r = URLOPEN2(http_req)
+    http_req = urllib.request.Request(source_url)
+    r = urllib.request.urlopen(http_req)
     return r.read()
 
   def GetGomaTmpDir(self):
@@ -1801,9 +1785,9 @@ class GomaEnv(object):
       headers = {
           'content-type': 'multipart/form-data; boundary=%s' % boundary,
       }
-      http_req = URLREQUEST(destination_url, data=body.getvalue(),
-                                 headers=headers)
-      r = URLOPEN2(http_req)
+      http_req = urllib.request.Request(
+          destination_url, data=body.getvalue(), headers=headers)
+      r = urllib.request.urlopen(http_req)
       out = r.read()
     finally:
       if cp_logfile:
@@ -1952,7 +1936,6 @@ class GomaEnv(object):
 
   def _CheckPlatformConfig(self):
     """Checks platform dependent GomaEnv configurations."""
-    pass
 
   def _CreateDetachedProcess(self, cmd, **kwargs):
     """Execute a program in a detached way.
@@ -1972,7 +1955,6 @@ class GomaEnv(object):
 
   def _GetDetailedFailureReason(self, proc=None):
     """Gets detailed failure reason if possible."""
-    pass
 
   def GetGomaCtlScriptName(self):
     """Get the name of goma_ctl script to be executed by command line."""
@@ -2060,6 +2042,14 @@ class GomaEnv(object):
     except (CalledProcessError, subprocess.CalledProcessError):
       return 'unknown'
 
+  def _GetStakeholderPids(self):
+    """Return PIDs that owns Goma related ports and files.
+
+    Returns:
+      a list of PIDs in string that owns Goma related ports and files.
+    """
+    raise NotImplementedError
+
   def UpdateEnvForHttpProxy(self):
     self._server_host = self._GetServerHost()
     self._http_proxy_port = os.environ.get('GOMACTL_PROXY_PORT',
@@ -2127,7 +2117,7 @@ class GomaEnvWin(GomaEnv):
       try:
         pids.append(entry['PID'])
       except KeyError:
-        raise Exception('strange output: %s' % output)
+        raise Exception('strange output: %s' % output) from None
     return pids
 
   def _ProcessRunning(self, image_name):
@@ -2190,7 +2180,7 @@ class GomaEnvWin(GomaEnv):
       except subprocess.CalledProcessError as e:
         print('Failed to execute taskkill: %s' % e)
 
-  def WarnNonProtectedFile(self, protocol):
+  def WarnNonProtectedFile(self, filename):
     # TODO: warn for Win.
     pass
 
@@ -2338,8 +2328,7 @@ class GomaEnvPosix(GomaEnv):
 
     if network:
       return self._ExecLsof({'type': 'network', 'name': name})
-    else:
-      return self._ExecLsof({'type': 'file', 'name': name})
+    return self._ExecLsof({'type': 'file', 'name': name})
 
   def _GetStakeholderPids(self):
     """Get PID of stake holders.
@@ -2372,7 +2361,7 @@ class GomaEnvPosix(GomaEnv):
         raise Error('compiler_proxy lock and/or socket is owned by others.'
                     ' details=%s' % owned_by_others)
 
-    return set([str(x['pid']) for x in results])
+    return set(str(x['pid']) for x in results)
 
   def KillStakeholders(self, force=False):
     pids = self._GetStakeholderPids()
@@ -2400,9 +2389,8 @@ class GomaEnvPosix(GomaEnv):
       if e.returncode == 1:
         # compiler_proxy is not running.
         return False
-      else:
-        # should be fatal error.
-        raise e
+      # should be fatal error.
+      raise e
     if not pids:
       raise Error('executed pgrep but result is not given')
 
@@ -2438,17 +2426,18 @@ class GomaEnvPosix(GomaEnv):
     return True
 
   def _WaitWithTimeout(self, proc, timeout_sec):
-    class TimeoutError(Exception):
+
+    class GomaCtlTimeoutError(Exception):
       """Raised on timeout."""
 
     def handle_timeout(_signum, _frame):
-      raise TimeoutError('timed out')
+      raise GomaCtlTimeoutError('timed out')
 
     signal.signal(signal.SIGALRM, handle_timeout)
     try:
       signal.alarm(timeout_sec)
       proc.wait()
-    except TimeoutError:
+    except GomaCtlTimeoutError:
       pass
     finally:
       signal.alarm(0)

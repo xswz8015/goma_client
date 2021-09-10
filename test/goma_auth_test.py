@@ -1,9 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2020 Google LLC.
 """Tests for goma_auth."""
-
-from __future__ import print_function
 
 import imp
 import argparse
@@ -40,7 +38,7 @@ class GomaAuthTest(unittest.TestCase):
       method_name: a string of test method name to execute.
       goma_auth_path: a string of goma directory name.
     """
-    super(GomaAuthTest, self).__init__(method_name)
+    super().__init__(method_name)
     self._goma_auth_path = goma_auth_path
 
   def setUp(self):

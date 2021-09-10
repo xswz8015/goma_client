@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright 2010 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -10,8 +10,6 @@ Usage:
  % genc.py file.txt # generates file.c and file.h
 """
 
-from __future__ import print_function
-
 
 
 import optparse
@@ -22,11 +20,7 @@ import sys
 
 def writeToEscaping(dst, src):
   count = 0
-  for c in src.read():
-    if sys.version_info.major < 3:
-      v = ord(c)
-    else:
-      v = c
+  for v in src.read():
     if v > 127:
       v = -(256 - v)
     dst.append('%3d, ' % v)
@@ -84,10 +78,8 @@ const char %(symbol)s_start[] = {
     writeToEscaping(output, src)
     output.append('};\n')
     src.close()
-    dst = open(c_file, 'wb')
+    dst = open(c_file, 'w')
     s = ''.join(output)
-    if sys.version_info.major == 3:
-      s = s.encode('utf-8')
     dst.write(s)
     dst.close()
   except Exception as ex:

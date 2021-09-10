@@ -10,6 +10,7 @@ the connection without waiting for the response.
 This is the regression test for crbug.com/904532.
 """
 
+import io
 import os
 import re
 import select
@@ -18,15 +19,6 @@ import socket
 import subprocess
 import sys
 import tempfile
-
-# TODO: remove this when we deprecate python2.
-if sys.version_info >= (3, 0):
-  import io
-  BUFIO = io.BytesIO
-else:
-  import cStringIO
-  BUFIO = cStringIO.StringIO
-
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CONTENT_LENGTH_PATTERN = re.compile('\r\nContent-Length:\s*(\d+)\r\n')
@@ -59,7 +51,7 @@ def FindAvailablePort():
   raise Execption('Cannot find available port')
 
 
-class CompilerProxyManager(object):
+class CompilerProxyManager:
   """compiler_proxy management class."""
 
   def __init__(self):
@@ -122,16 +114,16 @@ def ReadAll(conn):
     conn: socket instance to read.
 
   Returns:
-    data read from conn.
+    data read from conn or None if not enough data has been read.
   """
-  data = BUFIO()
+  data = io.BytesIO()
   while True:
     ready, _, _ = select.select([conn], [], [], READ_TIMEOUT_IN_SEC)
     if not ready:
       raise Exception('read time out')
     snippet = conn.recv(16)
     if not snippet:
-      return
+      return None
     data.write(snippet)
     CRLFCRLF = b'\r\n\r\n'
     pos = data.getvalue().find(CRLFCRLF)

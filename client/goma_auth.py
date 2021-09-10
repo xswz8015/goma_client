@@ -5,8 +5,6 @@
 # found in the LICENSE file.
 """A Script to set goma_client_oauth2_config."""
 
-from __future__ import print_function
-
 import argparse
 import copy
 import json
@@ -18,20 +16,11 @@ import sys
 import webbrowser
 import random
 
-if sys.version_info >= (3, 0):
-  from http.server import BaseHTTPRequestHandler
-  from http.server import HTTPServer
-  from urllib.parse import parse_qs
-  from urllib.parse import urlencode
-  from urllib.parse import urlparse
-  INPUT = input
-else:
-  from BaseHTTPServer import BaseHTTPRequestHandler
-  from BaseHTTPServer import HTTPServer
-  from urllib import urlencode
-  from urlparse import parse_qs
-  from urlparse import urlparse
-  INPUT = raw_input
+from http.server import BaseHTTPRequestHandler
+from http.server import HTTPServer
+from urllib.parse import parse_qs
+from urllib.parse import urlencode
+from urllib.parse import urlparse
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 GOOGLE_AUTH_URI = 'https://accounts.google.com/o/oauth2/auth'
@@ -92,7 +81,7 @@ Contents in source code and header files will be kept at most 153 days
 since last used.
 """)
 
-  yn = INPUT('Do you agree to our data usage policy? (y/n) -->')
+  yn = input('Do you agree to our data usage policy? (y/n) -->')
   if yn in ('Y', 'y'):
     print('You have agreed.')
     return
@@ -101,7 +90,6 @@ since last used.
 
 class Error(Exception):
   """Raised on Error."""
-  pass
 
 
 class GomaOAuth2Config(dict):
@@ -229,7 +217,8 @@ class AuthorizationCodeHandler(BaseHTTPRequestHandler):
     self.wfile.write(b'<body><p>The authentication flow has completed.</p>')
     self.wfile.write(b'</body></html>')
 
-  def log_message(self, _format, *args):
+  # pylint: disable=W0622
+  def log_message(self, format, *args):
     """Do not log messages to stdout while running as command line program."""
 
 
@@ -293,7 +282,7 @@ def GetAuthorizationCodeViaCommandLine(config):
   google_auth_url = '%s?%s' % (config['auth_uri'], body)
   print('Please visit following URL with your browser, and approve access:')
   print(google_auth_url)
-  return INPUT('Please input the code:')
+  return input('Please input the code:')
 
 
 def GetRefreshToken(get_code_func, config):
@@ -395,10 +384,10 @@ def CheckBackendAccess():
   if CheckPing(url):
     print('Ready to use Goma service at %s' % server_url)
     return True
-  else:
-    print(('Current user is not registered with Goma service at %s with ' +
-           'GOMA_RPC_EXTRA_PARAMS="%s". ' +
-           'Unable to use Goma.') % (server_url, rpc_extra_params))
+
+  print(('Current user is not registered with Goma service at %s with ' +
+         'GOMA_RPC_EXTRA_PARAMS="%s". ' + 'Unable to use Goma.') %
+        (server_url, rpc_extra_params))
   return False
 
 

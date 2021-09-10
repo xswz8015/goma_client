@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright 2011 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -11,8 +11,6 @@ etc. for use in HTTP RPC for user-agent and compiler_proxy's console.
 User-agents will help going through the server logs when debugging
 and the console will help users to make a better bug report.
 """
-
-from __future__ import print_function
 
 
 

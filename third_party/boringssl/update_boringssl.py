@@ -25,9 +25,6 @@ BORINGSSL_INSIDE_REPO_PATH = os.path.join('third_party', 'boringssl')
 BORINGSSL_PATH = os.path.join(SRC_PATH, BORINGSSL_INSIDE_REPO_PATH)
 BORINGSSL_SRC_PATH = os.path.join(BORINGSSL_PATH, 'src')
 
-assert sys.version_info.major == 3, ('Non supported python version. '
-                                     'Please run with python3.')
-
 assert os.path.isdir(BORINGSSL_SRC_PATH), 'Could not find BoringSSL checkout'
 
 # Pull OS_ARCH_COMBOS out of the BoringSSL script.

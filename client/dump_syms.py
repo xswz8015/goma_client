@@ -11,8 +11,6 @@ Usage:
     --output compiler_proxy.sym
 """
 
-from __future__ import print_function
-
 import argparse
 import os
 import platform
@@ -28,7 +26,7 @@ class Error(Exception):
   """Raised on Error."""
 
 
-class DumpSyms(object):
+class DumpSyms:
   """General purpose dump syms class."""
 
   def __init__(self, dump_syms, src, dst):

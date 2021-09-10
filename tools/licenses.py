@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2019 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -51,8 +51,7 @@ def FindLicense(third_party_dir, library_name):
     return ReadFile(os.path.join(third_party_dir,
                     SPECIAL_CASES[library_name]['path']))
 
-  for curdir, dirs, files in os.walk(os.path.join(third_party_dir,
-                                                  library_name)):
+  for curdir, _, files in os.walk(os.path.join(third_party_dir, library_name)):
     for f in files:
       if IsLicenseFile(f):
         return ReadFile(os.path.join(curdir, f))
@@ -61,15 +60,15 @@ def FindLicense(third_party_dir, library_name):
   return None
 
 
-def AddLicenseFile(license, name, contents):
+def AddLicenseFile(license_data, name, contents):
   """Add contents to license with title name."""
 
-  if license != '':
-    license += '\n\n'
-  license += name + '\n'
-  license += '=' * len(name) + '\n'
-  license += contents
-  return license
+  if license_data != '':
+    license_data += '\n\n'
+  license_data += name + '\n'
+  license_data += '=' * len(name) + '\n'
+  license_data += contents
+  return license_data
 
 
 def main():
@@ -90,10 +89,10 @@ def main():
       continue
     if d in PRUNE_DIRS:
       continue
-    license = FindLicense(args.third_party_dir, d)
-    if not license:
+    license_data = FindLicense(args.third_party_dir, d)
+    if not license_data:
       raise Exception('license file not found in {}'.format(d))
-    result = AddLicenseFile(result, d, license)
+    result = AddLicenseFile(result, d, license_data)
 
   with open(args.output_file, 'w') as f:
     f.write(result)

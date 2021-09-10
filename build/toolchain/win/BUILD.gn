@@ -293,16 +293,17 @@ if (host_os == "win") {
 assert(target_cpu != "x86")
 
 # 64-bit toolchains.
-x64_toolchain_data = exec_script("setup_toolchain.py",
-                                 [
-                                   visual_studio_path,
-                                   windows_sdk_path,
-                                   visual_studio_runtime_dirs,
-                                   "win",
-                                   "x64",
-                                   "environment.x64",
-                                 ],
-                                 "scope")
+x64_toolchain_data =
+    exec_script("//third_party/chromium_build/toolchain/win/setup_toolchain.py",
+                [
+                  visual_studio_path,
+                  windows_sdk_path,
+                  visual_studio_runtime_dirs,
+                  "win",
+                  "x64",
+                  "environment.x64",
+                ],
+                "scope")
 
 template("win_x64_toolchains") {
   msvc_toolchain(target_name) {

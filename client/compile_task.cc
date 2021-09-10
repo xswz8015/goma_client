@@ -1685,8 +1685,10 @@ void CompileTask::ProcessFinished(const std::string& msg) {
   // TODO: active fail fallback only for http error?
   // b/36576025 b/36577821
   if (!service_->IncrementActiveFailFallbackTasks()) {
-    AddErrorToResponse(
-        TO_USER, "reached max number of active fail fallbacks", true);
+    AddErrorToResponse(TO_USER,
+                       "reached max number of active fail fallbacks. "
+                       "Please check logs to understand the cause.",
+                       true);
     if (delayed_setup_subproc_ != nullptr) {
       delayed_setup_subproc_->Cancel();
       delayed_setup_subproc_ = nullptr;

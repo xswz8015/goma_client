@@ -42,7 +42,7 @@ class SimpleTryTest(unittest.TestCase):
       local_cl: a string of clang-cl.exe path.
       gomacc: a string of gomacc.exe path.
     """
-    super(SimpleTryTest, self).__init__(method_name)
+    super().__init__(method_name)
     self._dir = os.path.abspath(goma_dir)
     self.local_cl = local_cl
     self.gomacc = gomacc
@@ -365,7 +365,7 @@ def GetParameterizedTestSuite(klass, **kwargs):
   return suite
 
 
-class CompilerProxyManager(object):
+class CompilerProxyManager:
   """Compiler proxy management class.
 
   This class should be used with 'with' statement.

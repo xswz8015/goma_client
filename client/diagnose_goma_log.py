@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2012 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -24,8 +24,6 @@ It shows
  - Warning lines
 """
 
-from __future__ import print_function
-
 
 
 import datetime
@@ -44,7 +42,7 @@ LOGLINE_RE = re.compile(
     '^([IWEF])(\\d{4} \\d{2}:\\d{2}:\\d{2}).(\\d{6})  *(.*)')
 
 
-class TaskLog(object):
+class TaskLog:
   """Log instances of a compile task."""
 
   def __init__(self, taskId, desc, start_time):
@@ -69,7 +67,7 @@ class TaskLog(object):
     return self.end_time - self.start_time
 
 
-class LogLine(object):
+class LogLine:
   """A log instance."""
 
   def __init__(self, loglevel, time_str, micro_str, logtext):
@@ -105,7 +103,7 @@ class LogLine(object):
     return self._logtime
 
 
-class OpenWrapper(object):
+class OpenWrapper:
   """A wrapper of open."""
 
   def __init__(self, filename):
@@ -209,7 +207,7 @@ def IterLoglines(lines):
   yield last_logline
 
 
-class DurationPerParallelism(object):
+class DurationPerParallelism:
   """Duration per parallelism."""
 
   def __init__(self):
@@ -275,7 +273,7 @@ def LongValueFromJsonStats(json_stats, keys):
   return int(curr)
 
 
-class SimpleStats(object):
+class SimpleStats:
   """Simple Statistics."""
 
   def __init__(self):

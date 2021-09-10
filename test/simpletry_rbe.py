@@ -53,7 +53,7 @@ class RunCompilerProxyTest(unittest.TestCase):
       method_name: a string of method name to test.
       goma_dir: a string of GOMA directory.
     """
-    super(RunCompilerProxyTest, self).__init__(method_name)
+    super().__init__(method_name)
     self._dir = os.path.abspath(goma_dir)
 
     # Find and load goma_ctl module.
@@ -170,7 +170,7 @@ class RunCompilerProxyTest(unittest.TestCase):
         sysroot_path
     ]
 
-    result = subprocess.run(clang_cmd, capture_output=True)
+    result = subprocess.run(clang_cmd, capture_output=True, check=True)
     self.assertEqual(len(result.stdout), 0, msg=result.stdout)
     self.assertEqual(len(result.stderr), 0, msg=result.stderr)
     self.assertTrue(os.path.exists(output_path))
@@ -185,7 +185,7 @@ class RunCompilerProxyTest(unittest.TestCase):
     gomacc_cmd = [gomacc_path]
     gomacc_cmd.extend(clang_cmd)
 
-    result = subprocess.run(gomacc_cmd, capture_output=True)
+    result = subprocess.run(gomacc_cmd, capture_output=True, check=True)
     self.assertEqual(len(result.stdout), 0, msg=result.stdout)
     self.assertEqual(len(result.stderr), 0, msg=result.stderr)
 
@@ -223,7 +223,7 @@ class RunCompilerProxyTest(unittest.TestCase):
         output_path,
     ]
 
-    result = subprocess.run(clang_cmd, capture_output=True)
+    result = subprocess.run(clang_cmd, capture_output=True, check=True)
     self.assertEqual(len(result.stdout), 0, msg=result.stdout)
     self.assertEqual(len(result.stderr), 0, msg=result.stderr)
     self.assertTrue(os.path.exists(output_path))
@@ -238,7 +238,7 @@ class RunCompilerProxyTest(unittest.TestCase):
     gomacc_cmd = [gomacc_path]
     gomacc_cmd.extend(clang_cmd)
 
-    result = subprocess.run(gomacc_cmd, capture_output=True)
+    result = subprocess.run(gomacc_cmd, capture_output=True, check=True)
     self.assertEqual(len(result.stdout), 0, msg=result.stdout)
     self.assertEqual(len(result.stderr), 0, msg=result.stderr)
 
