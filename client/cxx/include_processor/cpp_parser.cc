@@ -450,7 +450,7 @@ void CppParser::ProcessIfndef(const CppDirectiveIfndef& d) {
 
 void CppParser::ProcessIf(const CppDirectiveIf& d) {
   GOMA_COUNTERZ("if");
-  int v = EvalCondition(d.tokens());
+  int64_t v = EvalCondition(d.tokens());
   VLOG(2) << DebugStringPrefix() << " #IF " << v;
   conditions_.push_back(Condition(v != 0));
 }
@@ -495,7 +495,7 @@ void CppParser::ProcessElif(const CppDirectiveElif& d) {
     return;
   }
 
-  int v = EvalCondition(d.tokens());
+  int64_t v = EvalCondition(d.tokens());
   VLOG(2) << DebugStringPrefix() << " #ELIF " << v;
   conditions_.back().cond = (v != 0);
   conditions_.back().taken |= (v != 0);
@@ -654,7 +654,7 @@ void CppParser::ProcessIncludeInternal(const CppDirectiveIncludeBase& d) {
   Error("#include expects \"filename\" or <filename>");
 }
 
-int CppParser::EvalCondition(const ArrayTokenList& orig_tokens) {
+int64_t CppParser::EvalCondition(const ArrayTokenList& orig_tokens) {
   // TODO: Add DCHECK here orig_tokens does not contain spaces.
   ArrayTokenList tokens;
   tokens.reserve(orig_tokens.size());

@@ -21,6 +21,7 @@ struct CppToken {
     IDENTIFIER,
     STRING,
     NUMBER,
+    UNSIGNED_NUMBER,
     SHARP,
     DOUBLESHARP,
     TRIPLEDOT,
@@ -55,12 +56,16 @@ struct CppToken {
     LAND,
     LOR,
   };
-
-  typedef int (*OperatorFunction)(int, int);
+  class int_value {
+   public:
+    int64_t value = 0;
+    bool unsigned_ = false;
+  };
+  typedef int_value (*OperatorFunction)(int_value, int_value);
 
   CppToken() : type(END) {}
   explicit CppToken(Type type) : type(type) {}
-  explicit CppToken(int i) : type(NUMBER), v(i) {}
+  explicit CppToken(int64_t i) : type(NUMBER), v(i) {}
   CppToken(Type type, char c) : type(type), v(c) {}
   CppToken(Type type, char c1, char c2) : type(type), v(c1, c2) {}
   CppToken(Type type, int i) : type(type) {
@@ -76,7 +81,7 @@ struct CppToken {
     if (type != other.type) {
       return false;
     }
-    if (type == NUMBER) {
+    if (type == NUMBER || type == UNSIGNED_NUMBER) {
       return v.int_value == other.v.int_value;
     }
 
@@ -101,7 +106,7 @@ struct CppToken {
   std::string DebugString() const;
   std::string GetCanonicalString() const;
 
-  int ApplyOperator(int v1, int v2) const {
+  int_value ApplyOperator(int_value v1, int_value v2) const {
     DCHECK(IsOperator());
     return kFunctionTable[type - OP_BEGIN](v1, v2);
   }
@@ -130,7 +135,7 @@ struct CppToken {
 
   union value {
     value() : param_index(0) {}
-    value(int i) : param_index(i) {}
+    value(int64_t i) : param_index(i) {}
     value(char c) : param_index(0) {
       char_value.c = c;
     }
@@ -141,7 +146,7 @@ struct CppToken {
       char_value.c2[2] = 0;
     }
     CharValue char_value;
-    long int_value;
+    int64_t int_value;
     size_t param_index;
   } v;
 };

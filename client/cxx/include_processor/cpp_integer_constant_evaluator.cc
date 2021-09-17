@@ -15,30 +15,35 @@ CppIntegerConstantEvaluator::CppIntegerConstantEvaluator(
           << DebugString(TokenList(tokens.begin(), tokens.end()));
 }
 
-int CppIntegerConstantEvaluator::Conditional() {
-  int v1 = Expression(Primary(), 0);
+CppToken::int_value CppIntegerConstantEvaluator::Conditional() {
+  CppToken::int_value v1 = Expression(Primary(), 0);
   while (iter_ != tokens_.end()) {
     if (iter_->IsPuncChar('?')) {
       ++iter_;
-      int v2 = Conditional();
+      CppToken::int_value v2 = Conditional();
       if (iter_ == tokens_.end() || !iter_->IsPuncChar(':')) {
         parser_->Error("syntax error: missing ':' in ternary operation");
-        return 0;
+        CppToken::int_value r;
+        return r;
       }
       ++iter_;
-      int v3 = Conditional();
-      return v1 ? v2 : v3;
+      CppToken::int_value v3 = Conditional();
+      CppToken::int_value r;
+      r.value = v1.value ? v2.value : v3.value;
+      return r;
     }
     break;
   }
   return v1;
 }
 
-int CppIntegerConstantEvaluator::Expression(int v1, int min_precedence) {
+CppToken::int_value CppIntegerConstantEvaluator::Expression(
+    CppToken::int_value v1,
+    int min_precedence) {
   while (iter_ != tokens_.end() && iter_->IsOperator() &&
          iter_->GetPrecedence() >= min_precedence) {
     const CppToken& op = *iter_++;
-    int v2 = Primary();
+    CppToken::int_value v2 = Primary();
     while (iter_ != tokens_.end() && iter_->IsOperator() &&
            iter_->GetPrecedence() > op.GetPrecedence()) {
       v2 = Expression(v2, iter_->GetPrecedence());
@@ -48,8 +53,8 @@ int CppIntegerConstantEvaluator::Expression(int v1, int min_precedence) {
   return v1;
 }
 
-int CppIntegerConstantEvaluator::Primary() {
-  int result = 0;
+CppToken::int_value CppIntegerConstantEvaluator::Primary() {
+  CppToken::int_value result;
   int sign = 1;
   while (iter_ != tokens_.end()) {
     const CppToken& token = *iter_++;
@@ -61,12 +66,15 @@ int CppIntegerConstantEvaluator::Primary() {
         if (parser_->is_cplusplus() && token.string_value == "true") {
           // Int value of C++ reserved keyword "true" is 1.
           // See: ISO/IEC 14882:2011 (C++11) 4.5 Integral promotions.
-          result = 1;
+          result.value = 1;
         }
         break;
+      case CppToken::UNSIGNED_NUMBER:
+        result.unsigned_ = true;
+        ABSL_FALLTHROUGH_INTENDED;
       case CppToken::NUMBER:
       case CppToken::CHAR_LITERAL:
-        result = token.v.int_value;
+        result.value = token.v.int_value;
         break;
       case CppToken::SUB:
         sign = 0 - sign;
@@ -76,15 +84,17 @@ int CppIntegerConstantEvaluator::Primary() {
       case CppToken::PUNCTUATOR:
         switch (token.v.char_value.c) {
           case '(':
-            result = GetValue();
+            result.value = GetValue();
             if (iter_ != tokens_.end() && iter_->IsPuncChar(')')) {
               ++iter_;
             }
             break;
           case '!':
-            return !Primary();
+            result.value = !(Primary().value);
+            return result;
           case '~':
-            return ~Primary();
+            result.value = ~(Primary().value);
+            return result;
           default: {
             parser_->Error("unknown unary operator: ", token.DebugString());
             break;
@@ -96,7 +106,8 @@ int CppIntegerConstantEvaluator::Primary() {
     }
     break;
   }
-  return sign * result;
+  result.value = sign * result.value;
+  return result;
 }
 
 }  // namespace devtools_goma

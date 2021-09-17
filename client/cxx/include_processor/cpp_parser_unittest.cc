@@ -1253,4 +1253,50 @@ TEST(CppParserTest, ObjectiveCXXIsCPlusPlus) {
   EXPECT_TRUE(cpp_parser.IsMacroDefined("OK"));
 }
 
+// crbug.com/1249808
+TEST(CppParserTest, Int64ArithmeticsWorks) {
+  CppParser cpp_parser;
+
+  cpp_parser.AddStringInput(
+      "#define ULONG_1 0xFFFFFFFFUL\n"
+      "#define ULONG_2 0xFFFFFFFFFFFFFFFFUL\n"
+      "#if ULONG_1 >= ULONG_2\n"
+      "# define NG\n"
+      "#endif\n",
+      "foo.cc");
+
+  EXPECT_TRUE(cpp_parser.ProcessDirectives());
+  EXPECT_FALSE(cpp_parser.IsMacroDefined("NG"));
+}
+
+TEST(CppParserTest, Int64ArithmeticsWorks2) {
+  CppParser cpp_parser;
+
+  cpp_parser.AddStringInput(
+      "#define ULONG_1 0xFFFFFFFFUL\n"
+      "#define ULONG_2 0xFFFFFFFFFFFFFFFFUL\n"
+      "#if ULONG_1 < ULONG_2\n"
+      "# define OK0\n"
+      "#endif\n"
+      "#define X 0xFFFFFFFFUL\n"
+      "#if X + 1 > X\n"
+      "# define OK1\n"
+      "#endif\n"
+      "#define Y 0x7FFFFFFFFFFFFFFF\n"
+      "#if Y + 1 > Y\n"
+      "# define NOT_OK2\n"
+      "#endif\n"
+      "#define Z 0x7FFFFFFFFFFFFFFFU\n"
+      "#if Z + 1 > Z\n"
+      "# define OK3\n"
+      "#endif\n",
+      "foo.cc");
+
+  EXPECT_TRUE(cpp_parser.ProcessDirectives());
+  EXPECT_TRUE(cpp_parser.IsMacroDefined("OK0"));
+  EXPECT_TRUE(cpp_parser.IsMacroDefined("OK1"));
+  EXPECT_FALSE(cpp_parser.IsMacroDefined("NOT_OK2"));
+  EXPECT_TRUE(cpp_parser.IsMacroDefined("OK3"));
+}
+
 }  // namespace devtools_goma

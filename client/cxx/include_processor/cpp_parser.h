@@ -201,7 +201,7 @@ class CppParser {
   void ProcessConditionInFalse(const CppDirective&);
 
   void EvalFunctionMacro(const std::string& name);
-  int EvalCondition(const ArrayTokenList& orig_tokens);
+  int64_t EvalCondition(const ArrayTokenList& orig_tokens);
   // Detects include guard from #if condition.
   std::string DetectIncludeGuard(const ArrayTokenList& orig_tokens);
 

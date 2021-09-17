@@ -284,7 +284,7 @@ CppToken CppTokenizer::ReadNumber(CppInputStream* stream, int c0,
 
   bool maybe_int_constant = (c0 != '.');
   int base = 10;
-  int value = 0;
+  int64_t value = 0;
   std::string suffix;
   int c;
 
@@ -341,6 +341,9 @@ CppToken CppTokenizer::ReadNumber(CppInputStream* stream, int c0,
   token.Append(begin, stream->GetLengthToCurrentFrom(begin, c));
   stream->UngetChar(c);
   if (maybe_int_constant && (suffix.empty() || IsValidIntegerSuffix(suffix))) {
+    if (IsUnsignedIntegerSuffix(suffix)) {
+      token.type = CppToken::UNSIGNED_NUMBER;
+    }
     token.v.int_value = value;
   }
   return token;
@@ -756,6 +759,20 @@ bool CppTokenizer::IsValidIntegerSuffix(const std::string& s) {
       return s == "u" || s == "l";
     case 2:
       return s == "ul" || s == "lu" || s == "ll";
+    case 3:
+      return s == "ull" || s == "llu";
+    default:
+      return false;
+  }
+}
+
+// static
+bool CppTokenizer::IsUnsignedIntegerSuffix(const std::string& s) {
+  switch (s.size()) {
+    case 1:
+      return s == "u";
+    case 2:
+      return s == "ul" || s == "lu";
     case 3:
       return s == "ull" || s == "llu";
     default:

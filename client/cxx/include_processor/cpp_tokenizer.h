@@ -65,6 +65,7 @@ class CppTokenizer {
 
  private:
   static bool IsValidIntegerSuffix(const std::string& s);
+  static bool IsUnsignedIntegerSuffix(const std::string& s);
   static CppToken::Type TypeFrom(int c1, int c2);
 
   FRIEND_TEST(CppTokenizerTest, IntegerSuffixes);

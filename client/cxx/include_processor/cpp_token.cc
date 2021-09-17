@@ -6,24 +6,175 @@
 
 namespace {
 
-int Mul(int v1, int v2) { return v1 * v2; }
-int Div(int v1, int v2) { return v2 == 0 ? 0 : v1 / v2; }
-int Mod(int v1, int v2) { return v2 == 0 ? 0 : v1 % v2; }
-int Add(int v1, int v2) { return v1 + v2; }
-int Sub(int v1, int v2) { return v1 - v2; }
-int RShift(int v1, int v2) { return v1 >> v2; }
-int LShift(int v1, int v2) { return v1 << v2; }
-int Gt(int v1, int v2) { return v1 > v2; }
-int Lt(int v1, int v2) { return v1 < v2; }
-int Ge(int v1, int v2) { return v1 >= v2; }
-int Le(int v1, int v2) { return v1 <= v2; }
-int Eq(int v1, int v2) { return v1 == v2; }
-int Ne(int v1, int v2) { return v1 != v2; }
-int And(int v1, int v2) { return v1 & v2; }
-int Xor(int v1, int v2) { return v1 ^ v2; }
-int Or(int v1, int v2) { return v1 | v2; }
-int LAnd(int v1, int v2) { return v1 && v2; }
-int LOr(int v1, int v2) { return v1 || v2; }
+typedef devtools_goma::CppToken::int_value int_value;
+
+int_value Mul(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) * static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value * v2.value;
+  }
+  return r;
+}
+
+int_value Div(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (v2.value == 0) {
+    r.value = 0;
+    return r;
+  }
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) / static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value / v2.value;
+  }
+  return r;
+}
+
+int_value Mod(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (v2.value == 0) {
+    r.value = 0;
+    return r;
+  }
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) / static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value % v2.value;
+  }
+  return r;
+}
+
+int_value Add(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  r.value = v1.value + v2.value;
+  return r;
+}
+
+int_value Sub(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  r.value = v1.value - v2.value;
+  return r;
+}
+
+int_value RShift(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  r.value = v1.value >> v2.value;
+  return r;
+}
+
+int_value LShift(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  r.value = v1.value << v2.value;
+  return r;
+}
+
+int_value Gt(int_value v1, int_value v2) {
+  int_value r;
+  if (v1.unsigned_ | v2.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) > static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value > v2.value;
+  }
+  return r;
+}
+
+int_value Lt(int_value v1, int_value v2) {
+  int_value r;
+  if (v1.unsigned_ | v2.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) < static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value < v2.value;
+  }
+  return r;
+}
+
+int_value Ge(int_value v1, int_value v2) {
+  int_value r;
+  if (v1.unsigned_ | v2.unsigned_) {
+    r.value =
+        static_cast<uint64_t>(v1.value) >= static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value >= v2.value;
+  }
+  return r;
+}
+
+int_value Le(int_value v1, int_value v2) {
+  int_value r;
+  if (v1.unsigned_ | v2.unsigned_) {
+    r.value =
+        static_cast<uint64_t>(v1.value) <= static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value <= v2.value;
+  }
+  return r;
+}
+
+int_value Eq(int_value v1, int_value v2) {
+  int_value r;
+  r.value = v1.value == v2.value;
+  return r;
+}
+
+int_value Ne(int_value v1, int_value v2) {
+  int_value r;
+  r.value = v1.value != v2.value;
+  return r;
+}
+
+int_value And(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) & static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value & v2.value;
+  }
+  return r;
+}
+
+int_value Xor(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) ^ static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value ^ v2.value;
+  }
+  return r;
+}
+
+int_value Or(int_value v1, int_value v2) {
+  int_value r;
+  r.unsigned_ = v1.unsigned_ | v2.unsigned_;
+  if (r.unsigned_) {
+    r.value = static_cast<uint64_t>(v1.value) | static_cast<uint64_t>(v2.value);
+  } else {
+    r.value = v1.value | v2.value;
+  }
+  return r;
+}
+
+int_value LAnd(int_value v1, int_value v2) {
+  int_value r;
+  r.value = v1.value && v2.value;
+  return r;
+}
+
+int_value LOr(int_value v1, int_value v2) {
+  int_value r;
+  r.value = v1.value || v2.value;
+  return r;
+}
 
 }  // anonymous namespace
 
@@ -63,6 +214,13 @@ std::string CppToken::DebugString() const {
       break;
     case NUMBER:
       str.append("[NUMBER(");
+      str.append(string_value);
+      str.append(", ");
+      str.append(std::to_string(v.int_value));
+      str.append(")]");
+      break;
+    case UNSIGNED_NUMBER:
+      str.append("[UNSIGNED_NUMBER(");
       str.append(string_value);
       str.append(", ");
       str.append(std::to_string(v.int_value));

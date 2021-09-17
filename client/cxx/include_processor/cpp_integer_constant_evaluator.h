@@ -14,12 +14,12 @@ class CppIntegerConstantEvaluator {
  public:
   CppIntegerConstantEvaluator(const ArrayTokenList& tokens, CppParser* parser);
 
-  int GetValue() { return Conditional(); }
+  int64_t GetValue() { return Conditional().value; }
 
  private:
-  int Conditional();
-  int Expression(int v1, int min_precedence);
-  int Primary();
+  CppToken::int_value Conditional();
+  CppToken::int_value Expression(CppToken::int_value v1, int min_precedence);
+  CppToken::int_value Primary();
 
   const ArrayTokenList& tokens_;
   ArrayTokenList::const_iterator iter_;
