@@ -531,4 +531,26 @@ TEST_F(DirectiveFilterTest, SkipRawStringLiteral) {
                                   filtered->buf_end() - filtered->buf()));
 }
 
+TEST_F(DirectiveFilterTest, HandleConcatOfStringAndValueEndingInR) {
+  const std::string src =
+      "#define BAR \"bar\" \n"
+      "#define BAZ \\\n"
+      "    BAR\"baz\" \n"
+      "#define FOO(x) x*x\n"
+      "#define OK \n";
+
+  const std::string expected =
+      "#define BAR \"bar\" \n"
+      "#define BAZ     BAR\"baz\" \n"
+      "#define FOO(x) x*x\n"
+      "#define OK \n";
+
+  std::unique_ptr<Content> content(Content::CreateFromString(src));
+  std::unique_ptr<Content> filtered(
+      DirectiveFilter::MakeFilteredContent(*content));
+
+  EXPECT_EQ(expected, absl::string_view(filtered->buf(),
+                                        filtered->buf_end() - filtered->buf()));
+}
+
 }  // namespace devtools_goma

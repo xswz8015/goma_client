@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
@@ -180,11 +181,14 @@ int DirectiveFilter::IsEscapedNewLine(const char* pos, const char* end) {
 // static
 size_t DirectiveFilter::RemoveComments(const char* src, const char* end,
                                        char* dst) {
+  const char* original_src = src;
   const char* original_dst = dst;
 
   while (src != end) {
     // Raw string literal starts.
-    if (*src == 'R' && src + 1 < end && *(src + 1) == '\"') {
+    if (*src == 'R' && src + 1 < end && *(src + 1) == '\"' &&
+        (src == original_src ||
+         (!absl::ascii_isalnum(*(src - 1)) && *(src - 1) != '_'))) {
       int num = CaptureRawStringLiteral(src, end);
       const absl::string_view literal(src, num);
       VLOG(5) << "raw string literal=" << literal;

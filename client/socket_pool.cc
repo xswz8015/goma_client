@@ -127,7 +127,10 @@ ScopedSocket SocketPool::NewSocket() {
   }
   new_fd = -1;
   absl::Time error_time = absl::InfinitePast();
-  for (int retry = 0; retry < std::max(1, addrs_size); ++retry) {
+  // even if addrs_size is 1, it should retry again
+  // to resolve again in new network for EHOSTUNREACH etc.
+  // http://b/199172870
+  for (int retry = 0; retry < std::max(2, addrs_size); ++retry) {
     AddrData addr;
     {
       AUTOLOCK(lock, &mu_);
