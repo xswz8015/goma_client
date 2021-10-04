@@ -112,7 +112,7 @@ def _DecodeBytes(data):
     returns utf-8 deocded data for bytes, otherwise return as-is.
   """
   if isinstance(data, bytes):
-    return data.decode('utf-8')
+    return data.decode('utf-8', 'ignore')
   return data
 
 

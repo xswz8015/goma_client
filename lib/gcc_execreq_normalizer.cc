@@ -200,7 +200,8 @@ void GCCExecReqNormalizer::NormalizeExecReqArgs(
 
   FixPathToBeCwdRelative fix_path(req->cwd());
   for (const auto& flag : normalize_weak_relative_for_arg) {
-    if ((keep_args & kPreserveI) && (flag == "I" || flag == "isystem")) {
+    if ((keep_args & kPreserveI) &&
+        (flag == "I" || flag == "isystem" || flag == "stdlib++-isystem")) {
       continue;
     }
     if (keep_args & kNormalizeWithDebugPrefixMap) {

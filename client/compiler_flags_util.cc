@@ -64,6 +64,7 @@ std::vector<std::string> CompilerFlagsUtil::MakeWeakRelative(
   parser.AddFlag("Wp,-MD,")->SetCallbackForParsedArgs(&fix_path);
   parser.AddFlag("isysroot")->SetCallbackForParsedArgs(&fix_path);
   parser.AddFlag("isystem")->SetCallbackForParsedArgs(&fix_path);
+  parser.AddFlag("stdlib++-isystem")->SetCallbackForParsedArgs(&fix_path);
   parser.AddFlag("-isysroot")->SetCallbackForParsedArgs(&fix_path);
   parser.AddFlag("B")->SetCallbackForParsedArgs(&fix_path);
   parser.AddFlag("iframework")->SetCallbackForParsedArgs(&fix_path);

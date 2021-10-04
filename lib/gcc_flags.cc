@@ -161,6 +161,7 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
   // parser.AddFlag("isysroot")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("imultilib")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("isystem")->SetOutput(&compiler_info_flags_);
+  parser.AddFlag("stdlib++-isystem")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("iquote")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("idirafter")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("-sysroot")->SetOutput(&compiler_info_flags_);
@@ -885,6 +886,7 @@ void GCCFlags::DefineFlags(FlagParser* parser) {
       {"iquote", kNormal},
       {"isysroot", kNormal},
       {"isystem", kNormal},
+      {"stdlib++-isystem", kNormal},
       {"m", kNormal},       // machine dependent options
       {"o", kNormal},       // specify output
       {"pedantic", kBool},  // old form of -Wpedantic (older gcc has this)
