@@ -51,15 +51,9 @@ bool LoadTrustedRootCertsInResource(std::string* certs, int resource_id) {
 namespace devtools_goma {
 
 bool GetTrustedRootCerts(std::string* certs) {
-  std::string roots;
-  if (!LoadTrustedRootCertsInResource(&roots, ROOT_CA_NAME)) {
+  if (!LoadTrustedRootCertsInResource(certs, ROOT_CA_NAME)) {
     return false;
   }
-  std::string dst_root;
-  if (!LoadTrustedRootCertsInResource(&dst_root, DST_CA_NAME)) {
-    return false;
-  }
-  *certs = roots + dst_root;
   return true;
 }
 

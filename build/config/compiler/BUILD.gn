@@ -483,6 +483,7 @@ config("no_goma_code") {
 
     if (is_clang) {
       cflags += [
+        "-Wno-bitwise-instead-of-logical",
         "-Wno-deprecated-declarations",
         "-Wno-enum-compare-switch",
         "-Wno-implicit-fallthrough",

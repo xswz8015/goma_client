@@ -22,21 +22,6 @@ if (os != "win") {
     ]
   }
 
-  action("gen_dst_certs") {
-    script = genc
-    sources = [ "DST_Root_CA_X3.pem" ]
-    outputs = [
-      "$target_gen_dir/DST_Root_CA_X3.c",
-      "$target_gen_dir/DST_Root_CA_X3.h",
-    ]
-    args = [
-      "--prefix=certs_",
-      "--out-dir",
-      rebase_path("$target_gen_dir", root_build_dir),
-      rebase_path("DST_Root_CA_X3.pem", root_build_dir),
-    ]
-  }
-
   config("certs_config") {
     include_dirs = [ "$target_gen_dir" ]
   }
@@ -44,13 +29,8 @@ if (os != "win") {
     sources = [
       "$target_gen_dir/$roots.c",
       "$target_gen_dir/$roots.h",
-      "$target_gen_dir/DST_Root_CA_X3.c",
-      "$target_gen_dir/DST_Root_CA_X3.h",
     ]
-    deps = [
-      ":gen_dst_certs",
-      ":gen_roots_certs",
-    ]
+    deps = [ ":gen_roots_certs" ]
     public_configs = [ ":certs_config" ]
   }
 } else {  # os == "win"
@@ -66,9 +46,6 @@ if (os != "win") {
       "certs_resource.h",
     ]
     public_configs = [ ":certs_resource_config" ]
-    data = [
-      "DST_Root_CA_X3.pem",
-      "$roots.pem",
-    ]
+    data = [ "$roots.pem" ]
   }
 }
