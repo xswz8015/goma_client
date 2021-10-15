@@ -149,6 +149,7 @@ def builder(name, os, bucket):
             name = "goma_client",
             cipd_package = "infra/recipe_bundles/chromium.googlesource.com/" +
                            "chromium/tools/build",
+            use_bbagent = True,
         ),
         service_account = "goma-client-ext-" + bucket + "-builders@" +
                           "chops-service-accounts.iam.gserviceaccount.com",
