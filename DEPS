@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "203feb789163278951e55ffeb624d70e016508e3",
+     "clang_revision": "c00aa10009548ad073810d810cc4a71d2965f75b",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
@@ -13,9 +13,9 @@ deps = {
      "client/third_party/protobuf/protobuf":
      "https://github.com/google/protobuf.git@6aa539bf0195f188ff86efe6fb8bfa2b676cdd46",
 
-     # google-glog v0.4.0
+     # google-glog v0.5.0
      "client/third_party/glog":
-     "https://github.com/google/glog.git@96a2f23dca4cc7180821ca5f32e526314395d26a",
+     "https://github.com/google/glog.git@8f9ccfe770add9e4c64e9b25c102658e3c763b73",
 
      # googletest 1.8.1
      "client/third_party/gtest":
@@ -41,7 +41,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@45c8be91f34741b140bcbfc4043795eb14669008",
+     "https://boringssl.googlesource.com/boringssl@f6ef1c560ae5af51e2df5d8d2175bed207b28b8f",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":

@@ -46,22 +46,7 @@ config("using_proto") {
 
   cflags = []
 
-  if (os == "win") {
-    # Suppress warnings on Windows.
-    cflags += [
-      "/wd4100",  # unreferenced formal parameter
-      "/wd4125",  # decimal digit terminates octal escape sequence
-      "/wd4127",  # conditional expression is constant
-      "/wd4146",  # unary minus operator applied to unsigned type
-      "/wd4244",  # '=': conversion from 'uint32' to 'uint8'.
-      "/wd4309",  # truncation of constant value
-      "/wd4456",  # declaration hides previous local declaration
-      "/wd4505",  # unreferenced local function has been removed
-      "/wd4512",  # assignment operator could not be generated
-      "/wd4838",  # require narrowing conversion
-    ]
-  }
-  if (is_posix || is_clang) {
+  if (is_posix || is_clang || is_win_gcc) {
     cflags += [
       # Not to warn for headers.
       "-Wno-bitfield-width",
@@ -74,6 +59,24 @@ config("using_proto") {
 
       # This is for `friend class DynamicMessage` in map_field.h
       "-Wno-microsoft-unqualified-friend",
+    ]
+
+    if (is_win_gcc) {
+      cflags += ["-Wno-stringop-overflow"]
+    }
+  } else if (os == "win") {
+    # Suppress warnings on Windows.
+    cflags += [
+      "/wd4100",  # unreferenced formal parameter
+      "/wd4125",  # decimal digit terminates octal escape sequence
+      "/wd4127",  # conditional expression is constant
+      "/wd4146",  # unary minus operator applied to unsigned type
+      "/wd4244",  # '=': conversion from 'uint32' to 'uint8'.
+      "/wd4309",  # truncation of constant value
+      "/wd4456",  # declaration hides previous local declaration
+      "/wd4505",  # unreferenced local function has been removed
+      "/wd4512",  # assignment operator could not be generated
+      "/wd4838",  # require narrowing conversion
     ]
   }
 }
@@ -221,7 +224,7 @@ protobuf_lite_sources = [
 ]
 
 protobuf_lite_cflags = []
-if (os == "win") {
+if (os == "win" && !is_win_gcc) {
   protobuf_lite_cflags = [
     "/wd4018",  # signed/unsigned mismatch in comparison
     "/wd4065",  # switch statement contains 'default' but no 'case' labels

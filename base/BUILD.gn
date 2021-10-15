@@ -42,10 +42,12 @@ static_library("base") {
       "socket_helper_win.h",
     ]
 
-    cflags = [
-      # These warnings come from int and SOCKET type mismatch.
-      "/wd4309",  # Truncation of constant value
-    ]
+    if (!is_win_gcc) {
+      cflags = [
+        # These warnings come from int and SOCKET type mismatch.
+        "/wd4309",  # Truncation of constant value
+      ]
+    }
   }
   public_configs = [ ":base_config" ]
 }

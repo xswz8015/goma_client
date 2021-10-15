@@ -576,11 +576,18 @@ class HttpProxyDriver:
     except IOError:  # http_proxy might not be started by goma_ctl before.
       pass
     if pid > 0:  # http_proxy should not need to be killed gracefully.
-      print('killing http_proxy...')
+      print('killing http_proxy (pid=%d)...' % pid)
       try:
         os.kill(pid, signal.SIGTERM)
       except OSError as ex:
-        sys.stderr.write('failed to kill http_proxy: %s' % ex)
+        try:
+          os.kill(pid, 0)
+          sys.stderr.write('failed to kill http_proxy (pid=%d %s): %s\n' %
+                           (pid, self._pid_file, ex))
+        except OSError:
+          # if it failed to send signal 0 to pid, pid doesn't exist,
+          # so self._pid_file has stale pid.
+          pass
       os.remove(self._pid_file)
       os.remove(self._host_file)
 
@@ -803,8 +810,8 @@ class GomaDriver:
         goma_dir = self._env._dir
         goma_dir_source = 'goma_ctl.py path'
     if not os.path.exists(os.path.join(goma_dir, self._env._GOMACC)):
-      sys.stderr.write('%s not exists in %s (%s)' % (self._env._GOMACC,
-                                                     goma_dir, goma_dir_source))
+      sys.stderr.write('%s not exists in %s (%s)\n' %
+                       (self._env._GOMACC, goma_dir, goma_dir_source))
       sys.exit(1)
     print('%s' % goma_dir)
 

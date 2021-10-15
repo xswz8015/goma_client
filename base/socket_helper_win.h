@@ -18,7 +18,11 @@
 #include "config_win.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#pragma comment (lib, "ws2_32")
+// MinGW does not support #pragma comment.
+// Libraries have to be linked on gcc call.
+#ifndef __MINGW32__
+#  pragma comment (lib, "ws2_32")
+#endif
 
 typedef unsigned short sa_family_t;
 

@@ -10,6 +10,10 @@ declare_args() {
   is_tsan = false
   is_msan = false
 
+  # Special case to use mingw gcc on windows (instead of msvc or clang).
+  # Also requires is_clang=flase to work properly.
+  is_win_gcc = false
+
   # msan_track_origins:
   # 0 = no tracking, 1 = only initial allocation, 2 track the chain of stores.
   msan_track_origins = 2
@@ -171,6 +175,8 @@ if (os == "win") {
   current_cpu = cpu_arch
   if (is_clang) {
     host_toolchain = "//build/toolchain/win:clang_$cpu_arch"
+  } else if (is_win_gcc) {
+    host_toolchain = "//build/toolchain/win:gcc_$cpu_arch"
   } else {
     host_toolchain = "//build/toolchain/win:$cpu_arch"
   }
@@ -184,10 +190,15 @@ if (os == "win") {
     "//build/config/win:zlib",
     "//build/config/win:glog",
     "//build/config/win:rand_s",
-    "//build/config/win:sdk_link",
-    "//build/config/win:console",
     "//build/config/win:default_crt",
   ]
+
+  if (!is_win_gcc) {
+    win_configs += [
+      "//build/config/win:sdk_link",
+      "//build/config/win:console",
+    ]
+  }
   default_compiler_configs += win_configs
 }
 

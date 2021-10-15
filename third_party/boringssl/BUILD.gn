@@ -9,6 +9,9 @@ import("BUILD.generated.gni")
 # Config for us and everybody else depending on BoringSSL.
 config("external_config") {
   include_dirs = [ "src/include" ]
+  if (is_win_gcc) {
+    cflags = [ "-Wno-ignored-qualifiers" ]
+  }
 }
 
 # Config internal to this build file, shared by boringssl and boringssl_fuzzer.
@@ -40,7 +43,8 @@ all_sources = crypto_sources + ssl_sources
 
 # Windows' assembly is built with NASM. The other platforms use the platform
 # assembler. Exclude Windows ARM64 because NASM targets x86 and x64 only.
-if (os == "win" && !is_msan) {
+# MinGW GCC on Windows, however, does have an assembler.
+if (os == "win" && !is_msan && !is_win_gcc) {
   import("//third_party/nasm/nasm_assemble.gni")
   nasm_assemble("boringssl_asm") {
     if (cpu_arch == "x64") {

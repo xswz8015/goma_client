@@ -1,7 +1,7 @@
 config("benchmark_config") {
   include_dirs = [ "src/include" ]
   defines = [ "HAVE_STD_REGEX" ]
-  if (os == "win" && !is_clang) {
+  if (os == "win" && !is_clang && !is_win_gcc) {
     # 'inline' used more than once for benchmark.h
     cflags = [ "/wd4141" ]
   }

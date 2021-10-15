@@ -763,6 +763,15 @@ if (os == "win") {
         "-Wno-missing-field-initializers",
         "-Wno-unused-but-set-variable",
       ]
+    } else if (is_win_gcc) {
+      cflags = [
+        "-Wno-cast-function-type",
+        "-Wno-class-memaccess",
+        "-Wno-conversion-null",
+        "-Wno-missing-field-initializers",
+        "-Wno-unknown-pragmas",
+        "-Wno-unused-but-set-variable",
+      ]
     }
   }
 
@@ -791,6 +800,7 @@ if (os == "win") {
       "breakpad/src/google_breakpad/common/minidump_format.h",
     ]
     configs += [ ":breakpad_handler_warnings" ]
+    public_configs += [ ":breakpad_handler_warnings" ]
   }
 
   source_set("breakpad_sender") {

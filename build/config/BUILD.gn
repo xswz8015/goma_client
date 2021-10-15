@@ -28,7 +28,7 @@ config("release") {
 }
 
 config("default_libs") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     libs = [
       "advapi32.lib",
       "delayimp.lib",

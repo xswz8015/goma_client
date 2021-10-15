@@ -28,6 +28,16 @@
 #include <gperftools/profiler.h>
 #endif
 
+#ifdef __MINGW32__
+// In MinGW GCC:
+// '::SetThreadDescription' has not been declared;
+// did you mean 'SetThreadDesktop'?
+// | reinterpret_cast<decltype(::SetThreadDescription)*>(::GetProcAddress(
+// |                             ^~~~~~~~~~~~~~~~~~~~
+// |                             SetThreadDesktop
+WINUSERAPI HRESULT WINAPI SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription);
+#endif
+
 namespace devtools_goma {
 
 #if defined (_WIN32)

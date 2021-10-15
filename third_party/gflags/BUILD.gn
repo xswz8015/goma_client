@@ -11,7 +11,7 @@ static_library("gflags") {
     "src/src/util.h",
   ]
 
-  include_dirs = [ "src" ]
+  include_dirs = [ "src/src" ]
 
   configs -= [ "//build/config/compiler:goma_code" ]
   configs += [ "//build/config/compiler:no_goma_code" ]

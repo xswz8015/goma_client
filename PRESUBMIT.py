@@ -120,6 +120,9 @@ def CheckChangeOnUpload(input_api, output_api):
       return False
     if input_api.os_path.basename(x.LocalPath()) == 'OWNERS':
       return False
+    if x.LocalPath().startswith(
+        input_api.os_path.join('third_party', 'config')):
+      return False
     return source_file_filter(x)
 
   def long_line_filter(x):

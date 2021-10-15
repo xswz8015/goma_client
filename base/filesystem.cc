@@ -22,7 +22,8 @@
 
 namespace file {
 
-::util::Status Delete(absl::string_view path, const file::Options& options) {
+// options are unused.
+::util::Status Delete(absl::string_view path, const file::Options&) {
   std::string name(path);
 #ifdef _WIN32
   if (DeleteFileA(name.c_str()) == FALSE) {

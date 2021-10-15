@@ -1,4 +1,11 @@
 config("chromium_base_config") {
+  if (is_win_gcc) {
+    # without this, on #include<intrin.h>:
+    # msys64/mingw64/lib/gcc/x86_64-w64-mingw32/10.2.0/include/xsaveintrin.h:60:1:
+    # error: inlining failed in call to 'always_inline'
+    # 'long long int _xgetbv(unsigned int)': target specific option mismatch
+    cflags = ["-mxsave"]
+  }
   include_dirs = [ "." ]
 }
 
@@ -33,6 +40,10 @@ static_library("platform_thread") {
     "//third_party:glog",
     "//third_party/abseil",
   ]
+
+  if (is_win_gcc) {
+    cflags = [ "-Wno-cast-function-type" ]
+  }
 
   public_configs = [ ":chromium_base_config" ]
 }

@@ -12,9 +12,8 @@
 namespace devtools_goma {
 
 struct DirEntry {
-  DirEntry() : is_dir(false) {}
   std::string name;
-  bool is_dir;
+  bool is_dir = false;
 };
 
 // Gets a entries of directory.

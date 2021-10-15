@@ -39,14 +39,16 @@ config("compiler") {
   configs = []
 
   configs += [ ":clang_revision" ]
-  if (is_posix) {
+  if (is_posix || is_win_gcc) {
     cflags_cc += [ "-std=c++14" ]
 
     cflags_c += [ "-std=c11" ]
 
     # hardening.
     # stack protection.
-    cflags += [ "-fstack-protector-all" ]
+    if (!is_win_gcc) {
+      cflags += [ "-fstack-protector-all" ]
+    }
 
     # making Address space layout randomization (ASLR) fully functional.
     if (may_make_pie) {
@@ -55,12 +57,12 @@ config("compiler") {
 
     # sanitizer build with _FORTIFY_SOURCE is not supported, and it requires a
     # -O level bigger than 0.
-    if (!is_asan && !is_msan && !is_debug) {
+    if (!is_asan && !is_msan && !is_debug && !is_win_gcc) {
       defines += [ "_FORTIFY_SOURCE=2" ]
     }
   }
 
-  if (os == "linux") {
+  if (os == "linux" || is_win_gcc) {
     cflags += [
       "-g",
       "-pthread",
@@ -70,10 +72,14 @@ config("compiler") {
     ldflags += [
       "-pthread",
       "-fPIC",
-      "-Wl,-z,noexecstack",
-      "-Wl,-z,now",
-      "-Wl,-z,relro",
     ]
+    if (!is_win_gcc) {
+      ldflags += [
+        "-Wl,-z,noexecstack",
+        "-Wl,-z,now",
+        "-Wl,-z,relro",
+      ]
+    }
     sysroot = ""
     if (current_cpu == "x64") {
       cflags += [
@@ -107,13 +113,11 @@ config("compiler") {
         "-Wl,-hash-style=both",
       ]
     }
-  }
-  if (os == "mac") {
+  } else if (os == "mac") {
     cflags_cc += [ "-stdlib=libc++" ]
     ldflags += [ "-stdlib=libc++" ]
     cflags += [ "-gdwarf-2" ]
-  }
-  if (os == "win") {
+  } else if (os == "win") {
     if (is_debug) {
       cflags += [ "/MTd" ]
     } else {
@@ -270,33 +274,11 @@ config("clang_revision") {
 # Optimization --------------------------------------------------------------
 
 config("optimize") {
-  if (os == "win") {
-    cflags = [
-      "/Ox",  # full optimization.
-      "/Ot",  # speed.
-      "/Oy",  # omit frame pointers.
-    ]
-
-    # TODO: support LTO for lld
-    if (use_link_time_optimization && !use_lld) {
-      if (!is_clang) {
-        cflags += [ "/GL" ]
-      }
-      if (use_incremental_link) {
-        ldflags = [ "/LTCG:INCREMENTAL" ]  # useLinkTimeCodeGeneration
-        arflags = [ "/LTCG:INCREMENTAL" ]  # useLinkTimeCodeGeneration
-      } else {
-        ldflags = [ "/LTCG" ]  # useLinkTimeCodeGeneration
-        arflags = [ "/LTCG" ]  # useLinkTimeCodeGeneration
-      }
-    }
-  } else {
-    cflags = [ "-O2" ]
-  }
   ldflags = []
-  if (os == "linux") {
-    cflags += [
-      "-msse2",
+  if (os == "linux" || is_win_gcc) {
+    cflags = [
+      "-msse4.1",
+      "-mpclmul",
 
       # Put data and code in their own sections, so that unused symbols can
       # be removed at link time with --gc-sections.
@@ -317,6 +299,32 @@ config("optimize") {
       "-Wl,--as-needed",
       "-Wl,--gc-sections",
     ]
+  } else if (os == "win") {
+    cflags = [
+      "/Ox",  # full optimization.
+      "/Ot",  # speed.
+      "/Oy",  # omit frame pointers.
+    ]
+
+    # TODO: support LTO for lld
+    if (use_link_time_optimization && !use_lld) {
+      if (!is_clang) {
+        cflags += [ "/GL" ]
+      }
+      if (use_incremental_link) {
+        ldflags = [ "/LTCG:INCREMENTAL" ]  # useLinkTimeCodeGeneration
+        arflags = [ "/LTCG:INCREMENTAL" ]  # useLinkTimeCodeGeneration
+      } else {
+        ldflags = [ "/LTCG" ]  # useLinkTimeCodeGeneration
+        arflags = [ "/LTCG" ]  # useLinkTimeCodeGeneration
+      }
+    }
+  } else {
+    cflags = []
+  }
+
+  if (os != "win" || is_win_gcc) {
+    cflags += [ "-O2" ]
   }
 
   if (use_thin_lto) {
@@ -330,7 +338,7 @@ config("optimize") {
 }
 
 config("no_optimize") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     cflags = [
       "/Od",  # Disable optimization.
       "/Ob0",  # Disable all inlining (on by default).
@@ -356,13 +364,13 @@ config("default_optimization") {
 
 # rtti -------------------------------------------------------------------
 config("rtti") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     cflags_cc = [ "/GR" ]
   }
 }
 
 config("no_rtti") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     cflags_cc = [ "/GR-" ]
   } else {
     cflags_cc = [ "-fno-rtti" ]
@@ -372,7 +380,7 @@ config("no_rtti") {
 # On Windows compiling on x64, VC will issue a warning when converting size_t
 # to int because it will truncate the value.
 config("no_size_t_to_int_warning") {
-  if (os == "win" && current_cpu == "x64") {
+  if (os == "win" && current_cpu == "x64" && !is_win_gcc) {
     cflags = [ "/wd4267" ]
   }
 }
@@ -383,7 +391,7 @@ config("no_size_t_to_int_warning") {
 # Note: exceptions are disallowed in Google code.
 
 config("exceptions") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     # Enables exceptions in the STL.
     if (!use_custom_libcxx) {
       defines = [ "_HAS_EXCEPTIONS=1" ]
@@ -396,7 +404,7 @@ config("exceptions") {
 }
 
 config("no_exceptions") {
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     # Disables exceptions in the STL.
     # libc++ uses the __has_feature macro to control whether to use exceptions,
     # so defining this macro is unnecessary. Defining _HAS_EXCEPTIONS to 0 also
@@ -417,7 +425,7 @@ config("no_exceptions") {
 # Toggles between higher and lower warnings for code that is part of goma.
 config("goma_code") {
   cflags = []
-  if (os == "win") {
+  if (os == "win" && !is_win_gcc) {
     cflags += [
       "/W4",  # Warning level 4.
       "/wd4127",  # (for abseil) conditional expression is constant
@@ -455,7 +463,12 @@ config("no_goma_code") {
   cflags = []
   defines = []
 
-  if (os == "win") {
+  if (os == "linux" || is_win_gcc) {
+    cflags += [
+      "-Wno-unused-result",
+      "-Wno-format",
+    ]
+  } else if (os == "win") {
     cflags += [
       "/W3",  # Warning level 3.
       "/wd4800",  # Disable warning when forcing value to bool.
@@ -504,13 +517,6 @@ config("no_goma_code") {
         "-Wno-null-pointer-subtraction",
       ]
     }
-  }
-
-  if (os == "linux") {
-    cflags += [
-      "-Wno-unused-result",
-      "-Wno-format",
-    ]
   }
 
   if (is_clang && treat_no_goma_code_warnings_as_errors) {

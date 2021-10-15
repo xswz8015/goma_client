@@ -44,7 +44,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-#if 1
+#ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 #include <vector>
@@ -107,17 +107,17 @@
 
 namespace google {
 
-#if 1      // the C99 format
+#if 1  // the C99 format
 typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
-#elif 1   // the BSD format
+#elif 1  // the BSD format
 typedef int32_t int32;
 typedef u_int32_t uint32;
 typedef int64_t int64;
 typedef u_int64_t uint64;
-#elif 0    // the windows (vc7) format
+#elif 0  // the windows (vc7) format
 typedef __int32 int32;
 typedef unsigned __int32 uint32;
 typedef __int64 int64;
@@ -659,10 +659,10 @@ class LogSink;  // defined below
 
 #define LOG_IF(severity, condition) \
   static_cast<void>(0),             \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+  !(condition) ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 #define SYSLOG_IF(severity, condition) \
   static_cast<void>(0),                \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & SYSLOG(severity)
+  !(condition) ? (void) 0 : google::LogMessageVoidify() & SYSLOG(severity)
 
 #define LOG_ASSERT(condition)  \
   LOG_IF(FATAL, !(condition)) << "Assert failed: " #condition
@@ -960,7 +960,7 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
 
 #define PLOG_IF(severity, condition) \
   static_cast<void>(0),              \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & PLOG(severity)
+  !(condition) ? (void) 0 : google::LogMessageVoidify() & PLOG(severity)
 
 // A CHECK() macro that postpends errno if the condition is false. E.g.
 //
@@ -1241,29 +1241,28 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 #define DLOG(severity)  \
   static_cast<void>(0), \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+  true ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DVLOG(verboselevel)                                 \
   static_cast<void>(0), (true || !VLOG_IS_ON(verboselevel)) \
                             ? (void)0                       \
                             : google::LogMessageVoidify() & LOG(INFO)
 
-#define DLOG_IF(severity, condition)           \
-  static_cast<void>(0), (true || !(condition)) \
-                            ? (void)0          \
-                            : google::LogMessageVoidify() & LOG(severity)
+#define DLOG_IF(severity, condition) \
+  static_cast<void>(0),              \
+  (true || !(condition)) ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_EVERY_N(severity, n) \
   static_cast<void>(0),           \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+  true ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_IF_EVERY_N(severity, condition, n) \
-  static_cast<void>(0), (true || !(condition))  \
-                            ? (void)0           \
-                            : google::LogMessageVoidify() & LOG(severity)
+  static_cast<void>(0),                         \
+  (true || !(condition))? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_ASSERT(condition) \
-  static_cast<void>(0), true ? (void)0 : LOG_ASSERT(condition)
+  static_cast<void>(0),        \
+  true ? (void) 0 : LOG_ASSERT(condition)
 
 // MSVC warning C4127: conditional expression is constant
 #define DCHECK(condition) \
@@ -1388,23 +1387,23 @@ public:
   // 2005 if you are deriving from a type in the Standard C++ Library"
   // http://msdn.microsoft.com/en-us/library/3tdb471s(VS.80).aspx
   // Let's just ignore the warning.
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
+GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
   class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostream {
-    GLOG_MSVC_POP_WARNING()
-   public:
-    LogStream(char* buf, int len, uint64 ctr)
-        : std::ostream(NULL), streambuf_(buf, len), ctr_(ctr), self_(this) {
-      rdbuf(&streambuf_);
-    }
+GLOG_MSVC_POP_WARNING()
+  public:
+   LogStream(char* buf, int len, uint64 ctr)
+       : std::ostream(NULL), streambuf_(buf, len), ctr_(ctr), self_(this) {
+     rdbuf(&streambuf_);
+   }
 
-    uint64 ctr() const { return ctr_; }
-    void set_ctr(uint64 ctr) { ctr_ = ctr; }
-    LogStream* self() const { return self_; }
+   uint64 ctr() const { return ctr_; }
+   void set_ctr(uint64 ctr) { ctr_ = ctr; }
+   LogStream* self() const { return self_; }
 
-    // Legacy std::streambuf methods.
-    size_t pcount() const { return streambuf_.pcount(); }
-    char* pbase() const { return streambuf_.pbase(); }
-    char* str() const { return pbase(); }
+   // Legacy std::streambuf methods.
+   size_t pcount() const { return streambuf_.pcount(); }
+   char* pbase() const { return streambuf_.pbase(); }
+   char* str() const { return pbase(); }
 
   private:
     LogStream(const LogStream&);

@@ -2,12 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-if (os != "win") {
-  config_h_dir = "config/glog/$os"
-} else {
-  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
-  config_h_dir = "glog/src/windows"
-}
+config_h_dir = "config/glog/$os"
 
 glog_sources = [
   "$config_h_dir/config.h",
@@ -42,26 +37,35 @@ glog_include_dirs = [
 
 glog_defines = [ "HAVE_CONFIG_H" ]
 
-if (os == "win" &&
-    (visual_studio_version == "2017" || visual_studio_version == "2019")) {
-  glog_defines += [ "HAVE_SNPRINTF" ]
-}
-
 if (os != "win") {
   glog_cflags_cc = [ "-Wno-sign-compare" ]
 } else {
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
+
+  if (is_win_gcc) {
+    glog_defines += [ "HAVE_PTHREAD",
+                      "HAVE_UNISTD_H" ]
+  }
+
+  if (visual_studio_version == "2017" || visual_studio_version == "2019") {
+    glog_defines += [ "HAVE_SNPRINTF" ]
+  }
+
   glog_defines += [ "DISABLE_RTTI" ]
-  glog_cflags_cc = [
-    "/wd4541",
+  glog_cflags_cc = []
+  if (!is_win_gcc) {
+    glog_cflags_cc = [
+      "/wd4541",
 
-    # C4389: signed/unsigned mismatch
-    # Come from glog/src/windows/glog/logging.h
-    "/wd4389",
+      # C4389: signed/unsigned mismatch
+      # Come from glog/src/windows/glog/logging.h
+      "/wd4389",
 
-    # destructor never returns, potential memory leak.
-    # Occurred in glog Fatal.
-    "/wd4722",
-  ]
+      # destructor never returns, potential memory leak.
+      # Occurred in glog Fatal.
+      "/wd4722",
+    ]
+  }
   glog_sources -= [
     "glog/src/stacktrace.h",
     "glog/src/stacktrace_generic-inl.h",
@@ -72,6 +76,13 @@ if (os != "win") {
     "glog/src/windows/port.cc",
     "glog/src/windows/port.h",
   ]
+  # Glog v0.5 removes the windows predefined configs besides
+  # "port.h/.cc" above, so preemptively copied them to config/glog/win.
+  # Since port.h/.cc remain, we still have to add this include_dir.
+  # Note that this meeans that until glog is upgraded to v0.5, there'll
+  # be two copies of those files - but the ones under third_party/config
+  # will be searched first.
+  glog_include_dirs += [ "glog/src/windows" ]
 }
 
 config("glog_config") {

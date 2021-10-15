@@ -5,6 +5,7 @@
 # found in the LICENSE file.
 
 import("//build/config/clang/clang.gni")
+import("//build/toolchain/gcc_toolchain.gni")
 import("//build/toolchain/goma.gni")
 import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
@@ -342,5 +343,23 @@ template("win_x64_toolchains") {
 win_x64_toolchains("x64") {
   toolchain_args = {
     # Use the defaults.
+  }
+}
+
+gcc_toolchain("gcc_x64") {
+  cc = "gcc"
+  cxx = "g++"
+
+  readelf = "readelf"
+  nm = "nm"
+  ar = "ar"
+  ld = cxx
+
+  executable_extension = ".exe"
+
+  toolchain_args = {
+    current_cpu = "x64"
+    current_os = "win"
+    is_clang = false
   }
 }
