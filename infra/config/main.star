@@ -159,6 +159,9 @@ def builder(name, os, bucket):
             "pool": "luci.flex." + bucket,
         },
         triggered_by = triggered_by,
+        experiments = {
+            "luci.recipes.use_python3": 100,
+        },
     )
 
 builder("linux_rel", os_type.LINUX, "ci")
