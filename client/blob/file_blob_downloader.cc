@@ -24,6 +24,7 @@ bool FileBlobDownloader::Download(const ExecResult_Output& output,
 
     case FileBlob::FILE_CHUNK:
     case FileBlob::FILE_UNSPECIFIED:
+    default:
       LOG(ERROR) << "Unable to handle blob type "
                  << FileBlob::BlobType_Name(blob_type);
       return false;

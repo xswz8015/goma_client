@@ -102,7 +102,7 @@ void DumpEnvFlag(std::ostringstream* ss) {
   for (const auto& iter : *g_env_flag_names) {
     const std::string name = "GOMA_" + iter;
     char* v = nullptr;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
     _dupenv_s(&v, nullptr, name.c_str());
 #else
     v = getenv(name.c_str());

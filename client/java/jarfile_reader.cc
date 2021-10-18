@@ -39,7 +39,7 @@ std::unique_ptr<FileReader> JarFileReader::Create(const std::string& filename) {
   // Since the number of jar files should not be large, and we see the message
   // once compiler_proxy read the file.  I guess it not so chatty.
   LOG(INFO) << "JarFileReader is used. filename=" << filename;
-  return std::move(file_reader);
+  return file_reader;
 }
 
 /* static */

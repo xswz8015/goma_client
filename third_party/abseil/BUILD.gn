@@ -7,9 +7,13 @@ import("//build/config/clang/clang.gni")
 config("abseil_config") {
   include_dirs = [ "src" ]
 
-  if (clang_base_path == default_clang_base_path) {
+  if (is_clang && clang_base_path == default_clang_base_path) {
     # Only apply this for chromium clang build.
     cflags = [ "-Wno-implicit-int-float-conversion" ]
+  }
+  if (is_win_gcc) {
+    # Used by "src/absl/debugging/symbolize_win32.inc"
+    libs = [ "dbghelp" ]
   }
 }
 

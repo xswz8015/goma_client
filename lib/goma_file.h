@@ -13,7 +13,9 @@
 #include "lib/file_reader.h"
 #include "lib/goma_data.pb.h"
 
-#ifdef _WIN32
+// MinGW GCC defines StrCat in <strsafe.h> which conflicts with abseil StrCat
+// It also interefers with <intrin.h>.
+#if defined(_WIN32) && !defined(__MINGW32__)
 # include <shlobj.h>
 # include <strsafe.h>
 # include "config_win.h"

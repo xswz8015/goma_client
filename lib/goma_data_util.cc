@@ -40,9 +40,6 @@ bool IsValidFileBlob(const FileBlob& blob) {
     return false;
 
   switch (blob.blob_type()) {
-    case FileBlob::FILE_UNSPECIFIED:
-      return false;
-
     case FileBlob::FILE:
       if (blob.has_offset())
         return false;
@@ -80,6 +77,10 @@ bool IsValidFileBlob(const FileBlob& blob) {
       if (blob.hash_key_size() != 1)
         return false;
       return true;
+
+    case FileBlob::FILE_UNSPECIFIED:
+    default:
+      return false;
   }
 }
 

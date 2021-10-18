@@ -79,6 +79,13 @@ is_nacl = false
 is_component_build = false
 is_chrome_branded = false
 
+# BUILDCONFIG.gn is evaluated once for every toolchain.
+# Since goma's toolchain definitions set "is_clang=true" for the
+# clang ones, we can't just assert that is_win_gcc and is_clang are
+# not both true at the same itme, since this will once be evaluated
+# with is_clang=true.
+assert(!is_win_gcc || os == "win", "is_win_gcc can only be used on windows")
+
 using_sanitizer = is_asan || is_tsan || is_msan
 declare_args() {
   # Since sanitizers kills subprocess on violation with messages shown to
@@ -173,10 +180,10 @@ if (os == "mac" && is_clang) {
 
 if (os == "win") {
   current_cpu = cpu_arch
-  if (is_clang) {
-    host_toolchain = "//build/toolchain/win:clang_$cpu_arch"
-  } else if (is_win_gcc) {
+  if (is_win_gcc) {
     host_toolchain = "//build/toolchain/win:gcc_$cpu_arch"
+  } else if (is_clang) {
+    host_toolchain = "//build/toolchain/win:clang_$cpu_arch"
   } else {
     host_toolchain = "//build/toolchain/win:$cpu_arch"
   }

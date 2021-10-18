@@ -75,8 +75,6 @@ std::unique_ptr<CompilerFlags> CompilerFlagTypeSpecific::NewCompilerFlags(
     const std::vector<std::string>& args,
     const std::string& cwd) const {
   switch (type_) {
-    case CompilerFlagType::Unknown:
-      return nullptr;
     case CompilerFlagType::Gcc:
       return absl::make_unique<GCCFlags>(args, cwd);
     case CompilerFlagType::Clexe:
@@ -93,14 +91,15 @@ std::unique_ptr<CompilerFlags> CompilerFlagTypeSpecific::NewCompilerFlags(
       return absl::make_unique<DartAnalyzerFlags>(args, cwd);
     case CompilerFlagType::Fake:
       return absl::make_unique<FakeFlags>(args, cwd);
+    case CompilerFlagType::Unknown:
+    default:
+      return nullptr;
   }
 }
 
 std::string CompilerFlagTypeSpecific::GetCompilerName(
     absl::string_view arg) const {
   switch (type_) {
-    case CompilerFlagType::Unknown:
-      return "";
     case CompilerFlagType::Gcc:
       return GCCFlags::GetCompilerName(arg);
     case CompilerFlagType::Clexe:
@@ -117,14 +116,15 @@ std::string CompilerFlagTypeSpecific::GetCompilerName(
       return DartAnalyzerFlags::GetCompilerName(arg);
     case CompilerFlagType::Fake:
       return FakeFlags::GetCompilerName(arg);
+    case CompilerFlagType::Unknown:
+    default:
+      return "";
   }
 }
 
 std::unique_ptr<ExecReqNormalizer>
 CompilerFlagTypeSpecific::NewExecReqNormalizer() const {
   switch (type_) {
-    case CompilerFlagType::Unknown:
-      return absl::make_unique<AsIsExecReqNormalizer>();
     case CompilerFlagType::Gcc:
       return absl::make_unique<GCCExecReqNormalizer>();
     case CompilerFlagType::Clexe:
@@ -141,6 +141,9 @@ CompilerFlagTypeSpecific::NewExecReqNormalizer() const {
       return absl::make_unique<DartAnalyzerExecReqNormalizer>();
     case CompilerFlagType::Fake:
       return absl::make_unique<FakeExecReqNormalizer>();
+    case CompilerFlagType::Unknown:
+    default:
+      return absl::make_unique<AsIsExecReqNormalizer>();
   }
 }
 

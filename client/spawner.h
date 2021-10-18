@@ -151,6 +151,8 @@ inline std::ostream& operator<<(std::ostream& os,
       return os << "RUNNING";
     case Spawner::ProcessStatus::EXITED:
       return os << "EXITED";
+    default:
+      return os << "UNKNOWN";
   }
 }
 

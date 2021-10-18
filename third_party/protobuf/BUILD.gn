@@ -33,6 +33,11 @@ config("protobuf_warnings") {
       # descriptor_ is not used in csharp_source_generator_base.h
       "-Wno-unused-private-field",
     ]
+  } else if (is_win_gcc) {
+    cflags = [
+      "-Wno-stringop-overflow",
+      "-Wno-type-limits",
+    ]
   }
 }
 
@@ -49,20 +54,24 @@ config("using_proto") {
   if (is_posix || is_clang || is_win_gcc) {
     cflags += [
       # Not to warn for headers.
-      "-Wno-bitfield-width",
       "-Wno-deprecated",
       "-Wno-implicit-fallthrough",
       "-Wno-missing-field-initializers",
       "-Wno-sign-compare",
-      "-Wno-unused-local-typedef",
       "-Wno-unused-parameter",
-
-      # This is for `friend class DynamicMessage` in map_field.h
-      "-Wno-microsoft-unqualified-friend",
     ]
 
     if (is_win_gcc) {
-      cflags += ["-Wno-stringop-overflow"]
+      cflags += [
+        "-Wno-type-limits",
+      ]
+    } else {
+      cflags += [
+        "-Wno-bitfield-width",
+        "-Wno-unused-local-typedef",
+        # This is for `friend class DynamicMessage` in map_field.h
+        "-Wno-microsoft-unqualified-friend",
+      ]
     }
   } else if (os == "win") {
     # Suppress warnings on Windows.

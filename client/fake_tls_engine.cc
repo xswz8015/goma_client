@@ -10,8 +10,9 @@
 namespace devtools_goma {
 
 FakeTLSEngine::~FakeTLSEngine() {
-  if (broken_ != FAKE_TLS_NO_BROKEN)
+  if (broken_ != FAKE_TLS_NO_BROKEN) {
     EXPECT_TRUE(execute_broken_);
+  }
 }
 
 bool FakeTLSEngine::IsIOPending() const {

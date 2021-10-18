@@ -8,8 +8,6 @@ namespace devtools_goma {
 
 std::ostream& operator<<(std::ostream& os, CompilerFlagType type) {
   switch (type) {
-    case CompilerFlagType::Unknown:
-      return os << "unknown";
     case CompilerFlagType::Fake:
       return os << "fake";
     case CompilerFlagType::Gcc:
@@ -26,6 +24,9 @@ std::ostream& operator<<(std::ostream& os, CompilerFlagType type) {
       return os << "rustc";
     case CompilerFlagType::DartAnalyzer:
       return os << "dartanalyzer";
+    case CompilerFlagType::Unknown:
+    default:
+      return os << "unknown";
   }
 }
 

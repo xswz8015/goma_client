@@ -7,7 +7,9 @@
 
 #include <process.h>
 #include <psapi.h>
-#pragma comment(lib, "psapi.lib")
+#ifndef __MINGW32__
+#  pragma comment(lib, "psapi.lib")
+#endif
 
 #include <algorithm>
 #include <deque>

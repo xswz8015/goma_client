@@ -12,6 +12,10 @@ config("base_config") {
   if (use_absl_backed_sync_primitives) {
     cflags += [ "-DUSE_ABSL_BACKED_SYNC_PRIMITIVES" ]
   }
+  if (is_win_gcc) {
+    # Used by base/socket_helper_win.cc
+    libs = [ "ws2_32" ]
+  }
 }
 
 static_library("base") {

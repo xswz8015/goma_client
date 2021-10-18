@@ -299,6 +299,8 @@ executable("cpp_tokenizer_unittest") {
     "//client:compiler_proxy_lib",
     "//client:goma_test_lib",
   ]
+  # MinGW doesn't seem to accept #pragma GCC diagnostic ignored -Wmultichar.
+  cflags = [ "-Wno-multichar" ]
 }
 
 executable("cpp_directive_optimizer_unittest") {
@@ -375,6 +377,7 @@ executable("cpp_include_processor_unittest") {
     "//client/cxx:cxx_compiler_info_builder_lib",
     "//lib:compiler_flag_type_specific",
   ]
+  cflags = [ "-Wno-comment" ]
 }
 
 if (os == "win") {

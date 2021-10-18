@@ -146,6 +146,7 @@ static_library("rust_specific") {
     "rustc_flags.h",
   ]
   deps = [ ":lib" ]
+  cflags = [ "-Wno-comment" ]
 }
 
 static_library("fake_specific") {

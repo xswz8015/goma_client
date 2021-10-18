@@ -25,7 +25,9 @@
 #ifdef _WIN32
 # include "config_win.h"
 # include <psapi.h>
-# pragma comment(lib, "psapi.lib")
+# ifndef __MINGW32__
+#   pragma comment(lib, "psapi.lib")
+# endif
 # include <lmcons.h>  // for UNLEN
 #endif
 

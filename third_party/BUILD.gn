@@ -87,11 +87,19 @@ if (os != "win") {
 
 config("glog_config") {
   include_dirs = glog_include_dirs
-  if (is_posix) {
+  if (is_posix || is_win_gcc) {
     cflags = [
-      "-Wno-unused-local-typedef",  # For COMPILE_ASSERT macro.
       "-Wno-sign-compare",  # glog/logging.h has sign compare code
     ]
+    if (is_posix) {
+      cflags += [
+        "-Wno-unused-local-typedef",  # For COMPILE_ASSERT macro.
+      ]
+    }
+  }
+  if (is_win_gcc) {
+    # Used by "glog/src/symbolize.cc"
+    libs = [ "dbghelp" ]
   }
 }
 
@@ -421,11 +429,17 @@ if (enable_lzma) {
         "//build/config/win:unicode",
       ]
 
+      # For xz/src/common/tuklib_physmem.c(86,18)
       if (is_clang) {
-        # For xz/src/common/tuklib_physmem.c(86,18)
         cflags = [ "-Wno-incompatible-function-pointer-types" ]
+      } else if (is_win_gcc) {
+        cflags = [ "-Wno-incompatible-pointer-types" ]
       }
     }
+  }
+  if (is_win_gcc) {
+    # Used by "glog/src/symbolize.cc"
+    libs = [ "dbghelp" ]
   }
 }
 
@@ -455,7 +469,7 @@ static_library("zlib_x86_simd") {
       "zlib/zlib.h",
       "zlib/zutil.h",
     ]
-    if (!is_win || is_clang) {
+    if (!is_win || is_clang || is_win_gcc) {
       cflags = [
         "-msse4.2",
         "-mpclmul",

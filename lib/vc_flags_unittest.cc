@@ -25,9 +25,12 @@
 
 #ifdef _WIN32
 #include "config_win.h"
+
+#ifndef __MINGW32__
 // we'll ignore the warnings:
 // warning C4996: 'strdup': The POSIX name for this item is deprecated.
 #pragma warning(disable : 4996)
+#endif  // __MINGW32__
 #endif  // _WIN32
 
 using google::GetExistingTempDirectories;

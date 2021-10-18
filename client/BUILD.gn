@@ -14,7 +14,10 @@ group("client") {
     ":gomacc",
   ]
 
-  if (is_official_build) {
+  # We don't make MinGW Official Goma builds,
+  # and MinGW GCC can't properly use Windows SDK which
+  # breakpad uses for dump_syms.
+  if (is_official_build && !is_win_gcc) {
     deps += [ ":calc_sha256_checksum" ]
   }
 }
@@ -111,6 +114,12 @@ static_library("oauth2_lib") {
   public_deps = [ "//third_party/abseil" ]
 }
 
+config("subprocess_lib_config") {
+  if (is_win_gcc) {
+    libs = [ "psapi" ]
+  }
+}
+
 static_library("subprocess_lib") {
   sources = [
     "spawner.h",
@@ -129,6 +138,8 @@ static_library("subprocess_lib") {
       "spawner_posix.h",
     ]
   }
+
+  public_configs = [ ":subprocess_lib_config" ]
 
   public_deps = [
     "//base",
@@ -191,6 +202,10 @@ config("include_target_gen_dir") {
 
 config("client_config") {
   include_dirs = [ "." ]
+  # Used by client/mypath.cc
+  if (is_win_gcc) {
+    libs = [ "psapi" ]
+  }
 }
 
 action("gen_compiler_proxy_info") {
@@ -567,12 +582,16 @@ static_library("file_path_util_lib") {
 
 static_library("jwt_lib") {
   if (os == "win") {
-    cflags = [
-      # C4267: conversion from 'size_t' to 'int', possible loss of data
-      # Come from passing string::size() to
-      # BIO_new_mem_buf(const void*, int len).
-      "/wd4267",
-    ]
+    if (is_win_gcc) {
+      cflags = [ "-Wno-ignored-qualifiers" ]
+    } else {
+      cflags = [
+        # C4267: conversion from 'size_t' to 'int', possible loss of data
+        # Come from passing string::size() to
+        # BIO_new_mem_buf(const void*, int len).
+        "/wd4267",
+      ]
+    }
   }
 
   sources = [
@@ -686,6 +705,9 @@ static_library("proto_util") {
     "proto_util.cc",
     "proto_util.h",
   ]
+  configs += [
+    "//third_party/protobuf:protobuf_warnings",
+  ]
   public_deps = [
     "//third_party/abseil",
     "//third_party/protobuf:protobuf_lite",
@@ -777,6 +799,12 @@ static_library("scoped_tmp_file_lib") {
   ]
 }
 
+config("breakpad_lib_config") {
+  if (is_win_gcc) {
+    libs = ["msvcr90"]
+  }
+}
+
 static_library("breakpad_lib") {
   sources = [ "breakpad.h" ]
   if (os == "linux") {
@@ -811,6 +839,7 @@ static_library("breakpad_lib") {
     # linux_syscall_support.h do not have .c or .cc file.
     "//",
   ]
+  public_configs = [ ":breakpad_lib_config" ]
 }
 
 static_library("notification_lib") {
@@ -924,7 +953,7 @@ copy("copy_diagnose_goma_log_py") {
   outputs = [ "$root_out_dir/{{source_file_part}}" ]
 }
 
-if (os != "win") {
+if (os != "win" || is_win_gcc) {
   copy("goma_tool") {
     sources = [
       "goma_auth",
@@ -960,7 +989,10 @@ if (os != "win") {
            ] + rebase_path(outputs)
   }
 
-  if (is_official_build) {
+  # We don't make MinGW Official Goma builds,
+  # and MinGW GCC can't properly use Windows SDK which
+  # breakpad uses for dump_syms.
+  if (is_official_build && !is_win_gcc) {
     action("dump_compiler_proxy_symbols") {
       script = "dump_syms.py"
       deps = [
@@ -1617,6 +1649,7 @@ executable("proto_util_unittest") {
     ":proto_util",
     "//build/config:exe_and_shlib_deps",
   ]
+  configs += [ "//third_party/protobuf:protobuf_warnings" ]
 }
 
 executable("rand_util_unittest") {

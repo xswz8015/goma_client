@@ -10,8 +10,6 @@ namespace devtools_goma {
 CompilerTypeSpecific* CompilerTypeSpecificCollection::Get(
     CompilerFlagType type) {
   switch (type) {
-    case CompilerFlagType::Unknown:
-      return nullptr;
     case CompilerFlagType::Rustc:
       return &rustc_;
     case CompilerFlagType::Gcc:
@@ -28,6 +26,9 @@ CompilerTypeSpecific* CompilerTypeSpecificCollection::Get(
       return &dart_analyzer_;
     case CompilerFlagType::Fake:
       return &fake_;
+    case CompilerFlagType::Unknown:
+    default:
+      return nullptr;
   }
 }
 

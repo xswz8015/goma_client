@@ -35,6 +35,8 @@ const char* GetEncodingName(EncodingType type) {
       return "gzip";
     case EncodingType::LZMA2:
       return "lzma2";
+    default:
+      return "unknown encoding";
   }
 }
 

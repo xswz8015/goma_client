@@ -31,7 +31,7 @@ class MyPathTest : public testing::Test {
     // use GetGomaTmpDir().  That is why we do not use TmpDirUtil here.
     std::string tmpdir;
 #ifdef _WIN32
-    char tmp_dir[PATH_MAX], first_dir[PATH_MAX];
+    char tmp_dir[PATH_MAX];
     ASSERT_NE(0, GetTempPathA(PATH_MAX, tmp_dir));
     tmpdir = file::JoinPath(tmp_dir, "mypath_test.XXXXXX");
     ASSERT_NE(devtools_goma::mkdtemp(&tmpdir[0]), nullptr);

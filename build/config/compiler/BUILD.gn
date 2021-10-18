@@ -46,9 +46,7 @@ config("compiler") {
 
     # hardening.
     # stack protection.
-    if (!is_win_gcc) {
-      cflags += [ "-fstack-protector-all" ]
-    }
+    cflags += [ "-fstack-protector-all" ]
 
     # making Address space layout randomization (ASLR) fully functional.
     if (may_make_pie) {
@@ -57,8 +55,13 @@ config("compiler") {
 
     # sanitizer build with _FORTIFY_SOURCE is not supported, and it requires a
     # -O level bigger than 0.
-    if (!is_asan && !is_msan && !is_debug && !is_win_gcc) {
+    if (!is_asan && !is_msan && !is_debug) {
       defines += [ "_FORTIFY_SOURCE=2" ]
+    }
+
+    if (is_win_gcc) {
+      # For -fstack-protector-all
+      libs = [ "ssp" ]
     }
   }
 
@@ -87,7 +90,9 @@ config("compiler") {
         "-march=x86-64",
       ]
       ldflags += [ "-m64" ]
-      sysroot = "//third_party/chromium_build/linux/debian_sid_amd64-sysroot"
+      if (os == "linux") {
+        sysroot = "//third_party/chromium_build/linux/debian_sid_amd64-sysroot"
+      }
     } else if (current_cpu == "x86") {
       cflags += [ "-m32" ]
       ldflags += [ "-m32" ]
@@ -277,8 +282,7 @@ config("optimize") {
   ldflags = []
   if (os == "linux" || is_win_gcc) {
     cflags = [
-      "-msse4.1",
-      "-mpclmul",
+      "-msse2",
 
       # Put data and code in their own sections, so that unused symbols can
       # be removed at link time with --gc-sections.
@@ -463,29 +467,31 @@ config("no_goma_code") {
   cflags = []
   defines = []
 
-  if (os == "linux" || is_win_gcc) {
+  if (os == "linux") {
     cflags += [
       "-Wno-unused-result",
       "-Wno-format",
     ]
   } else if (os == "win") {
-    cflags += [
-      "/W3",  # Warning level 3.
-      "/wd4800",  # Disable warning when forcing value to bool.
+    if (!is_win_gcc) {
+      cflags += [
+        "/W3",  # Warning level 3.
+        "/wd4800",  # Disable warning when forcing value to bool.
 
-      # Suppress warning on conversion that cause possibly loss of data.
-      "/wd4244",  # any conversion that may cause loss of data.
-      "/wd4267",  # conversion from __size_t.
+        # Suppress warning on conversion that cause possibly loss of data.
+        "/wd4244",  # any conversion that may cause loss of data.
+        "/wd4267",  # conversion from __size_t.
 
-      # Allow POSIX style functions.
-      "/wd4996",
+        # Allow POSIX style functions.
+        "/wd4996",
 
-      "/wd4291",  # no matching operator delete found
+        "/wd4291",  # no matching operator delete found
 
-      # conversion from 'unsigned int' to 'yasm_symrec_get_label_bytecodep'
-      # of greater size come from yasm.
-      "/wd4312",
-    ]
+        # conversion from 'unsigned int' to 'yasm_symrec_get_label_bytecodep'
+        # of greater size come from yasm.
+        "/wd4312",
+      ]
+    }
     defines += [
       "_CRT_NONSTDC_NO_WARNINGS",
       "_CRT_NONSTDC_NO_DEPRECATE",
@@ -497,27 +503,33 @@ config("no_goma_code") {
     if (is_clang) {
       cflags += [
         "-Wno-bitwise-instead-of-logical",
-        "-Wno-deprecated-declarations",
         "-Wno-enum-compare-switch",
-        "-Wno-implicit-fallthrough",
-        "-Wno-invalid-noreturn",
         "-Wno-microsoft-cast",
         "-Wno-microsoft-include",
-        "-Wno-missing-field-initializers",
-        "-Wno-reorder",
-        "-Wno-shift-negative-value",
-        "-Wno-tautological-constant-compare",
-        "-Wno-unused-const-variable",
-        "-Wno-unused-function",
-        "-Wno-unused-variable",
-        "-Wno-unused-but-set-variable",
+        "-Wno-invalid-noreturn",
         "-Wno-null-pointer-arithmetic",  # TODO:
                                          # Possibly reenable if the warning
                                          # becomes usable again upstream.
         "-Wno-null-pointer-subtraction",
+        "-Wno-tautological-constant-compare",
       ]
     }
+    if (is_clang || is_win_gcc) {
+      cflags += [
+        "-Wno-deprecated-declarations",
+        "-Wno-implicit-fallthrough",
+        "-Wno-missing-field-initializers",
+        "-Wno-shift-negative-value",
+        "-Wno-unused-const-variable",
+        "-Wno-unused-function",
+        "-Wno-unused-variable",
+        "-Wno-unused-but-set-variable",
+      ]
+
+      cflags_cc = ["-Wno-reorder"]
+    }
   }
+
 
   if (is_clang && treat_no_goma_code_warnings_as_errors) {
     cflags += [ "-Werror" ]

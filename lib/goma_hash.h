@@ -8,6 +8,8 @@
 
 #include <ostream>
 #include <string>
+// Needed for memcmp
+#include <cstring>
 
 #include "absl/base/macros.h"
 #include "absl/strings/string_view.h"

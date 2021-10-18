@@ -398,7 +398,7 @@ template("proto_library") {
           public_deps += [ "//third_party/protobuf:protobuf_lite" ]
         }
 
-        if (is_win) {
+        if (is_win && !is_win_gcc) {
           cflags = [
             # disable: C4125 decimal digit terminates octal escape sequence
             # Protoc generates such sequences frequently, there's no obvious

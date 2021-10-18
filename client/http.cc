@@ -2031,7 +2031,18 @@ bool HttpClient::Response::Recv(int r) {
 bool HttpClient::Response::BodyRecv(int r) {
   VLOG(3) << trace_id_ << " body receive=" << r;
   switch (body_->Process(r)) {
+    case Body::State::Ok:
+      CHECK_GE(r, 0);
+      VLOG(3) << trace_id_ << " received full content";
+      return true;
+
+    case Body::State::Incomplete:
+      CHECK_GT(r, 0);
+      VLOG(3) << trace_id_ << " need more data";
+      return false;
+
     case Body::State::Error:
+    default:
       if (r == 0) {
         LOG(WARNING) << trace_id_
                      << " connection closed before receiving all data at "
@@ -2050,15 +2061,6 @@ bool HttpClient::Response::BodyRecv(int r) {
       result_ = FAIL;
       return true;
 
-    case Body::State::Ok:
-      CHECK_GE(r, 0);
-      VLOG(3) << trace_id_ << " received full content";
-      return true;
-
-    case Body::State::Incomplete:
-      CHECK_GT(r, 0);
-      VLOG(3) << trace_id_ << " need more data";
-      return false;
   }
 }
 

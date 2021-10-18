@@ -43,7 +43,11 @@ static_library("benchmark") {
   ]
 
   if (os == "win") {
-    libs = [ "shlwapi.lib" ]
+    if (is_win_gcc) {
+      libs = [ "shlwapi" ]
+    } else {
+      libs = [ "shlwapi.lib" ]
+    }
   }
 
   configs -= [ "//build/config/compiler:goma_code" ]

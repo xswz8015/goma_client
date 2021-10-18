@@ -42,6 +42,12 @@ config("tools_config") {
       "-Wno-non-c-typedef-for-linkage",  # typedef struct{} Options
     ]
   }
+  if (is_win_gcc) {
+    cflags = [
+      "-Wno-conversion-null",
+      "-Wno-unknown-pragmas",
+    ]
+  }
 }
 
 config("internal_config") {
@@ -67,6 +73,12 @@ config("handler_config") {
 
 config("sender_config") {
   include_dirs = [ "breakpad/src" ]
+  if (is_win_gcc) {
+    cflags = [
+      "-Wno-conversion-null",
+      "-Wno-unknown-pragmas",
+    ]
+  }
 }
 
 config("breakpad_unittest_config") {
@@ -704,7 +716,9 @@ if (os == "linux") {
   }
 }
 
-if (os == "win") {
+# MinGW GCC can't properly use Windows SDK which
+# breakpad uses for dump_syms.
+if (os == "win" && !is_win_gcc) {
   executable("dump_syms") {
     # TODO using this with VS2015 may break the crash server.
     # https://crbug.com/696671
