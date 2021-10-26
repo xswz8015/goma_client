@@ -4,9 +4,9 @@
 //
 // This is auto-generated file by
 //   go run generate_feature_lists.go -r
-//   0e03450ae4358e8a8242b73d493d96efea9d3ccf -o client/clang_features.cc.
+//   aee49255074fd4ef38d97e6e70cbfbf2f9fd0fa7 -o client/clang_features.cc.
 //
-// LLVM revison: 0e03450ae4358e8a8242b73d493d96efea9d3ccf
+// LLVM revison: aee49255074fd4ef38d97e6e70cbfbf2f9fd0fa7
 // *** DO NOT EDIT ***
 
 #include "absl/base/macros.h"
@@ -264,7 +264,6 @@ static const char* KNOWN_ATTRIBUTES[] = {
     "__sptr",
     "__stdcall",
     "__thiscall",
-    "__unsafe_unretained",
     "__unspecified_inheritance",
     "__uptr",
     "__vectorcall",
@@ -315,7 +314,7 @@ static const char* KNOWN_ATTRIBUTES[] = {
     "availability",
     "blocks",
     "bounded",
-    "btf_tag",
+    "btf_decl_tag",
     "builtin_alias",
     "callable_when",
     "callback",
@@ -1936,6 +1935,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wbitfield-enum-conversion",
     "-Wbitfield-width",
     "-Wbitwise-conditional-parentheses",
+    "-Wbitwise-instead-of-logical",
     "-Wbitwise-op-parentheses",
     "-Wblock-capture-autoreleasing",
     "-Wbool-conversion",
@@ -2059,6 +2059,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wdelete-incomplete",
     "-Wdelete-non-abstract-non-virtual-dtor",
     "-Wdelete-non-virtual-dtor",
+    "-Wdelimited-escape-sequence-extension",
     "-Wdeprecated",
     "-Wdeprecated-altivec-src-compat",
     "-Wdeprecated-anon-enum-enum-conversion",
@@ -2145,6 +2146,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wextra-semi-stmt",
     "-Wextra-tokens",
     "-Wfinal-dtor-non-final-class",
+    "-Wfinal-macro",
     "-Wfixed-enum-extension",
     "-Wfixed-point-overflow",
     "-Wflag-enum",
@@ -2208,6 +2210,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wgnu-variable-sized-type-not-at-end",
     "-Wgnu-zero-line-directive",
     "-Wgnu-zero-variadic-macro-arguments",
+    "-Wgpu-maybe-wrong-side",
     "-Wheader-guard",
     "-Wheader-hygiene",
     "-Whip-only",
@@ -2453,6 +2456,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-bitfield-enum-conversion",
     "-Wno-bitfield-width",
     "-Wno-bitwise-conditional-parentheses",
+    "-Wno-bitwise-instead-of-logical",
     "-Wno-bitwise-op-parentheses",
     "-Wno-block-capture-autoreleasing",
     "-Wno-bool-conversion",
@@ -2576,6 +2580,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-delete-incomplete",
     "-Wno-delete-non-abstract-non-virtual-dtor",
     "-Wno-delete-non-virtual-dtor",
+    "-Wno-delimited-escape-sequence-extension",
     "-Wno-deprecated",
     "-Wno-deprecated-altivec-src-compat",
     "-Wno-deprecated-anon-enum-enum-conversion",
@@ -2662,6 +2667,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-extra-semi-stmt",
     "-Wno-extra-tokens",
     "-Wno-final-dtor-non-final-class",
+    "-Wno-final-macro",
     "-Wno-fixed-enum-extension",
     "-Wno-fixed-point-overflow",
     "-Wno-flag-enum",
@@ -2725,6 +2731,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-gnu-variable-sized-type-not-at-end",
     "-Wno-gnu-zero-line-directive",
     "-Wno-gnu-zero-variadic-macro-arguments",
+    "-Wno-gpu-maybe-wrong-side",
     "-Wno-header-guard",
     "-Wno-header-hygiene",
     "-Wno-hip-only",
@@ -3057,6 +3064,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-receiver-expr",
     "-Wno-receiver-forward-class",
     "-Wno-redeclared-class-member",
+    "-Wno-redundant-consteval-if",
     "-Wno-redundant-decls",
     "-Wno-redundant-move",
     "-Wno-redundant-parens",
@@ -3081,6 +3089,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wno-round-trip-cc1-args",
     "-Wno-rtti",
     "-Wno-sanitize-address",
+    "-Wno-search-path-usage",
     "-Wno-section",
     "-Wno-selector",
     "-Wno-selector-type-mismatch",
@@ -3447,6 +3456,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wreceiver-expr",
     "-Wreceiver-forward-class",
     "-Wredeclared-class-member",
+    "-Wredundant-consteval-if",
     "-Wredundant-decls",
     "-Wredundant-move",
     "-Wredundant-parens",
@@ -3471,6 +3481,7 @@ static const char* KNOWN_WARNINGS[] = {
     "-Wround-trip-cc1-args",
     "-Wrtti",
     "-Wsanitize-address",
+    "-Wsearch-path-usage",
     "-Wsection",
     "-Wselector",
     "-Wselector-type-mismatch",

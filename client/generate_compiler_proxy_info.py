@@ -94,8 +94,19 @@ def GetGNArgs(gn_out_dir):
     return 'unknown'
 
 
-def GenerateSourceCode(out_dir):
+def GenerateSourceCode(out_dir, agnostic):
   info_file = os.path.join(out_dir, 'compiler_proxy_info.h')
+  user_agent = UserAgentString()
+  built_time = GetDateAndTime()
+  built_directory = repr(GetGomaDirectory())[1:-1]
+  user_name = GetUserName()
+  host_name = GetHostName()
+  if agnostic:
+    user_agent = "compiler-proxy built with agnostic=true"
+    built_time = "1999-09-09T09:00:00.000000Z"
+    built_directory = "/goma"
+    user_name = "user"
+    host_name = "host"
   try:
     fp = open(info_file, 'w')
     fp.write(
@@ -112,11 +123,11 @@ static const char kBuiltRevisionString[] = "%(revision)s";
 static const char kBuiltGNArgsString[] = "%(gn_args)s";
 #endif // COMPILER_PROXY_INFO_H_
 """ % {
-            'user_agent': UserAgentString(),
-            'built_time': GetDateAndTime(),
-            'built_directory': repr(GetGomaDirectory())[1:-1],
-            'user_name': GetUserName(),
-            'host_name': GetHostName(),
+            'user_agent': user_agent,
+            'built_time': built_time,
+            'built_directory': built_directory,
+            'user_name': user_name,
+            'host_name': host_name,
             'revision': GetRevisionNumber(),
             'gn_args': GetGNArgs(os.path.dirname(os.path.dirname(out_dir))),
         })
@@ -131,8 +142,10 @@ def main():
   parser = optparse.OptionParser()
   parser.add_option('-o', '--out-dir', default='.',
                     help='Output directory')
+  parser.add_option('--agnostic', default=False,
+                    action="store_true", help='Agnostic Builds')
   options, _ = parser.parse_args()
-  GenerateSourceCode(options.out_dir)
+  GenerateSourceCode(options.out_dir, options.agnostic)
 
 
 if __name__ == '__main__':

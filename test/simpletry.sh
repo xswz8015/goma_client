@@ -402,11 +402,12 @@ CXXFLAGS=
 if [ "$(uname)" = "Darwin" ]; then
   # Make the build more deterministic
   CFLAGS+=" -mmacosx-version-min=10.10.0"
-  # TODO: Have goma client send SDKSettings.json to the server
   CFLAGS+=" -isysroot $goma_top_dir/third_party/chromium_build/mac_files/\
 xcode_binaries/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/\
 MacOSX.sdk"
-  CFLAGS+=" -Xclang -target-sdk-version=10.14.0"
+  # if SDKSetings.json is not uploaded, need this to get the same artifacts.
+  # https://bugs.chromium.org/p/chromium/issues/detail?id=1261709
+  # CFLAGS+=" -Xclang -target-sdk-version=10.14.0"
 
   CXXFLAGS+=${CFLAGS}
 fi

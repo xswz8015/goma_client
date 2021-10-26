@@ -39,7 +39,7 @@ import sys
 
 
 LOGLINE_RE = re.compile(
-    '^([IWEF])(\\d{4} \\d{2}:\\d{2}:\\d{2}).(\\d{6})  *(.*)')
+    '^([IWEF])(\\d{4,8} \\d{2}:\\d{2}:\\d{2}).(\\d{6})  *(.*)')
 
 
 class TaskLog:
@@ -91,10 +91,12 @@ class LogLine:
 
     now = datetime.datetime.now()
 
-    # strptime won't accept "0229" if year is not provided.
-    # c.f. http://bugs.python.org/issue26460
-    lt = datetime.datetime.strptime(str(now.year) + self._time_str,
-                                    '%Y%m%d %H:%M:%S')
+    time_str = self._time_str
+    if time_str[4] == ' ':
+      # strptime won't accept "0229" if year is not provided.
+      # c.f. http://bugs.python.org/issue26460
+      time_str = str(now.year) + time_str
+    lt = datetime.datetime.strptime(time_str, '%Y%m%d %H:%M:%S')
     if lt.month > now.month:
       lt.year -= 1
     self._logtime = datetime.datetime(
@@ -113,9 +115,9 @@ class OpenWrapper:
   def __enter__(self):
     _, ext = os.path.splitext(self._filename)
     if ext == '.gz':
-      self._fh = gzip.open(self._filename)
+      self._fh = gzip.open(self._filename, 'rt')
     else:
-      self._fh = open(self._filename)
+      self._fh = open(self._filename, 'rt')
     return self._fh
 
   def __exit__(self, unused_exc_type, unused_exc_value, unused_traceback):

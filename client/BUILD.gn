@@ -1,6 +1,11 @@
 # Copyright 2014 The Goma Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+declare_args() {
+  # If true, doesn't try getting information to embed on the current build.
+  agnostic_build = false
+}
+
 generate_compiler_proxy_info = "generate_compiler_proxy_info.py"
 
 import("//testing/libfuzzer/fuzzer_test.gni")
@@ -215,6 +220,9 @@ action("gen_compiler_proxy_info") {
     "--out-dir",
     rebase_path("$target_gen_dir", root_build_dir),
   ]
+  if (agnostic_build) {
+    args += [ "--agnostic" ]
+  }
   public_configs = [ ":include_target_gen_dir" ]
 }
 

@@ -363,12 +363,23 @@ ClangCompilerInfoBuilderHelper::ParseResourceOutput(
     std::vector<std::string> profilelist_paths;
     flag_parser->AddPrefixFlag("fprofile-list=")
         ->SetValueOutputWithCallback(nullptr, &profilelist_paths);
+    FlagParser::Flag* isysroot = flag_parser->AddFlag("isysroot");
     flag_parser->Parse(argv);
     for (std::string& path : ignorelist_paths) {
       paths->emplace_back(std::move(path), CompilerInfoData::CLANG_RESOURCE);
     }
     for (std::string& path : profilelist_paths) {
       paths->emplace_back(std::move(path), CompilerInfoData::CLANG_RESOURCE);
+    }
+    if (isysroot->seen()) {
+      std::string sdk_settings =
+          file::JoinPath(isysroot->GetLastValue(), "SDKSettings.json");
+      const std::string abs_sdk_settings =
+          file::JoinPathRespectAbsolute(cwd, sdk_settings);
+      if (access(abs_sdk_settings.c_str(), R_OK) == 0) {
+        paths->emplace_back(std::move(sdk_settings),
+                            CompilerInfoData::MACOSX_SDK_SETTINGS_JSON);
+      }
     }
     return ParseStatus::kSuccess;
   }
@@ -759,12 +770,23 @@ bool ClangCompilerInfoBuilderHelper::GetPredefinedFeaturesAndExtensions(
                             &status);
   }
   VLOG(1) << "out=" << out;
-  LOG_IF(ERROR, status != 0)
-      << "Read of features and extensions did not ends with status 0."
-      << " normal_compiler_path=" << normal_compiler_path
-      << " status=" << status << " argv=" << argv << " env=" << env
-      << " cwd=" << cwd << " out=" << out;
   if (status != 0) {
+    LOG(ERROR) << "Read of features and extensions did not ends with status 0."
+               << " normal_compiler_path=" << normal_compiler_path
+               << " status=" << status << " argv=" << argv << " env=" << env
+               << " cwd=" << cwd << " out=" << out;
+    std::string outerr = ReadCommandOutput(normal_compiler_path, argv, env, cwd,
+                                           MERGE_STDOUT_STDERR, &status);
+    absl::string_view piece(outerr);
+    const size_t chunk_size = 20000;
+    LOG(ERROR) << "out/err="
+               << piece.substr(0, std::min(chunk_size, piece.size()));
+    size_t begin_pos = chunk_size;
+    while (begin_pos < piece.size()) {
+      size_t len = std::min(chunk_size, piece.size() - begin_pos);
+      LOG(ERROR) << "out/err continued=" << piece.substr(begin_pos, len);
+      begin_pos += len;
+    }
     return false;
   }
 

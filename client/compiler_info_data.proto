@@ -22,6 +22,9 @@ message CompilerInfoData {
     // Compiler binaries, shared objects, linker, interpreter, etc.
     // to be used in compile.
     EXECUTABLE_BINARY = 3;
+    // MacOSX SDK settings json for LC_VERSION_MIN_MACOSX
+    // http://b/145780867 http://crbug.com/1261709
+    MACOSX_SDK_SETTINGS_JSON = 4;
   }
 
   // FileId of the compiler or subprogram.

@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "c00aa10009548ad073810d810cc4a71d2965f75b",
+     "clang_revision": "e193c0af0ae8c32a4c7c8faa32421f449b2db8bb",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
 }
 
@@ -123,7 +123,7 @@ deps = {
          'packages': [
              {
                  'package': 'infra/3pp/tools/go/${{platform}}',
-                 'version': 'version:2@1.17.1',
+                 'version': 'version:2@1.17.2',
              },
          ],
          'dep_type': 'cipd',

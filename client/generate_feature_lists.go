@@ -259,6 +259,10 @@ func main() {
 			if strings.Contains(attr, " ") {
 				continue
 			}
+			// http://b/203775818: __unsafe_unretained can't be used with __has_attribute
+			if attr == "__unsafe_unretained" {
+				continue
+			}
 			if seenAttr[attr] {
 				continue
 			}

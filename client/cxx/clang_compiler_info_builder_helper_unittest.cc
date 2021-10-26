@@ -418,6 +418,65 @@ TEST(ClangCompilerInfoBuilderHelperTest, GetResourceDirPosixClangCl11) {
             compiler_info.cxx().resource_dir());
 }
 
+TEST(ClangCompilerInfoBuilderHelperTest, MacOSXSDKSettingsJSON) {
+  // clang -xc -E -v /dev/null -isysroot build/mac_files/sdk_root
+  static const char kClangVOutput[] =
+      "clang version 14.0.0 (https://github.com/llvm/llvm-project/ "
+      "0fbd3aad75f957da5a76e761509efed1988d562b)\n"
+      "Target: x86_64-apple-darwin20.6.0\n"
+      "Thread model: posix\n"
+      "InstalledDir: "
+      "/b/w/src/chromium/src/./third_party/llvm-build/Release+Asserts/"
+      "bin\n"
+      " (in-process)\n"
+      " \"/b/w/src/chromium/src/third_party/llvm-build/Release+Asserts/"
+      "bin/clang\" -cc1 -triple x86_64-apple-macosx11.0.0 "
+      "-Wundef-prefix=TARGET_OS_ -Werror=undef-prefix "
+      "-Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -emit-obj "
+      "-mrelax-all -disable-free -disable-llvm-verifier -discard-value-names "
+      "-main-file-name null -mrelocation-model pic -pic-level 2 "
+      "-mframe-pointer=all -fno-rounding-math -funwind-tables=2 "
+      "-target-sdk-version=11.3 "
+      "-fcompatibility-qualified-id-block-type-checking "
+      "-fvisibility-inlines-hidden-static-local-var -target-cpu penryn "
+      "-tune-cpu generic -debugger-tuning=lldb -target-linker-version 609.8 -v "
+      "-fcoverage-compilation-dir=/b/w/src/chromium/src -resource-dir "
+      "/b/w/src/chromium/src/third_party/llvm-build/Release+Asserts/lib/"
+      "clang/14.0.0 -isysroot build/mac_files/sdk_root -internal-isystem "
+      "build/mac_files/sdk_root/usr/local/include -internal-isystem "
+      "/b/w/src/chromium/src/third_party/llvm-build/Release+Asserts/lib/"
+      "clang/14.0.0/include -internal-externc-isystem "
+      "build/mac_files/sdk_root/usr/include "
+      "-fdebug-compilation-dir=/b/w/src/chromium/src -ferror-limit 19 "
+      "-stack-protector 1 -fblocks -fencode-extended-block-signature "
+      "-fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 "
+      "-fmax-type-align=16 -fcolor-diagnostics -D__GCC_HAVE_DWARF2_CFI_ASM=1 "
+      "-o null.o -x c /dev/null\n"
+      "clang -cc1 version 14.0.0 based upon LLVM 14.0.0git default target "
+      "x86_64-apple-darwin20.6.0\n"
+      "#include \"...\" search starts here:\n"
+      "#include <...> search starts here:\n"
+      " /b/w/src/chromium/src/third_party/llvm-build/Release+Asserts/"
+      "lib/clang/14.0.0/include\n"
+      " build/mac_files/sdk_root/usr/include\n"
+      " build/mac_files/sdk_root/System/Library/Frameworks (framework "
+      "directory)\n"
+      "End of search list.\n";
+
+  TmpdirUtil tmpdir("mac_sdk");
+  tmpdir.CreateEmptyFile("build/mac_files/sdk_root/SDKSettings.json");
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> resource;
+  EXPECT_EQ(ClangCompilerInfoBuilderHelper::ParseStatus::kSuccess,
+            ClangCompilerInfoBuilderHelper::ParseResourceOutput(
+                "/third_party/llvm-build/Release+Asserts/bin/clang",
+                tmpdir.realcwd(), kClangVOutput, &resource));
+  std::vector<ClangCompilerInfoBuilderHelper::ResourceList> expected = {
+      {"build/mac_files/sdk_root/SDKSettings.json",
+       CompilerInfoData::MACOSX_SDK_SETTINGS_JSON},
+  };
+  EXPECT_EQ(expected, resource);
+}
+
 #else
 TEST(ClangCompilerInfoBuilderHelperTest, ParseResourceOutputWin) {
   static const char kDummyClangOutput[] =
