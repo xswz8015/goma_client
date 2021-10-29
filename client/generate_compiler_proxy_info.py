@@ -96,17 +96,29 @@ def GetGNArgs(gn_out_dir):
 
 def GenerateSourceCode(out_dir, agnostic):
   info_file = os.path.join(out_dir, 'compiler_proxy_info.h')
-  user_agent = UserAgentString()
-  built_time = GetDateAndTime()
-  built_directory = repr(GetGomaDirectory())[1:-1]
-  user_name = GetUserName()
-  host_name = GetHostName()
-  if agnostic:
-    user_agent = "compiler-proxy built with agnostic=true"
-    built_time = "1999-09-09T09:00:00.000000Z"
-    built_directory = "/goma"
-    user_name = "user"
-    host_name = "host"
+
+  user_agent = "compiler-proxy built with agnostic=true"
+  built_time = "1999-09-09T09:00:00.000000Z"
+  built_directory = "/goma"
+  user_name = "user"
+  host_name = "host"
+  if not agnostic:
+    # Put this inside if to avoid invoking "UserAgentString()",
+    # which will attempt to import `pwd`.
+    # File "../../client/generate_compiler_proxy_info.py", line 75, in 
+    # UserAgentString
+    #   return 'compiler-proxy built by %s at %s on %s ' % (GetUserName(),
+    # File "../../client/generate_compiler_proxy_info.py", line 29, in 
+    # GetUserName
+    #   return getpass.getuser()
+    # File "C:\tools\msys64\mingw64\lib\python3.8\getpass.py", line 168, in
+    # getuser
+    #   import pwd
+    user_agent = UserAgentString()
+    built_time = GetDateAndTime()
+    built_directory = repr(GetGomaDirectory())[1:-1]
+    user_name = GetUserName()
+    host_name = GetHostName()
   try:
     fp = open(info_file, 'w')
     fp.write(
