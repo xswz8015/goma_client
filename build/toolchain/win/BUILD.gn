@@ -7,7 +7,6 @@
 import("//build/config/clang/clang.gni")
 import("//build/toolchain/gcc_toolchain.gni")
 import("//build/toolchain/goma.gni")
-import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
 # Should only be running on Windows.
 assert(os == "win")
@@ -34,7 +33,7 @@ if (use_goma) {
 
 # Copy the VS runtime DLL for the default toolchain to the root build directory
 # so things will run.
-if (current_toolchain == default_toolchain) {
+if (current_toolchain == default_toolchain && !is_win_gcc) {
   if (is_debug) {
     configuration_name = "Debug"
   } else {
@@ -285,64 +284,68 @@ template("msvc_toolchain") {
   }
 }
 
-if (host_os == "win") {
-  clang_cl = "clang-cl.exe"
-} else {
-  clang_cl = "clang-cl"
-}
-
 assert(target_cpu != "x86")
 
 # 64-bit toolchains.
-x64_toolchain_data =
-    exec_script("//third_party/chromium_build/toolchain/win/setup_toolchain.py",
-                [
-                  visual_studio_path,
-                  windows_sdk_path,
-                  visual_studio_runtime_dirs,
-                  "win",
-                  "x64",
-                  "environment.x64",
-                ],
-                "scope")
+if (!is_win_gcc) {
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
-template("win_x64_toolchains") {
-  msvc_toolchain(target_name) {
-    environment = "environment.x64"
-    cl = "${goma_prefix}\"${x64_toolchain_data.vc_bin_dir}/cl.exe\""
+  if (host_os == "win") {
+    clang_cl = "clang-cl.exe"
+  } else {
+    clang_cl = "clang-cl"
+  }
 
-    toolchain_args = {
-      if (defined(invoker.toolchain_args)) {
-        forward_variables_from(invoker.toolchain_args, "*")
+  x64_toolchain_data =
+      exec_script("//third_party/chromium_build/toolchain/win/setup_toolchain.py",
+                  [
+                    visual_studio_path,
+                    windows_sdk_path,
+                    visual_studio_runtime_dirs,
+                    "win",
+                    "x64",
+                    "environment.x64",
+                  ],
+                  "scope")
+
+  template("win_x64_toolchains") {
+    msvc_toolchain(target_name) {
+      environment = "environment.x64"
+      cl = "${goma_prefix}\"${x64_toolchain_data.vc_bin_dir}/cl.exe\""
+
+      toolchain_args = {
+        if (defined(invoker.toolchain_args)) {
+          forward_variables_from(invoker.toolchain_args, "*")
+        }
+        is_clang = false
+        current_cpu = "x64"
       }
-      is_clang = false
-      current_cpu = "x64"
+    }
+
+    msvc_toolchain("clang_" + target_name) {
+      environment = "environment.x64"
+      prefix = rebase_path("$clang_base_path/bin", root_build_dir)
+      cl = "${goma_prefix}$prefix/${clang_cl}"
+      if (host_os == "win") {
+        # Flip the slashes so that copy/paste of the command works.
+        cl = string_replace(cl, "/", "\\")
+      }
+      sys_include_flags = "${x64_toolchain_data.include_flags_imsvc}"
+
+      toolchain_args = {
+        if (defined(invoker.toolchain_args)) {
+          forward_variables_from(invoker.toolchain_args, "*")
+        }
+        is_clang = true
+        current_cpu = "x64"
+      }
     }
   }
 
-  msvc_toolchain("clang_" + target_name) {
-    environment = "environment.x64"
-    prefix = rebase_path("$clang_base_path/bin", root_build_dir)
-    cl = "${goma_prefix}$prefix/${clang_cl}"
-    if (host_os == "win") {
-      # Flip the slashes so that copy/paste of the command works.
-      cl = string_replace(cl, "/", "\\")
-    }
-    sys_include_flags = "${x64_toolchain_data.include_flags_imsvc}"
-
+  win_x64_toolchains("x64") {
     toolchain_args = {
-      if (defined(invoker.toolchain_args)) {
-        forward_variables_from(invoker.toolchain_args, "*")
-      }
-      is_clang = true
-      current_cpu = "x64"
+      # Use the defaults.
     }
-  }
-}
-
-win_x64_toolchains("x64") {
-  toolchain_args = {
-    # Use the defaults.
   }
 }
 

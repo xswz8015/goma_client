@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 if (os == "win") {
   import("//build/toolchain/goma.gni")
-  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 }
 
 import("//build/config/clang/clang.gni")
@@ -123,6 +122,8 @@ config("compiler") {
     ldflags += [ "-stdlib=libc++" ]
     cflags += [ "-gdwarf-2" ]
   } else if (os == "win") {
+    import("//third_party/chromium_build/config/win/visual_studio_version.gni")
+
     if (is_debug) {
       cflags += [ "/MTd" ]
     } else {

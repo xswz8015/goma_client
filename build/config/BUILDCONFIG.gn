@@ -79,12 +79,8 @@ is_nacl = false
 is_component_build = false
 is_chrome_branded = false
 
-# BUILDCONFIG.gn is evaluated once for every toolchain.
-# Since goma's toolchain definitions set "is_clang=true" for the
-# clang ones, we can't just assert that is_win_gcc and is_clang are
-# not both true at the same itme, since this will once be evaluated
-# with is_clang=true.
 assert(!is_win_gcc || os == "win", "is_win_gcc can only be used on windows")
+assert(!(is_win_gcc && is_clang), "is_win_gcc cannot be used with is_clang")
 
 using_sanitizer = is_asan || is_tsan || is_msan
 declare_args() {

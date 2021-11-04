@@ -10,6 +10,7 @@ import io
 import json
 import optparse
 import os
+import random
 import shutil
 import stat
 import string
@@ -17,6 +18,7 @@ import sys
 import tempfile
 import time
 import unittest
+import urllib
 
 _GOMA_CTL = 'goma_ctl.py'
 
@@ -1608,6 +1610,44 @@ class GomaCtlSmallTest(GomaCtlTestCommon):
     self.assertFalse(driver._Audit())
     self.assertTrue(env.load_checksum)
     self.assertTrue(env.calculate_checksum)
+
+  # some test for python3. http://crbug.com/1266216
+  def testBuildFormDataTempFile(self):
+    env = self._module._GOMA_ENVS[os.name]()
+    dump_file = os.path.join(self._tmp_dir, "crash_file")
+    with open(dump_file, 'w') as f:
+      f.write('crash data')
+    form = {
+        'prod': 'Goma',
+        'ver': 'ver 236 1234@5678',
+        'upload_file_minidump': '@%s' % dump_file,
+    }
+    boundary = ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(32))
+    with open(os.path.join(self._tmp_dir, "upload_req"), 'wb') as f:
+      env._BuildFormData(form, boundary, f)
+
+  # some test for python3. http://crbug.com/1266216
+  def testBuildFormDataBytesIO(self):
+    env = self._module._GOMA_ENVS[os.name]()
+    dump_file = os.path.join(self._tmp_dir, "crash_file")
+    with open(dump_file, 'w') as f:
+      f.write('crash data')
+    form = {
+        'prod': 'Goma',
+        'ver': 'ver 236 1234@5678',
+        'upload_file_minidump': '@%s' % dump_file,
+    }
+    boundary = ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(32))
+    body = io.BytesIO()
+    env._BuildFormData(form, boundary, body)
+    headers = {
+        'content-type': 'multipart/form-data; boundary=%s' % boundary,
+    }
+    destination_url = self._module._STAGING_CRASH_SERVER
+    urllib.request.Request(
+        destination_url, data=body.getvalue(), headers=headers)
 
 
 class GomaEnvTest(GomaCtlTestCommon):

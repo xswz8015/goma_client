@@ -40,15 +40,17 @@ glog_defines = [ "HAVE_CONFIG_H" ]
 if (os != "win") {
   glog_cflags_cc = [ "-Wno-sign-compare" ]
 } else {
-  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
   if (is_win_gcc) {
     glog_defines += [ "HAVE_PTHREAD",
+                      "HAVE_SNPRINTF",
                       "HAVE_UNISTD_H" ]
-  }
+  } else {
+    import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
-  if (visual_studio_version == "2017" || visual_studio_version == "2019") {
-    glog_defines += [ "HAVE_SNPRINTF" ]
+    if (visual_studio_version == "2017" || visual_studio_version == "2019") {
+      glog_defines += [ "HAVE_SNPRINTF" ]
+    }
   }
 
   glog_defines += [ "DISABLE_RTTI" ]

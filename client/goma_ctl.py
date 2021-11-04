@@ -1685,35 +1685,36 @@ class GomaEnv:
             If a value starts from '@', it is treated as a file like curl.
             e.g. [['prod', 'goma'], ['ver', '160']]
       bondary: a string to represent what value should be used as a boundary.
-      out_fh: file handle to output.  Note that you can use StringIO.
+      out_fh: file handle to output.  Note that you can use BytesIO.
     """
-    out_fh.write('--%s\r\n' % boundary)
+    out_fh.write(('--%s\r\n' % boundary).encode())
     if isinstance(form, dict):
       form = form.items()
-    for i in range(len(form)):
-      name, value = form[i]
+    for i, item in enumerate(form):
+      name, value = item
       filename = None
       content_type = None
-      content = value
+      content = value.encode()
       if isinstance(value, str) and value.startswith('@'):  # means file.
         filename = value[1:]
         content_type = 'application/octet-stream'
         with open(filename, 'rb') as f:
           content = f.read()
       if filename:
-        out_fh.write('content-disposition: form-data; '
-                     'name="%s"; '
-                     'filename="%s"\r\n' % (name, filename))
+        out_fh.write(('content-disposition: form-data; '
+                      'name="%s"; '
+                      'filename="%s"\r\n' % (name, filename)).encode())
       else:
-        out_fh.write('content-disposition: form-data; name="%s"\r\n' % name)
+        out_fh.write(
+            ('content-disposition: form-data; name="%s"\r\n' % name).encode())
       if content_type:
-        out_fh.write('content-type: %s\r\n' % content_type)
-      out_fh.write('\r\n')
+        out_fh.write(('content-type: %s\r\n' % content_type).encode())
+      out_fh.write(b'\r\n')
       out_fh.write(content)
       if i == len(form) - 1:
-        out_fh.write('\r\n--%s--\r\n' % boundary)
+        out_fh.write(('\r\n--%s--\r\n' % boundary).encode())
       else:
-        out_fh.write('\r\n--%s\r\n' % boundary)
+        out_fh.write(('\r\n--%s\r\n' % boundary).encode())
 
   def UploadCrashDump(self, destination_url, product, version, dump_file,
                       guid=None):
@@ -1786,7 +1787,7 @@ class GomaEnv:
       if sys.hexversion < 0x2070900:
         raise Error('Please use python version >= 2.7.9')
 
-      body = io.StringIO()
+      body = io.BytesIO()
       self._BuildFormData(form, boundary, body)
 
       headers = {

@@ -16,10 +16,6 @@
 
 import("//third_party/chromium_build/symlink.gni")
 
-if (os == "win") {
-  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
-}
-
 config("goma_breakpad_config") {
   include_dirs = [ "//" ]
   if (is_clang) {
@@ -719,6 +715,8 @@ if (os == "linux") {
 # MinGW GCC can't properly use Windows SDK which
 # breakpad uses for dump_syms.
 if (os == "win" && !is_win_gcc) {
+  import("//third_party/chromium_build/config/win/visual_studio_version.gni")
+
   executable("dump_syms") {
     # TODO using this with VS2015 may break the crash server.
     # https://crbug.com/696671
