@@ -85,6 +85,7 @@ class CppParser {
   }
   void set_include_observer(IncludeObserver* obs) { include_observer_ = obs; }
   void set_error_observer(ErrorObserver* obs) { error_observer_ = obs; }
+  void SetTarget(absl::string_view target);
   void SetCompilerInfo(const CxxCompilerInfo* compiler_info);
 
   void set_is_vc() { is_vc_ = true; }
@@ -306,11 +307,19 @@ class CppParser {
     return ProcessHasCheckMacro("__has_warning", tokens,
                                 compiler_info_->has_warning());
   }
-
   Token ProcessHasCheckMacro(
       const std::string& name,
       const ArrayTokenList& tokens,
       const absl::flat_hash_map<std::string, int>& has_check_macro);
+
+  Token ProcessIsTargetArch(const ArrayTokenList& tokens);
+  Token ProcessIsTargetVendor(const ArrayTokenList& tokens);
+  Token ProcessIsTargetOS(const ArrayTokenList& tokens);
+  Token ProcessIsTargetEnvironment(const ArrayTokenList& tokens);
+  Token ProcessIsTarget(const std::string& name,
+                        const ArrayTokenList& tokens,
+                        const std::string& target_part);
+  Token MacroParamToken(const ArrayTokenList& tokens);
 
   // Initializes tables etc.
   static void EnsureInitialize();
@@ -343,6 +352,13 @@ class CppParser {
   // When include guard macro is detected, the token is preserved here.
   absl::flat_hash_map<std::string, std::string> include_guard_ident_;
 
+  struct TargetTriples {
+    std::string arch;
+    std::string vendor;
+    std::string os;
+    std::string environment;
+  };
+  TargetTriples target_;
   const CxxCompilerInfo* compiler_info_;
   bool is_vc_;
 

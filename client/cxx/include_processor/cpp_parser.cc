@@ -19,6 +19,7 @@
 #include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
@@ -901,6 +902,92 @@ CppParser::Token CppParser::ProcessHasCheckMacro(
   return Token(iter->second);
 }
 
+void CppParser::SetTarget(absl::string_view target) {
+  // llvm/lib/Support/Triple.cpp
+  std::vector<std::string> tokens = absl::StrSplit(target, "-");
+  if (tokens.size() > 0) {
+    // normalize as parseArch in Triple.cpp?
+    target_.arch = tokens[0];
+  }
+  if (tokens.size() > 1) {
+    // normalize as parseVendor in Triple.cpp?
+    target_.vendor = tokens[1];
+  }
+  if (tokens.size() > 2) {
+    // normalize as parseOS in Triple.cpp?
+    if (absl::StartsWith(tokens[2], "ios")) {
+      target_.os = "ios";
+    } else if (absl::StartsWith(tokens[2], "apple")) {
+      target_.os = "apple";
+    } else {
+      target_.os = tokens[2];
+    }
+  }
+  if (tokens.size() > 3) {
+    // normalize as parseEnvironment in Triple.cpp?
+    target_.environment = tokens[3];
+  }
+  VLOG(1) << "target: arch=" << target_.arch << " vendor=" << target_.vendor
+          << " os=" << target_.os << " env=" << target_.environment;
+}
+
+CppParser::Token CppParser::ProcessIsTargetArch(const ArrayTokenList& tokens) {
+  return ProcessIsTarget("__is_target_arch", tokens, target_.arch);
+}
+
+CppParser::Token CppParser::ProcessIsTargetVendor(
+    const ArrayTokenList& tokens) {
+  return ProcessIsTarget("__is_target_vendor", tokens, target_.vendor);
+}
+
+CppParser::Token CppParser::ProcessIsTargetOS(const ArrayTokenList& tokens) {
+  return ProcessIsTarget("__is_target_os", tokens, target_.os);
+}
+
+CppParser::Token CppParser::ProcessIsTargetEnvironment(
+    const ArrayTokenList& tokens) {
+  return ProcessIsTarget("__is_target_environment", tokens,
+                         target_.environment);
+}
+
+CppParser::Token CppParser::ProcessIsTarget(const std::string& name,
+                                            const ArrayTokenList& tokens,
+                                            const std::string& target_part) {
+  Token token = MacroParamToken(tokens);
+  if (token.type != Token::IDENTIFIER) {
+    Error(name + " expects an identifier");
+    VLOG(1) << name << " expects an identifier";
+    return Token(0);
+  }
+  VLOG(1) << name << " " << token.string_value << " " << target_part;
+  return Token(token.string_value == target_part);
+}
+
+CppParser::Token CppParser::MacroParamToken(const ArrayTokenList& tokens) {
+  if (tokens.empty()) {
+    return Token(0);
+  }
+  std::string ident;
+  if (tokens.size() > 1) {
+    for (const auto& t : tokens) {
+      if (t.type == Token::IDENTIFIER) {
+        ident += t.string_value;
+      } else if (t.IsPuncChar(':')) {
+        ident += ':';
+      } else {
+        return Token(0);
+      }
+    }
+  } else {
+    Token token = tokens.front();
+    if (token.type != Token::IDENTIFIER) {
+      return Token(0);
+    }
+    ident = token.string_value;
+  }
+  return Token(Token::IDENTIFIER, ident);
+}
+
 // static
 void CppParser::EnsureInitialize() {
   static absl::once_flag key_once;
@@ -945,6 +1032,10 @@ void CppParser::InitializeStaticOnce() {
       {"__has_declspec_attribute", &self::ProcessHasDeclspecAttribute},
       {"__has_builtin", &self::ProcessHasBuiltin},
       {"__has_warning", &self::ProcessHasWarning},
+      {"__is_target_arch", &self::ProcessIsTargetArch},
+      {"__is_target_vendor", &self::ProcessIsTargetVendor},
+      {"__is_target_os", &self::ProcessIsTargetOS},
+      {"__is_target_environment", &self::ProcessIsTargetEnvironment},
   };
 
   for (const auto& iter : kPredefinedCallbackFuncMacros) {

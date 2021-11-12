@@ -4,9 +4,9 @@
 //
 // This is auto-generated file by
 //   go run generate_feature_lists.go -r
-//   aee49255074fd4ef38d97e6e70cbfbf2f9fd0fa7 -o client/clang_features.cc.
+//   34b903d8b0c1df7c564340cbdda3737f9bf5bdcb -o client/clang_features.cc.
 //
-// LLVM revison: aee49255074fd4ef38d97e6e70cbfbf2f9fd0fa7
+// LLVM revison: 34b903d8b0c1df7c564340cbdda3737f9bf5bdcb
 // *** DO NOT EDIT ***
 
 #include "absl/base/macros.h"
@@ -954,6 +954,9 @@ static const char* KNOWN_BUILTINS[] = {
     "__builtin_dynamic_object_size",
     "__builtin_eh_return",
     "__builtin_eh_return_data_regno",
+    "__builtin_elementwise_abs",
+    "__builtin_elementwise_max",
+    "__builtin_elementwise_min",
     "__builtin_erfcf",
     "__builtin_erfcf128",
     "__builtin_erfcl",
@@ -1136,6 +1139,8 @@ static const char* KNOWN_BUILTINS[] = {
     "__builtin_printf",
     "__builtin_readcyclecounter",
     "__builtin_realloc",
+    "__builtin_reduce_max",
+    "__builtin_reduce_min",
     "__builtin_remainderf",
     "__builtin_remainderf128",
     "__builtin_remainderl",
@@ -1269,6 +1274,7 @@ static const char* KNOWN_BUILTINS[] = {
     "__c11_atomic_fetch_and",
     "__c11_atomic_fetch_max",
     "__c11_atomic_fetch_min",
+    "__c11_atomic_fetch_nand",
     "__c11_atomic_fetch_or",
     "__c11_atomic_fetch_sub",
     "__c11_atomic_fetch_xor",
@@ -1289,6 +1295,10 @@ static const char* KNOWN_BUILTINS[] = {
     "__finite",
     "__finitef",
     "__finitel",
+    "__is_target_arch",
+    "__is_target_environment",
+    "__is_target_os",
+    "__is_target_vendor",
     "__iso_volatile_load16",
     "__iso_volatile_load32",
     "__iso_volatile_load64",

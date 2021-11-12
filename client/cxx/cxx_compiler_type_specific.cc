@@ -35,7 +35,8 @@ CxxCompilerTypeSpecific::RunIncludeProcessor(
   std::set<std::string> required_files;
   bool ok = include_processor.GetIncludeFiles(
       input_filename, compiler_flags.cwd_for_include_processor(),
-      compiler_flags, info, &required_files, file_stat_cache);
+      compiler_flags, compiler_info.target(), info, &required_files,
+      file_stat_cache);
 
   if (!ok) {
     return IncludeProcessorResult::ErrorToLog(

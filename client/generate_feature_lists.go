@@ -296,6 +296,14 @@ func main() {
 
 	builtinsDef := mustFetch(ctx, revision, "clang/include/clang/Basic/Builtins.def")
 	builtins := captures(mustParse(ctx, builtinsDef, `(?ms)^[A-Z_]*BUILTIN\((\w+),`), 1)
+	// these builtins are not defined in *.def
+	// but Preprocessor::RegisterBuiltinMacros
+	// https://github.com/llvm/llvm-project/blob/d245f2e8597bfb52c34810a328d42b990e4af1a4/clang/lib/Lex/PPMacroExpansion.cpp#L383
+	builtins = append(builtins,
+		"__is_target_arch",
+		"__is_target_vendor",
+		"__is_target_os",
+		"__is_target_environment")
 	sort.Strings(builtins)
 
 	diagnosticsDef := mustFetchIncludes(ctx, revision, "clang/include/clang/Basic/Diagnostic.td")

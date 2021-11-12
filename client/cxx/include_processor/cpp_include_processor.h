@@ -10,6 +10,7 @@
 #include <set>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "basictypes.h"
 #include "compiler_flags.h"
 #include "cpp_parser.h"
@@ -29,9 +30,11 @@ class CppIncludeProcessor {
   // Enumerates all include files. When FileStats are created for them,
   // we cache them in |file_stat_cache| so that we can reuse them later,
   // because creating FileStat is so slow especially on Windows.
+  // TODO: put target in CxxCompilerInfo?
   bool GetIncludeFiles(const std::string& filename,
                        const std::string& current_directory,
                        const CompilerFlags& compiler_flags,
+                       absl::string_view target,
                        const CxxCompilerInfo& compiler_info,
                        std::set<std::string>* include_files,
                        FileStatCache* file_stat_cache);

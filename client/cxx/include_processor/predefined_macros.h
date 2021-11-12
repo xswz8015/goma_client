@@ -21,16 +21,20 @@ const char* const kPredefinedObjectMacros[] = {
 const int kPredefinedObjectMacroSize = ABSL_ARRAYSIZE(kPredefinedObjectMacros);
 
 const char* const kPredefinedFunctionMacros[] = {
-  "__has_include",
-  "__has_include__",
-  "__has_include_next",
-  "__has_include_next__",
-  "__has_feature",
-  "__has_extension",
-  "__has_attribute",
-  "__has_cpp_attribute",
-  "__has_declspec_attribute",
-  "__has_builtin",
+    "__has_include",
+    "__has_include__",
+    "__has_include_next",
+    "__has_include_next__",
+    "__has_feature",
+    "__has_extension",
+    "__has_attribute",
+    "__has_cpp_attribute",
+    "__has_declspec_attribute",
+    "__has_builtin",
+    "__is_target_arch",
+    "__is_target_vendor",
+    "__is_target_os",
+    "__is_target_environment",
 };
 const int kPredefinedFunctionMacroSize =
     ABSL_ARRAYSIZE(kPredefinedFunctionMacros);

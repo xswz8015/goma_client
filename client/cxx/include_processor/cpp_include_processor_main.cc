@@ -238,7 +238,7 @@ int main(int argc, char* argv[], const char** envp) {
       CompilerTypeSpecificCollection()
           .Get(flags->type())
           ->BuildCompilerInfoData(*flags, args[0], compiler_info_envs));
-
+  const std::string target = cid->target();
   devtools_goma::CxxCompilerInfo compiler_info(std::move(cid));
   if (compiler_info.HasError()) {
     std::cerr << compiler_info.error_message() << std::endl;
@@ -260,8 +260,9 @@ int main(int argc, char* argv[], const char** envp) {
 
     clock_t start_time = clock();
     for (const auto& iter : flags->input_filenames()) {
-      bool ok = include_processor.GetIncludeFiles(
-          iter, cwd, *flags, compiler_info, &include_files, &file_stat_cache);
+      bool ok = include_processor.GetIncludeFiles(iter, cwd, *flags, target,
+                                                  compiler_info, &include_files,
+                                                  &file_stat_cache);
       if (!ok) {
         std::cerr << "GetIncludeFiles failed" << std::endl;
         exit(1);

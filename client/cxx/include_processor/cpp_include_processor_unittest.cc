@@ -46,9 +46,9 @@ class CppIncludeProcessorTest : public testing::Test {
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
-    EXPECT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
-                                          *flags, compiler_info, &files,
-                                          &file_stat_cache));
+    EXPECT_TRUE(processor.GetIncludeFiles(
+        source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
+        compiler_info, &files, &file_stat_cache));
     return files;
   }
 
