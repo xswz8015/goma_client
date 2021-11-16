@@ -88,16 +88,16 @@ class CppIncludeProcessorPosixTest : public testing::Test {
         CompilerFlagsParser::MustNew(args, tmpdir_util_->tmpdir()));
     std::unique_ptr<CompilerInfoData> data(new CompilerInfoData);
     data->set_found(true);
-    data->mutable_cxx();
+    data->mutable_cxx()->set_cxx_target("x86_64-unknown-linux-gnu");
     CxxCompilerInfo compiler_info(std::move(data));
 
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
     // ASSERT_TRUE cannot be used here, I don't know why.
-    EXPECT_TRUE(processor.GetIncludeFiles(
-        source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-        compiler_info, &files, &file_stat_cache));
+    EXPECT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                          *flags, compiler_info, &files,
+                                          &file_stat_cache));
     return files;
   }
 
@@ -118,7 +118,7 @@ class CppIncludeProcessorPosixTest : public testing::Test {
     CppIncludeProcessor processor;
     FileStatCache file_stat_cache;
     ASSERT_TRUE(processor.GetIncludeFiles(
-        source_file, tmpdir_util_->tmpdir(), *flags, cis.get()->info().target(),
+        source_file, tmpdir_util_->tmpdir(), *flags,
         ToCxxCompilerInfo(cis.get()->info()), files, &file_stat_cache));
   }
 
@@ -257,10 +257,9 @@ class CppIncludeProcessorPosixTest : public testing::Test {
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
-    ASSERT_TRUE(processor.GetIncludeFiles(include_file, tmpdir_util_->tmpdir(),
-                                          *flags, cis.get()->info().target(),
-                                          ToCxxCompilerInfo(cis.get()->info()),
-                                          &files, &file_stat_cache));
+    ASSERT_TRUE(processor.GetIncludeFiles(
+        include_file, tmpdir_util_->tmpdir(), *flags,
+        ToCxxCompilerInfo(cis.get()->info()), &files, &file_stat_cache));
     // TODO: don't use ResolvePath.
     //  for now, it fails without ResolvePath
     //    recursive: /dir/../dir/foo.c not found, /dir/./foo.c not found
@@ -479,15 +478,16 @@ TEST_F(CppIncludeProcessorPosixTest, stdcpredef) {
   data->mutable_cxx()->set_predefined_macros(
       "#define __GNUC__ 4\n"
       "#define __GNUC_MINOR__ 8\n");
+  data->mutable_cxx()->set_cxx_target("x86_64-unknown-linux-gnu");
 
   CxxCompilerInfo compiler_info(std::move(data));
 
   CppIncludeProcessor processor;
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor.GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                        *flags, compiler_info, &files,
+                                        &file_stat_cache));
 
   // stdc-predef.h should be included.
   EXPECT_EQ(1U, files.size());
@@ -520,6 +520,7 @@ TEST_F(CppIncludeProcessorPosixTest, stdcpredef_missing) {
   data->mutable_cxx()->mutable_system_include_paths()->Clear();
   data->mutable_cxx()->mutable_cxx_system_include_paths()->Clear();
   data->mutable_cxx()->mutable_system_framework_paths()->Clear();
+  data->mutable_cxx()->set_cxx_target("x86_64-unknown-linux-gnu");
 
   CxxCompilerInfo compiler_info(std::move(data));
 
@@ -528,9 +529,9 @@ TEST_F(CppIncludeProcessorPosixTest, stdcpredef_missing) {
   FileStatCache file_stat_cache;
 
   // Don't fail even if stdc-predef.h is missing.
-  ASSERT_TRUE(processor.GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                        *flags, compiler_info, &files,
+                                        &file_stat_cache));
 
   // stdc-predef.h should not be included.
   EXPECT_EQ(0U, files.size());
@@ -554,9 +555,9 @@ TEST_F(CppIncludeProcessorPosixTest, ffreestanding) {
   CppIncludeProcessor processor;
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor.GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                        *flags, compiler_info, &files,
+                                        &file_stat_cache));
 
   // stdc-predef.h should not be included.
   EXPECT_EQ(0U, files.size());
@@ -591,9 +592,9 @@ TEST_F(CppIncludeProcessorPosixTest, fnohosted) {
   CppIncludeProcessor processor;
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor.GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                        *flags, compiler_info, &files,
+                                        &file_stat_cache));
 
   // stdc-predef.h should not be included.
   EXPECT_EQ(0U, files.size());
@@ -642,9 +643,9 @@ TEST_F(CppIncludeProcessorPosixTest, opt_include_gch) {
   CppIncludeProcessor processor;
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor.GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                        *flags, compiler_info, &files,
+                                        &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -689,9 +690,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -711,9 +712,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -732,9 +733,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -754,9 +755,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -775,9 +776,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(1, static_cast<int>(files.size()));
@@ -798,9 +799,9 @@ TEST_F(CppIncludeProcessorPosixTest, gch) {
 
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   ASSERT_EQ(2, static_cast<int>(files.size()));
@@ -873,9 +874,9 @@ TEST_F(CppIncludeProcessorPosixTest, hmap) {
   std::unique_ptr<CppIncludeProcessor> processor(new CppIncludeProcessor());
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      include_foo, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(include_foo, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   EXPECT_EQ(2, static_cast<int>(files.size()));
@@ -889,9 +890,9 @@ TEST_F(CppIncludeProcessorPosixTest, hmap) {
   processor = absl::make_unique<CppIncludeProcessor>();
   files.clear();
   file_stat_cache.Clear();
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      include_foo, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(include_foo, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   EXPECT_EQ(2, static_cast<int>(files.size()));
@@ -925,9 +926,9 @@ TEST_F(CppIncludeProcessorPosixTest, hmap_with_dir) {
   std::unique_ptr<CppIncludeProcessor> processor(new CppIncludeProcessor());
   std::set<std::string> files;
   FileStatCache file_stat_cache;
-  ASSERT_TRUE(processor->GetIncludeFiles(
-      include_foo, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-      compiler_info, &files, &file_stat_cache));
+  ASSERT_TRUE(processor->GetIncludeFiles(include_foo, tmpdir_util_->tmpdir(),
+                                         *flags, compiler_info, &files,
+                                         &file_stat_cache));
 
   RemoveAndCheckEmptySourceIncludeHeaders(bare_gcc, &files);
   EXPECT_EQ(4, static_cast<int>(files.size()));
@@ -1452,7 +1453,7 @@ TEST_F(CppIncludeProcessorPosixTest, has_include_relative) {
   std::set<std::string> files;
   FileStatCache file_stat_cache;
   ASSERT_TRUE(processor.GetIncludeFiles(
-      "foo.cc", tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
+      "foo.cc", tmpdir_util_->tmpdir(), *flags,
       ToCxxCompilerInfo(cis.get()->info()), &files, &file_stat_cache));
   EXPECT_TRUE(files.count("./a.h"));
 }
@@ -1740,6 +1741,38 @@ TEST_F(CppIncludeProcessorPosixTest, has_builtin) {
     RunTest(compiler.path,
             CreateTmpFile(define_has_builtin +
                               "#if __has_builtin(__atomic_exchange)\n"
+                              "# include <stdio.h>\n"
+                              "#else\n"
+                              "# include <stddef.h>\n"
+                              "#endif\n",
+                          "foo.c"),
+            args);
+  }
+}
+
+TEST_F(CppIncludeProcessorPosixTest, has_warning) {
+  const std::string define_has_warning =
+      "#ifndef __has_warning\n"
+      "# define __has_warning(x) 0\n"
+      "#endif\n";
+
+  for (const auto& compiler : GccLikeCompilers()) {
+    const std::vector<std::string>& args = compiler.additional_args;
+
+    // Check __has_warning existence.
+    // Don't add define_has_warning.
+    RunTest(compiler.path,
+            CreateTmpFile("#ifdef __has_warning\n"
+                          "# include <stdio.h>\n"
+                          "#else\n"
+                          "# include <stddef.h>\n"
+                          "#endif\n",
+                          "foo.c"),
+            args);
+
+    RunTest(compiler.path,
+            CreateTmpFile(define_has_warning +
+                              "#if __has_warning(\"-Wc++-compat\")\n"
                               "# include <stdio.h>\n"
                               "#else\n"
                               "# include <stddef.h>\n"

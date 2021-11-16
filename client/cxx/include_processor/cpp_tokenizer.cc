@@ -277,6 +277,9 @@ CppToken CppTokenizer::ReadIdentifier(CppInputStream* stream,
 //    pp-number [eEpP] sign  ([pP] is new in C99)
 //    pp-number .
 //
+// Optional single quotes (') may be inserted between the digits
+// as a separator. They are ignored by the compiler since C++14.
+//
 // static
 CppToken CppTokenizer::ReadNumber(CppInputStream* stream, int c0,
                                   const char* begin) {
@@ -304,8 +307,10 @@ CppToken CppTokenizer::ReadNumber(CppInputStream* stream, int c0,
     // Read the digits part.
     c = absl::ascii_tolower(stream->GetChar());
     while ((c >= '0' && c <= ('0' + std::min(9, base - 1))) ||
-           (base == 16 && c >= 'a' && c <= 'f')) {
-      value = value * base + ((c >= 'a') ? (c - 'a' + 10) : (c - '0'));
+           (base == 16 && c >= 'a' && c <= 'f') || (c == '\'')) {
+      if (c != '\'') {
+        value = value * base + ((c >= 'a') ? (c - 'a' + 10) : (c - '0'));
+      }
       c = absl::ascii_tolower(stream->GetChar());
     }
     stream->UngetChar(c);

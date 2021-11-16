@@ -980,6 +980,14 @@ bool ClangCompilerInfoBuilderHelper::SetBasicCompilerInfo(
     }
   }
 
+  std::string version, target;
+  if (ParseClangVersionTarget(c_output, &version, &target)) {
+    compiler_info->mutable_cxx()->set_cxx_target(std::move(target));
+  } else {
+    LOG(WARNING) << "Failed to get cxx target. use compiler default";
+    compiler_info->mutable_cxx()->set_cxx_target(compiler_info->target());
+  }
+
   if (!GetPredefinedFeaturesAndExtensions(
           local_compiler_path, lang_flag, compiler_info_flags,
           compiler_info_envs, cwd, compiler_info)) {

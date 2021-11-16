@@ -106,16 +106,16 @@ class CppIncludeProcessorWinTest : public testing::Test {
         CompilerFlagsParser::MustNew(args, tmpdir_util_->tmpdir()));
     std::unique_ptr<CompilerInfoData> data(new CompilerInfoData);
     data->set_found(true);
-    data->mutable_cxx();
+    data->mutable_cxx()->set_cxx_target("x86_64-pc-windows-msvc");
     CxxCompilerInfo compiler_info(std::move(data));
 
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
     // ASSERT_TRUE cannot be used here, I don't know why.
-    EXPECT_TRUE(processor.GetIncludeFiles(
-        source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-pc-windows-msvc",
-        compiler_info, &files, &file_stat_cache));
+    EXPECT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                          *flags, compiler_info, &files,
+                                          &file_stat_cache));
     return files;
   }
 
@@ -136,7 +136,7 @@ class CppIncludeProcessorWinTest : public testing::Test {
     CppIncludeProcessor processor;
     FileStatCache file_stat_cache;
     ASSERT_TRUE(processor.GetIncludeFiles(
-        source_file, tmpdir_util_->tmpdir(), *flags, cis.get()->info().target(),
+        source_file, tmpdir_util_->tmpdir(), *flags,
         ToCxxCompilerInfo(cis.get()->info()), files, &file_stat_cache));
   }
 
@@ -248,10 +248,9 @@ class CppIncludeProcessorWinTest : public testing::Test {
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
-    ASSERT_TRUE(processor.GetIncludeFiles(include_file, tmpdir_util_->tmpdir(),
-                                          *flags, cis.get()->info().target(),
-                                          ToCxxCompilerInfo(cis.get()->info()),
-                                          &files, &file_stat_cache));
+    ASSERT_TRUE(processor.GetIncludeFiles(
+        include_file, tmpdir_util_->tmpdir(), *flags,
+        ToCxxCompilerInfo(cis.get()->info()), &files, &file_stat_cache));
     // TODO: don't use ResolvePath.
     std::set<std::string> actual_files;
     for (std::string path : files) {

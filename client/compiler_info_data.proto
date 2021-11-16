@@ -170,7 +170,7 @@ message CompilerInfoData {
 };
 
 // CxxCompilerInfoData contains C/C++ related CompilerInfoData.
-// NEXT ID TO USE: 17
+// NEXT ID TO USE: 18
 message CxxCompilerInfoData {
   message MacroValue {
     optional string key = 1;
@@ -205,6 +205,13 @@ message CxxCompilerInfoData {
   // paths are relative paths from the toolchain root.
   //
   optional string toolchain_root = 15;
+
+  // cxx_target is a target triple that compiler will generate code to.
+  // it differs from CompilerInfoData's target, which is `gcc -dumpmachine`
+  // or default target of the compiler binary.
+  // This cxx_target is actual target, and would change in cross compiling.
+  // This is used for __is_target_* builtin macros.
+  optional string cxx_target = 17;
 };
 
 // JavacCompilerInfoData contains Javac related CompilerInfoData.

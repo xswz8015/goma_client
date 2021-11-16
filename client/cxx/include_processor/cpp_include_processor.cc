@@ -470,7 +470,6 @@ static void MergeIncludeDirs(
 bool CppIncludeProcessor::GetIncludeFiles(const std::string& filename,
                                           const std::string& current_directory,
                                           const CompilerFlags& compiler_flags,
-                                          absl::string_view target,
                                           const CxxCompilerInfo& compiler_info,
                                           std::set<std::string>* include_files,
                                           FileStatCache* file_stat_cache) {
@@ -585,22 +584,6 @@ bool CppIncludeProcessor::GetIncludeFiles(const std::string& filename,
   if (VLOG_IS_ON(1))
     cpp_parser_.set_error_observer(&error_observer);
 
-  // TODO: instead of parsing flag here, parse -v output's
-  // `Target:` line in compiler info builder, store it in CxxCompilerInfo?
-  FlagParser flag_parser;
-  std::vector<std::string> flag_targets;
-  flag_parser.AddFlag("target")->SetOutput(&flag_targets);
-  flag_parser.AddFlag("-target")->SetOutput(&flag_targets);
-  if (compiler_flags.expanded_args().empty()) {
-    flag_parser.Parse(compiler_flags.args());
-  } else {
-    flag_parser.Parse(compiler_flags.expanded_args());
-  }
-  if (!flag_targets.empty()) {
-    cpp_parser_.SetTarget(flag_targets.back());
-  } else {
-    cpp_parser_.SetTarget(target);
-  }
   cpp_parser_.SetCompilerInfo(&compiler_info);
   if (compiler_flags.type() == CompilerFlagType::Clexe) {
     cpp_parser_.set_is_vc();

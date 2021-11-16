@@ -109,6 +109,7 @@ void CppParser::SetCompilerInfo(const CxxCompilerInfo* compiler_info) {
   // see GCCFlags::GetLanguage
   // http://b/167131595
   set_is_cplusplus(absl::StrContains(compiler_info_->lang(), "c++"));
+  SetTarget(compiler_info_->cxx_target());
 
   AddPredefinedMacros(*compiler_info);
   AddPreparsedDirectivesInput(compiler_info->predefined_directives());
@@ -874,10 +875,18 @@ CppParser::Token CppParser::ProcessHasCheckMacro(
     }
   } else {
     Token token = expanded.front();
-    if (token.type != Token::IDENTIFIER) {
-      Error(name + " expects an identifier");
-      VLOG(1) << "ProcessHasCheckMacro " << name << ": expects an identifier "
-              << token;
+    CppToken::Type token_type = Token::IDENTIFIER;
+    absl::string_view token_type_name = "an identifier";
+    if (name == "__has_warning") {
+      // __has_warning takes string, not identifier.
+      // e.g. #if __has_warning("-Wformat-insufficient-args")
+      token_type = Token::STRING;
+      token_type_name = "a string";
+    }
+    if (token.type != token_type) {
+      Error(absl::StrCat(name, " expects ", token_type_name));
+      VLOG(1) << "ProcessHasCheckMacro " << name << ": expects "
+              << token_type_name << " " << token;
       return Token(0);
     }
     ident = token.string_value;

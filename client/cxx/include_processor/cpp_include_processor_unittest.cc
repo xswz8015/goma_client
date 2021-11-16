@@ -40,15 +40,15 @@ class CppIncludeProcessorTest : public testing::Test {
         CompilerFlagsParser::MustNew(args, tmpdir_util_->tmpdir()));
     std::unique_ptr<CompilerInfoData> data(new CompilerInfoData);
     data->set_found(true);
-    data->mutable_cxx();
+    data->mutable_cxx()->set_cxx_target("x86_64-unknown-linux-gnu");
     CxxCompilerInfo compiler_info(std::move(data));
 
     CppIncludeProcessor processor;
     std::set<std::string> files;
     FileStatCache file_stat_cache;
-    EXPECT_TRUE(processor.GetIncludeFiles(
-        source_file, tmpdir_util_->tmpdir(), *flags, "x86_64-unknown-linux-gnu",
-        compiler_info, &files, &file_stat_cache));
+    EXPECT_TRUE(processor.GetIncludeFiles(source_file, tmpdir_util_->tmpdir(),
+                                          *flags, compiler_info, &files,
+                                          &file_stat_cache));
     return files;
   }
 

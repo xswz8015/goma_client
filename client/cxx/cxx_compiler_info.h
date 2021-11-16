@@ -79,6 +79,8 @@ class CxxCompilerInfo : public CompilerInfo {
     return has_warning_;
   }
 
+  std::string cxx_target() const { return data_->cxx().cxx_target(); }
+
  private:
   std::vector<std::string> quote_include_paths_;
   std::vector<std::string> cxx_system_include_paths_;

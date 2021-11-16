@@ -185,6 +185,62 @@ TEST(CppTokenizerTest, TokenizeAll) {
   EXPECT_EQ(7U, tokens_ws.size());
 }
 
+TEST(CppTokeninerTest, ReadNumber) {
+  std::unique_ptr<Content> content(
+      Content::CreateFromString("0 1 10 "
+                                "0777 0xff "
+                                "1UL "
+                                "0x0000'0000'FFFF'FFFF"));
+  CppInputStream stream(content.get(), "<content>");
+  const char* cur = stream.cur();
+  int c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  CppToken token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::NUMBER, 0));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::NUMBER, 1));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::NUMBER, 10));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::NUMBER, 0777));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::NUMBER, 0xff));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(CppToken::UNSIGNED_NUMBER, 1));
+
+  stream.SkipWhiteSpaces();
+  cur = stream.cur();
+  c = stream.GetChar();
+  ASSERT_TRUE(c >= '0' && c <= '9');
+  token = CppTokenizer::ReadNumber(&stream, c, cur);
+  EXPECT_EQ(token, CppToken(0xFFFFFFFF));
+}
+
 TEST(CppTokenizerTest, IntegerSuffixes) {
   EXPECT_TRUE(CppTokenizer::IsValidIntegerSuffix("u"));
   EXPECT_TRUE(CppTokenizer::IsValidIntegerSuffix("l"));

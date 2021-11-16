@@ -85,7 +85,6 @@ class CppParser {
   }
   void set_include_observer(IncludeObserver* obs) { include_observer_ = obs; }
   void set_error_observer(ErrorObserver* obs) { error_observer_ = obs; }
-  void SetTarget(absl::string_view target);
   void SetCompilerInfo(const CxxCompilerInfo* compiler_info);
 
   void set_is_vc() { is_vc_ = true; }
@@ -177,6 +176,8 @@ class CppParser {
     bool cond;
     bool taken;
   };
+
+  void SetTarget(absl::string_view target);
 
   bool IsProcessedFileInternal(const std::string& filepath,
                                int include_dir_index);
