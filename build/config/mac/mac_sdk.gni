@@ -97,7 +97,9 @@ if (use_system_xcode) {
   mac_sdk_version = mac_sdk_official_version
   _dev = _hermetic_xcode_path + "/Contents/Developer"
   _sdk = "MacOSX${mac_sdk_version}.sdk"
-  mac_sdk_path = _dev + "/Platforms/MacOSX.platform/Developer/SDKs/$_sdk"
+  mac_sdk_path =
+      rebase_path(_dev + "/Platforms/MacOSX.platform/Developer/SDKs/$_sdk",
+                  root_buld_dir)
   mac_bin_path = _dev + "/Toolchains/XcodeDefault.xctoolchain/usr/bin/"
 
   # If we're using hermetic Xcode, then we want the paths to be relative so that
