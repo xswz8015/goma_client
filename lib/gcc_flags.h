@@ -34,6 +34,7 @@ class GCCFlags : public CxxFlags {
   const std::vector<std::string>& framework_dirs() const {
     return framework_dirs_;
   }
+  const std::vector<std::string>& arch() const { return arch_; }
 
   const std::vector<std::pair<std::string, bool>>& commandline_macros() const {
     return commandline_macros_;
@@ -125,6 +126,7 @@ class GCCFlags : public CxxFlags {
   std::vector<std::string> non_system_include_dirs_;
   std::vector<std::string> root_includes_;
   std::vector<std::string> framework_dirs_;
+  std::vector<std::string> arch_;
   // The second value is true if the macro is defined and false if undefined.
   std::vector<std::pair<std::string, bool>> commandline_macros_;
   Mode mode_;

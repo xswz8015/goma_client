@@ -183,6 +183,8 @@ TEST_F(GCCFlagsTest, Basic) {
   EXPECT_TRUE(flags.fail_message().empty()) << flags.fail_message();
   EXPECT_EQ("x86_64-pc-linux-gnu-gcc-4.3", flags.compiler_base_name());
   EXPECT_EQ("gcc", flags.compiler_name());
+  std::vector<std::string> want_arch{"ppc"};
+  EXPECT_EQ(want_arch, flags.arch());
 
   const std::vector<std::string> expected_compiler_info_flags{
       "-m32",
@@ -2218,6 +2220,14 @@ TEST_F(GCCFlagsTest, ChromeTSANCompileFlagWithSanitizeBlacklist) {
   ASSERT_EQ(1U, gcc_flags->commandline_macros().size());
   EXPECT_EQ("THREAD_SANITIZER", gcc_flags->commandline_macros()[0].first);
   EXPECT_TRUE(gcc_flags->commandline_macros()[0].second);
+}
+
+TEST_F(GCCFlagsTest, ChromeM1MultiArch) {
+  std::vector<std::string> args{"clang++", "-arch", "x86_64", "-arch", "arm64"};
+  GCCFlags flags(args, "/");
+
+  std::vector<std::string> want_arch{"x86_64", "arm64"};
+  EXPECT_EQ(want_arch, flags.arch());
 }
 
 TEST_F(GCCFlagsTest, ChromeMacDylibLink) {

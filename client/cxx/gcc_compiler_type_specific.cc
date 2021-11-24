@@ -5,6 +5,7 @@
 #include "gcc_compiler_type_specific.h"
 
 #include "glog/logging.h"
+#include "glog/stl_logging.h"
 #include "linker/linker_input_processor/linker_input_processor.h"
 #include "linker/linker_input_processor/thinlto_import_processor.h"
 #include "path.h"
@@ -65,6 +66,13 @@ bool GCCCompilerTypeSpecific::RemoteCompileSupported(
       LOG(INFO) << trace_id << " force fallback -fmodule-map-file.";
       return false;
     }
+  }
+  if (gcc_flag.arch().size() > 1) {
+    LOG(WARNING)
+        << trace_id
+        << " force fallback. multi arch is not supported. http://b/27730714"
+        << " arch=" << gcc_flag.arch();
+    return false;
   }
   absl::string_view ext = file::Extension(gcc_flag.input_filenames()[0]);
   if (ext == "s" || ext == "S") {

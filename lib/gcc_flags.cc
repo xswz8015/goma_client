@@ -151,7 +151,8 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
   flag_gsplit_dwarf->SetOutput(&compiler_info_flags_);
 
   parser.AddFlag("m")->SetOutput(&compiler_info_flags_);
-  parser.AddFlag("arch")->SetOutput(&compiler_info_flags_);
+  FlagParser::Flag* flag_arch = parser.AddFlag("arch");
+  flag_arch->SetOutput(&compiler_info_flags_);
   parser.AddFlag("target")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("-target")->SetOutput(&compiler_info_flags_);
   parser.AddFlag("gcc-toolchain")->SetOutput(&compiler_info_flags_);
@@ -242,6 +243,8 @@ GCCFlags::GCCFlags(const std::vector<std::string>& args, const std::string& cwd)
 
   parser.Parse(expanded_args_);
   unknown_flags_ = parser.unknown_flag_args();
+
+  arch_ = flag_arch->values();
 
   ClangFlagsHelper clang_flags_helper(expanded_args_);
 
