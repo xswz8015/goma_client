@@ -5,7 +5,7 @@ REPO_URL = "https://chromium.googlesource.com/infra/goma/client"
 
 os_type = struct(
     LINUX = "Ubuntu-18.04",
-    MAC = "Mac-10.15",
+    MAC = "Mac-11",
     WIN = "Windows-10",
 )
 
