@@ -54,11 +54,17 @@ void __cdecl ForceCrashOnSigAbort(int) {
 
 // This function is copied from Chromium's base/win/win_util.cc.
 void SetAbortBehaviorForCrashReporting() {
-  // Prevent CRT's abort code from prompting a dialog or trying to "report" it.
-  // Disabling the _CALL_REPORTFAULT behavior is important since otherwise it
-  // has the sideffect of clearing our exception filter, which means we
-  // don't get any crash.
+// Prevent CRT's abort code from prompting a dialog or trying to "report" it.
+// Disabling the _CALL_REPORTFAULT behavior is important since otherwise it
+// has the sideffect of clearing our exception filter, which means we
+// don't get any crash.
+#ifndef __MINGW32__
+  // _set_abort_behvior is only available on VC redistributables past
+  // vcredist80 (Visual C++ 2005 +). Unfortunately, MinGW cannot statically
+  // link vc redistributables properly, and we don't want to have to ship
+  // them along with out binaries.
   _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif
 
   // Set a SIGABRT handler for good measure. We will crash even if the default
   // is left in place, however this allows us to crash earlier. And it also

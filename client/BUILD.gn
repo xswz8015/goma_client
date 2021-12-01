@@ -807,12 +807,6 @@ static_library("scoped_tmp_file_lib") {
   ]
 }
 
-config("breakpad_lib_config") {
-  if (is_win_gcc) {
-    libs = ["msvcr90"]
-  }
-}
-
 static_library("breakpad_lib") {
   sources = [ "breakpad.h" ]
   if (os == "linux") {
@@ -847,7 +841,6 @@ static_library("breakpad_lib") {
     # linux_syscall_support.h do not have .c or .cc file.
     "//",
   ]
-  public_configs = [ ":breakpad_lib_config" ]
 }
 
 static_library("notification_lib") {
