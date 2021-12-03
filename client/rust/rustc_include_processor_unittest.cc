@@ -22,6 +22,20 @@ main.d: ./main.rs
   EXPECT_EQ(required_files, std::set<std::string>{"./main.rs"});
 }
 
+TEST(RustcIncludeProcessorTest, ParseDepsInfoWithMultipleDeps) {
+  constexpr absl::string_view kDepsInfo =
+      R"(main: main.rs dep.rs
+
+main.rs:
+dep.rs:
+)";
+  std::set<std::string> required_files;
+  std::string error_reason;
+  EXPECT_TRUE(RustcIncludeProcessor::ParseRustcDeps(kDepsInfo, &required_files,
+                                                    &error_reason));
+  EXPECT_EQ(required_files, std::set<std::string>({"main.rs", "dep.rs"}));
+}
+
 TEST(RustcIncludeProcessorTest, RewriteArgsTest) {
   const std::vector<std::string> test_args{
       "rustc",

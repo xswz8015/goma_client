@@ -126,7 +126,9 @@ bool RustcIncludeProcessor::ParseRustcDeps(
     if (absl::StrContains(current_line, ": ")) {
       absl::string_view s =
           current_line.substr(current_line.find_first_of(": ") + 2);
-      required_files->insert(std::string(s));
+      for (auto e : absl::StrSplit(s, absl::ByChar(' '))) {
+        required_files->insert(std::string(e));
+      }
       continue;
     }
     required_files->insert(std::string(current_line));
