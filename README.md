@@ -102,9 +102,8 @@ Follow Google code style.
 - [C++](https://google.github.io/styleguide/cppguide.html)
 - [Python](https://github.com/google/styleguide/blob/gh-pages/pyguide.md)
 
-For C++11 features, we prefer to follow chromium guideline:
-http://chromium-cpp.appspot.com/
-
+For C++11/14 features, we prefer to follow [Chromium's
+guidelines](https://chromium.googlesource.com/chromium/src/+/main/styleguide/c++/c++11.md).
 
 ## How to use
 
