@@ -30,6 +30,8 @@ config("internal_config") {
   ]
   if (is_posix) {
     cflags_c = [ "-std=c99" ]
+  }
+  if (is_linux) {
     defines += [ "_XOPEN_SOURCE=700" ]
   }
 }
