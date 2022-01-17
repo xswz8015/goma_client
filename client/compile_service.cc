@@ -629,6 +629,7 @@ void CompileService::DumpToJson(Json::Value* json, absl::Time after) {
     num_exec["compiler_info_count"] = CompilerInfoCache::instance()->Count();
     num_exec["goma_finished"] = num_exec_goma_finished_;
     num_exec["goma_cache_hit"] = num_exec_goma_cache_hit_;
+    num_exec["goma_local_cache_hit"] = num_exec_goma_local_cache_hit_;
     num_exec["goma_aborted"] = num_exec_goma_aborted_;
     num_exec["goma_retry"] = num_exec_goma_retry_;
     num_exec["local_run"] = num_exec_local_run_;

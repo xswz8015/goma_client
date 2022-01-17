@@ -304,6 +304,7 @@ GomaTaskView.prototype = {
     setTextAndMeter('#task-stats-request-failure', resp['num_exec']['failure'], requestMeterMax);
     setTextAndMeter('#task-stats-request-success-finished', resp['num_exec']['goma_finished'], requestMeterMax);
     setTextAndMeter('#task-stats-request-success-cache-hit', resp['num_exec']['goma_cache_hit'], requestMeterMax);
+    setTextAndMeter('#task-stats-request-success-local-cache-hit', resp['num_exec']['goma_local_cache_hit'], requestMeterMax);
     setTextAndMeter('#task-stats-request-success-aborted', resp['num_exec']['goma_aborted'], requestMeterMax);
     setTextAndMeter('#task-stats-request-success-retry', resp['num_exec']['goma_retry'], requestMeterMax);
     setTextAndMeter('#task-stats-request-local-run', resp['num_exec']['local_run'], requestMeterMax);
