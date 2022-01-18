@@ -508,6 +508,82 @@ expected_output_files: "obj/base/allocator/tcmalloc/malloc_hook.o"
 expected_output_files: "obj/base/allocator/tcmalloc/malloc_hook.o.d"
 )";
 
+const char kExecReqFFileCompilationDir[] = R"(command_spec {
+  name: "clang"
+  version: "4.2.1[clang version 5.0.0 (trunk 300839)]"
+  target: "x86_64-unknown-linux-gnu"
+  binary_hash: "5f650cc98121b383aaa25e53a135d8b4c5e0748f25082b4f2d428a5934d22fda"
+  local_compiler_path: "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+  cxx_system_include_path: "../../build/linux/debian_jessie_amd64-sysroot/usr/lib/gcc/x86_64-linux-gnu/4.8/../../../../include/c++/4.8"
+  cxx_system_include_path: "../../build/linux/debian_jessie_amd64-sysroot/usr/lib/gcc/x86_64-linux-gnu/4.8/../../../../include/x86_64-linux-gnu/c++/4.8"
+  cxx_system_include_path: "../../build/linux/debian_jessie_amd64-sysroot/usr/lib/gcc/x86_64-linux-gnu/4.8/../../../../include/c++/4.8/backward"
+  cxx_system_include_path: "../../build/linux/debian_jessie_amd64-sysroot/usr/include/x86_64-linux-gnu"
+  cxx_system_include_path: "../../build/linux/debian_jessie_amd64-sysroot/usr/include"
+}
+arg: "../../third_party/llvm-build/Release+Asserts/bin/clang++"
+arg: "-MMD"
+arg: "-MF"
+arg: "obj/base/allocator/tcmalloc/malloc_hook.o.d"
+arg: "-g"
+arg: "-DNO_HEAP_CHECK"
+arg: "-I../../base/allocator"
+arg: "-I../../third_party/tcmalloc/chromium/src/base"
+arg: "-I../../third_party/tcmalloc/chromium/src"
+arg: "-I../.."
+arg: "-Igen"
+arg: "-B../../third_party/binutils/Linux_x64/Release/bin"
+arg: "-ffile-compilation-dir=/chromium"
+arg: "-Xclang"
+arg: "/chromium"
+arg: "-m64"
+arg: "--sysroot=../../build/linux/debian_jessie_amd64-sysroot"
+arg: "-fvisibility=hidden"
+arg: "-Xclang"
+arg: "-load"
+arg: "-Xclang"
+arg: "../../third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so"
+arg: "-Xclang"
+arg: "-add-plugin"
+arg: "-Xclang"
+arg: "find-bad-constructs"
+arg: "-Xclang"
+arg: "-plugin-arg-find-bad-constructs"
+arg: "-Xclang"
+arg: "check-auto-raw-pointer"
+arg: "-Xclang"
+arg: "-plugin-arg-find-bad-constructs"
+arg: "-Xclang"
+arg: "check-ipc"
+arg: "-c"
+arg: "../../third_party/tcmalloc/chromium/src/malloc_hook.cc"
+arg: "-o"
+arg: "obj/base/allocator/tcmalloc/malloc_hook.o"
+env: "PWD=/home/goma/chromium/src/out/rel_ng"
+cwd: "/home/goma/chromium/src/out/rel_ng"
+subprogram {
+  path: "/home/goma/chromium/src/third_party/llvm-build/Release+Asserts/lib/libFindBadConstructs.so"
+  binary_hash: "119407f17eb4777402734571183eb5518806900d9c7c7ce5ad71d242aad249f0"
+}
+subprogram {
+  path: "/home/goma/chromium/src/third_party/binutils/Linux_x64/Release/bin/objcopy"
+  binary_hash: "9ccd249906d57ef2ccd24cf19c67c8d645d309c49c284af9d42813caf87fba7e"
+}
+requester_info {
+  username: "goma"
+  compiler_proxy_id: "goma@goma.example.com:8088/1494385386/0"
+  api_version: 2
+  pid: 94105
+  retry: 0
+}
+Input {
+  filename: "../../build/linux/debian_sid_amd64-sysroot/usr/lib/gcc/x86_64-linux-gnu/6/crtbegin.o"
+  hash_key: "7c893b5861ad2cc08fbf8aa9a23e294447694f01c94fa3be5b643ba9d3d65adc"
+}
+hermetic_mode: true
+expected_output_files: "obj/base/allocator/tcmalloc/malloc_hook.o"
+expected_output_files: "obj/base/allocator/tcmalloc/malloc_hook.o.d"
+)";
+
 const char kExecReqToNormalizeDebugPrefixMapAlice[] =
     "command_spec {\n"
     "  name: \"clang\"\n"
@@ -2391,6 +2467,28 @@ TEST(GCCExecReqNormalizerTest, FDebugCompilationDir) {
   devtools_goma::ExecReq req;
 
   ASSERT_TRUE(TextFormat::ParseFromString(kExecReqFDebugCompilationDir, &req));
+  req.set_cwd("/home/chromium/chromium/src");
+
+  ASSERT_TRUE(devtools_goma::VerifyExecReq(req));
+  ASSERT_TRUE(ValidateOutputFilesAndDirs(req));
+  devtools_goma::NormalizeExecReqForCacheKey(
+      0, false, false, std::vector<std::string>(),
+      std::map<std::string, std::string>(), &req);
+
+  EXPECT_EQ(req.cwd(), "/chromium");
+
+  EXPECT_EQ(2, req.expected_output_files_size());
+  EXPECT_EQ("obj/base/allocator/tcmalloc/malloc_hook.o",
+            req.expected_output_files(0));
+  EXPECT_EQ("obj/base/allocator/tcmalloc/malloc_hook.o.d",
+            req.expected_output_files(1));
+  EXPECT_TRUE(req.expected_output_dirs().empty());
+}
+
+TEST(GCCExecReqNormalizerTest, FFileCompilationDir) {
+  devtools_goma::ExecReq req;
+
+  ASSERT_TRUE(TextFormat::ParseFromString(kExecReqFFileCompilationDir, &req));
   req.set_cwd("/home/chromium/chromium/src");
 
   ASSERT_TRUE(devtools_goma::VerifyExecReq(req));
