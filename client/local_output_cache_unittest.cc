@@ -285,4 +285,30 @@ TEST_F(LocalOutputCacheTest, CollectGarbageByNumItems) {
   }
 }
 
+TEST_F(LocalOutputCacheTest, CacheKeyIsEqualWithFDebugCompilationDir) {
+  ExecReq req = MakeFakeExecReqWithArgs({
+      "clang",
+      "-g2",
+      "-fdebug-compilation-dir=.",
+  });
+  ExecReq req2 = req;
+  req2.set_cwd(tmpdir_->FullPath("second_build_dir"));
+  ASSERT_NE(req.cwd(), req2.cwd());
+  EXPECT_EQ(LocalOutputCache::MakeCacheKey(req),
+            LocalOutputCache::MakeCacheKey(req2));
+}
+
+TEST_F(LocalOutputCacheTest, CacheKeyIsEqualWithFFileCompilationDir) {
+  ExecReq req = MakeFakeExecReqWithArgs({
+      "clang",
+      "-g2",
+      "-ffile-compilation-dir=.",
+  });
+  ExecReq req2 = req;
+  req2.set_cwd(tmpdir_->FullPath("second_build_dir"));
+  ASSERT_NE(req.cwd(), req2.cwd());
+  EXPECT_EQ(LocalOutputCache::MakeCacheKey(req),
+            LocalOutputCache::MakeCacheKey(req2));
+}
+
 }  // namespace devtools_goma

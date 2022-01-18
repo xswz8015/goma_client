@@ -48,9 +48,10 @@ ConfigurableExecReqNormalizer::Config GCCExecReqNormalizer::Configure(
   FlagParser::Flag* flag_fcoverage_mapping =
       flag_parser.AddBoolFlag("fcoverage-mapping");
   FlagParser::Flag* flag_fdebug_compilation_dir =
-      flag_parser.AddBoolFlag("fdebug-compilation-dir");
-  // TODO: support -ffile-compilation-dir and
-  //                    -fcoverage-compilation-dir.
+      flag_parser.AddFlag("fdebug-compilation-dir");
+  FlagParser::Flag* flag_ffile_compilation_dir =
+      flag_parser.AddPrefixFlag("ffile-compilation-dir=");
+  // TODO: support -fcoverage-compilation-dir.
   flag_parser.Parse(args);
 
   // -g does not capture -gsplit-dwarf. So we need to check it explicitly.
@@ -71,8 +72,10 @@ ConfigurableExecReqNormalizer::Config GCCExecReqNormalizer::Configure(
       LOG(ERROR) << "-fdebug-compilation-dir is specified w/ and w/o -Xclang";
     } else if (flag_fdebug_compilation_dir->seen()) {
       fdebug_compilation_dir = flag_fdebug_compilation_dir->GetLastValue();
-    } else {
+    } else if (clang_flags_helper.fdebug_compilation_dir()) {
       fdebug_compilation_dir = clang_flags_helper.fdebug_compilation_dir();
+    } else if (flag_ffile_compilation_dir->seen()) {
+      fdebug_compilation_dir = flag_ffile_compilation_dir->GetLastValue();
     }
   }
 
