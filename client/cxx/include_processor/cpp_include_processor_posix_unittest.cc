@@ -1999,6 +1999,37 @@ TEST_F(CppIncludeProcessorPosixTest, sub_framework) {
   RunTest("/usr/bin/gcc",
           CreateTmpFile("#include <Accelerate/Accelerate.h>", "foo.cc"), args);
 }
+
+TEST_F(CppIncludeProcessorPosixTest, relative_sub_framework_paths) {
+  // Ensure that relative paths are used for nested framework headers instead of
+  // forced absolute paths when it's not necessary.
+  CreateTmpDir("EarlGrey.framework");
+  CreateTmpDir("EarlGrey.framework/Headers");
+  CreateTmpFile("#include <Sub/Sub.h>",
+                "EarlGrey.framework/Headers/EarlGrey.h");
+  CreateTmpDir("EarlGrey.framework/Frameworks/Sub.framework/Headers");
+  CreateTmpFile("",
+                "EarlGrey.framework/Frameworks/Sub.framework/Headers/Sub.h");
+
+  std::unique_ptr<CompilerFlags> flags(CompilerFlagsParser::MustNew(
+      std::vector<std::string>{"/usr/bin/gcc", "-c", "foo.mm", "-F."},
+      tmpdir_util_->tmpdir()));
+  ScopedCompilerInfoState cis(
+      GetCompilerInfoFromCacheOrCreate(*flags, "/usr/bin/gcc", env_));
+
+  CreateTmpFile("#import <EarlGrey/EarlGrey.h>\n", "foo.mm");
+
+  CppIncludeProcessor processor;
+  std::set<std::string> files;
+  FileStatCache file_stat_cache;
+  ASSERT_TRUE(processor.GetIncludeFiles(
+      "foo.mm", tmpdir_util_->tmpdir(), *flags,
+      ToCxxCompilerInfo(cis.get()->info()), &files, &file_stat_cache));
+  EXPECT_EQ(1u, files.count("./EarlGrey.framework/Headers/EarlGrey.h"));
+  EXPECT_EQ(1u,
+            files.count(
+                "./EarlGrey.framework/Frameworks/Sub.framework/Headers/Sub.h"));
+}
 #endif
 
 }  // namespace devtools_goma

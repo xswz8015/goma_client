@@ -263,12 +263,9 @@ bool IncludeFileFinder::LookupFramework(const std::string& path_in_directive,
 bool IncludeFileFinder::LookupSubframework(const std::string& path_in_directive,
                                            const std::string& current_directory,
                                            std::string* filepath) {
-  const std::string& abs_current =
-      file::JoinPathRespectAbsolute(cwd_, current_directory);
   for (const auto& fwdir : *framework_dirs_) {
-    if (CreateSubframeworkIncludeFilename(
-            file::JoinPathRespectAbsolute(cwd_, fwdir),
-            abs_current, path_in_directive, filepath)) {
+    if (CreateSubframeworkIncludeFilename(fwdir, current_directory,
+                                          path_in_directive, filepath)) {
       return true;
     }
   }
