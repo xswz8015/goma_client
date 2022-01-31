@@ -182,8 +182,6 @@ void DepsCacheInit() {
 }  // namespace devtools_goma
 
 int main(int argc, char* argv[], const char* envp[]) {
-  devtools_goma::InitLogging(argv[0]);
-
 #ifdef _WIN32
   devtools_goma::PlatformThread::SetName(GetCurrentThread(), "main");
 #endif
@@ -295,6 +293,7 @@ int main(int argc, char* argv[], const char* envp[]) {
 
   devtools_goma::SubProcessController::Initialize(argv[0], subproc_options);
 
+  devtools_goma::InitLogging(argv[0]);
   if (FLAGS_COMPILER_PROXY_ENABLE_CRASH_DUMP) {
     devtools_goma::InitCrashReporter(devtools_goma::GetCrashDumpDirectory());
     LOG(INFO) << "breakpad is enabled";
