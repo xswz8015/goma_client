@@ -9,11 +9,8 @@ os_type = struct(
     WIN = "Windows-10",
 )
 
-# Enable LUCI Realms support.
-lucicfg.enable_experiment("crbug.com/1085650")
-
-# Launch 100% of Swarming tasks for builds in "realms-aware mode"
-luci.builder.defaults.experiments.set({"luci.use_realms": 100})
+# Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
+lucicfg.enable_experiment("crbug.com/1182002")
 
 luci.project(
     name = "goma-client",
