@@ -2,8 +2,10 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "17ca796825dbba0e5a96fd687a07c41f583840b4",
+     "clang_revision": "bfa8372deaca7059d7f1d79b29df50b5c0c5f05a",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
+     "mingw_version": "version:2@11.2.0-6",
+     "checkout_mingw": False,
 }
 
 deps = {
@@ -41,7 +43,7 @@ deps = {
 
      # chrome's deps/third_party/boringssl
      "client/third_party/boringssl/src":
-     "https://boringssl.googlesource.com/boringssl@24e97fb69f26ddb8303b2d2a60e694ffcd287c86",
+     "https://boringssl.googlesource.com/boringssl@123eaaef26abc278f53ae338e9c758eb01c70b08",
 
      # google-breakpad
      "client/third_party/breakpad/breakpad":
@@ -77,11 +79,11 @@ deps = {
 
      # abseil
      "client/third_party/abseil/src":
-     "https://github.com/abseil/abseil-cpp.git@a048203a881f11f4b7b8df5fb563aec85522f8db",
+     "https://github.com/abseil/abseil-cpp.git@215105818dfde3174fe799600bb0f3cae233d0bf",
 
      # google benchmark v1.4.1
      "client/third_party/benchmark/src":
-     "https://github.com/google/benchmark.git@e776aa0275e293707b6a0901e0e8d8a8a3679508",
+     "https://github.com/google/benchmark.git@0d98dba29d66e93259db7daa53a9327df767a415",
 
      # Jinja2 template engine v2.10
      "client/third_party/jinja2":
@@ -176,6 +178,16 @@ deps = {
       'dep_type': 'cipd',
       'condition': 'host_os == "win"',
     },
+    'client/third_party/mingw': {
+      'packages': [
+        {
+          'package': 'infra/3pp/build_support/mingw/windows-amd64',
+          'version': Var('mingw_version'),
+        }
+      ],
+      'dep_type': 'cipd',
+      'condition': 'host_os == "win" and checkout_mingw',
+    }
 }
 
 hooks = [

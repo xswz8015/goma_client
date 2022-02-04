@@ -2080,7 +2080,7 @@ class GomaEnv:
   @property
   def use_http_proxy(self):
     if self._use_http_proxy is None:
-      self._use_http_proxy = _IsFlagTrue('GOMACTL_USE_PROXY')
+      self._use_http_proxy = _IsFlagTrue('GOMACTL_USE_PROXY', True)
     return self._use_http_proxy
 
 

@@ -112,7 +112,7 @@ default_compiler_configs = [
 if (is_debug) {
   default_compiler_configs += [ "//build/config:debug" ]
 
-  if (os == "win" && use_incremental_link) {
+  if (os == "win" && use_incremental_link && !is_win_gcc) {
     # Note: we don't make "incremental_linking" on when is_debug=false, because
     # the existence of /LTCG causes /INCREMENTAL ignorance.
     # When use_incremental_link is on, we use /LTCG:INCREMENTAL instead.
@@ -121,7 +121,7 @@ if (is_debug) {
 } else {
   default_compiler_configs += [ "//build/config:release" ]
 
-  if (os == "win" && !use_link_time_optimization) {
+  if (os == "win" && !use_link_time_optimization && !is_win_gcc) {
     # When !is_debug && !use_link_time_optimization, /INCREMENTAL works.
     # Note: When use_link_time_optimization is true, we enable
     # /LTCG:INCREMENTAL, but it might cause b/35825478.

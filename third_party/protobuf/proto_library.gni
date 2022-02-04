@@ -254,6 +254,13 @@ template("proto_library") {
       rebase_path(proto_in_dir, root_build_dir),
     ]
 
+    if (is_win_gcc) {
+      args += [
+        "--dll-path",
+        rebase_path("//third_party/mingw/mingw64/bin", root_build_dir),
+      ]
+    }
+
     if (generate_cc) {
       args += [
         "--cc-out-dir",

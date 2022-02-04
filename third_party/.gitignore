@@ -18,6 +18,7 @@ libyaml/src
 llvm-build
 lss
 markupsafe
+mingw
 nasm
 protobuf/protobuf
 xz

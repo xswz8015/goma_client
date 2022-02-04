@@ -350,12 +350,18 @@ if (!is_win_gcc) {
 }
 
 gcc_toolchain("gcc_x64") {
-  cc = "gcc"
-  cxx = "g++"
+  assert(!(is_win_gcc && use_goma), "cannot use_goma when using mingw gcc on windows")
+  mingw_path = rebase_path("//third_party/mingw/mingw64/bin", root_build_dir)
+  path_wrapper = rebase_path("//build/toolchain/path_wrapper.py", root_build_dir)
+  mingw_prefix = "$python_path $path_wrapper $mingw_path/"
+  cc = mingw_prefix + "gcc"
+  cxx = mingw_prefix + "g++"
 
-  readelf = "readelf"
-  nm = "nm"
-  ar = "ar"
+  readelf = mingw_prefix + "readelf"
+  nm = mingw_prefix + "nm"
+  # Ar has its own prefix, and doesn't need the PATH
+  # tweak from path_wrapper.
+  ar = mingw_path + "/ar"
   ld = cxx
 
   executable_extension = ".exe"

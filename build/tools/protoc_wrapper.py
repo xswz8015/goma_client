@@ -23,7 +23,7 @@ Features:
 
 from __future__ import print_function
 import argparse
-import os.path
+import os
 import subprocess
 import sys
 import tempfile
@@ -129,6 +129,11 @@ def main(argv):
       help="Do not include imported files into generated descriptor.",
       action="store_true",
       default=False)
+
+  parser.add_argument('--dll-path',
+                      help='The path to add to PATH for running command',
+                      metavar='PATH')
+
   parser.add_argument("protos", nargs="+",
                       help="Input protobuf definition file(s).")
 
@@ -199,7 +204,11 @@ def main(argv):
     with open(options.descriptor_set_dependency_file, 'rb') as f:
       dependency_file_data = f.read().decode('utf-8')
 
-  ret = subprocess.call(protoc_cmd)
+  d = os.environ.copy()
+  if options.dll_path is not None:
+    d['PATH'] = options.dll_path + ';' + d['PATH']
+
+  ret = subprocess.call(protoc_cmd, env=d)
   if ret != 0:
     if ret <= -100:
       # Windows error codes such as 0xC0000005 and 0xC0000409 are much easier to
