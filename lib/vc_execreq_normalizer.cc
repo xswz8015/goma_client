@@ -57,6 +57,8 @@ ConfigurableExecReqNormalizer::Config VCExecReqNormalizer::Configure(
       flag_parser.AddBoolFlag("showIncludes:user");
   FlagParser::Flag* flag_fdebug_compilation_dir =
       flag_parser.AddBoolFlag("fdebug-compilation-dir");
+  FlagParser::Flag* flag_ffile_compilation_dir =
+      flag_parser.AddPrefixFlag("ffile-compilation-dir=");
   flag_parser.Parse(args);
 
   if (flag_show_include->seen() || flag_show_include_user->seen()) {
@@ -92,8 +94,12 @@ ConfigurableExecReqNormalizer::Config VCExecReqNormalizer::Configure(
       LOG(ERROR) << "-fdebug-compilation-dir is specified w/ and w/o -Xclang";
     } else if (is_clang_cl && flag_fdebug_compilation_dir->seen()) {
       fdebug_compilation_dir = flag_fdebug_compilation_dir->GetLastValue();
-    } else if (is_clang_cl && !(keep_cwd & kAsIs)) {
+    } else if (is_clang_cl && !(keep_cwd & kAsIs) &&
+               clang_flags_helper.fdebug_compilation_dir()) {
       fdebug_compilation_dir = clang_flags_helper.fdebug_compilation_dir();
+    } else if (is_clang_cl && !(keep_cwd & kAsIs) &&
+               flag_ffile_compilation_dir->seen()) {
+      fdebug_compilation_dir = flag_ffile_compilation_dir->GetLastValue();
     }
   }
 

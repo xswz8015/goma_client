@@ -62,9 +62,9 @@ class LocalOutputCacheTest : public ::testing::Test {
                            threshold_items);
   }
 
-  ExecReq MakeFakeExecReq() {
+  ExecReq MakeFakeExecReq(std::string name) {
     ExecReq req;
-    req.mutable_command_spec()->set_name("clang");
+    req.mutable_command_spec()->set_name(std::move(name));
     req.mutable_command_spec()->set_version("4.2.1");
     req.mutable_command_spec()->set_target("x86_64-unknown-linux-gnu");
     req.set_cwd(tmpdir_->FullPath("build"));
@@ -72,7 +72,8 @@ class LocalOutputCacheTest : public ::testing::Test {
   }
 
   ExecReq MakeFakeExecReqWithArgs(const std::vector<std::string>& args) {
-    ExecReq req = MakeFakeExecReq();
+    CHECK(!args.empty()) << "args[0] should be set";
+    ExecReq req = MakeFakeExecReq(args[0]);
     for (const auto& arg : args) {
       req.add_arg(arg);
     }
@@ -108,7 +109,7 @@ TEST_F(LocalOutputCacheTest, Match) {
   const std::string trace_id = "(test-match)";
 
   // 1. Make ExecReq and ExecResp for fake compile
-  ExecReq req = MakeFakeExecReq();
+  ExecReq req = MakeFakeExecReq("clang");
   ExecResp resp = MakeFakeExecResp();
 
   // 2. Try to Save output.
@@ -139,7 +140,7 @@ TEST_F(LocalOutputCacheTest, NoMatch) {
   const std::string trace_id = "(test-nomatch)";
 
   // 1. Make ExecReq and ExecResp for fake compile
-  ExecReq req = MakeFakeExecReq();
+  ExecReq req = MakeFakeExecReq("clang");
   ExecResp resp = MakeFakeExecResp();
 
   // 2. Try to Save output.
@@ -167,7 +168,7 @@ TEST_F(LocalOutputCacheTest, CollectGarbage) {
   const std::string trace_id = "(garbage)";
 
   // Make Item.
-  ExecReq req = MakeFakeExecReq();
+  ExecReq req = MakeFakeExecReq("clang");
   ExecResp resp = MakeFakeExecResp();
   tmpdir_->CreateTmpFile("build/output.o", "(output)");
   std::string key = LocalOutputCache::instance()->MakeCacheKey(req);
@@ -194,7 +195,7 @@ TEST_F(LocalOutputCacheTest, WontCollectGarbage) {
   const std::string trace_id = "(garbage)";
 
   // Make Item.
-  ExecReq req = MakeFakeExecReq();
+  ExecReq req = MakeFakeExecReq("clang");
   ExecResp resp = MakeFakeExecResp();
   tmpdir_->CreateTmpFile("build/output.o", "(output)");
   std::string key = LocalOutputCache::instance()->MakeCacheKey(req);
@@ -285,30 +286,26 @@ TEST_F(LocalOutputCacheTest, CollectGarbageByNumItems) {
   }
 }
 
-TEST_F(LocalOutputCacheTest, CacheKeyIsEqualWithFDebugCompilationDir) {
-  ExecReq req = MakeFakeExecReqWithArgs({
-      "clang",
-      "-g2",
-      "-fdebug-compilation-dir=.",
-  });
-  ExecReq req2 = req;
-  req2.set_cwd(tmpdir_->FullPath("second_build_dir"));
-  ASSERT_NE(req.cwd(), req2.cwd());
-  EXPECT_EQ(LocalOutputCache::MakeCacheKey(req),
-            LocalOutputCache::MakeCacheKey(req2));
-}
+TEST_F(LocalOutputCacheTest, CacheKeyIsEqualWithRelocatableDebugFlags) {
+  struct TestCase {
+    std::vector<std::string> args;
+  } const kTestCases[] = {
+      {{"clang", "-g2", "-fdebug-compilation-dir=."}},
+      {{"clang", "-g2", "-ffile-compilation-dir=."}},
+      {{"clang-cl.exe", "/Z7", "-fdebug-compilation-dir=."}},
+      {{"clang-cl.exe", "/Z7", "-ffile-compilation-dir=."}},
+  };
 
-TEST_F(LocalOutputCacheTest, CacheKeyIsEqualWithFFileCompilationDir) {
-  ExecReq req = MakeFakeExecReqWithArgs({
-      "clang",
-      "-g2",
-      "-ffile-compilation-dir=.",
-  });
-  ExecReq req2 = req;
-  req2.set_cwd(tmpdir_->FullPath("second_build_dir"));
-  ASSERT_NE(req.cwd(), req2.cwd());
-  EXPECT_EQ(LocalOutputCache::MakeCacheKey(req),
-            LocalOutputCache::MakeCacheKey(req2));
+  for (const auto& test_case : kTestCases) {
+    SCOPED_TRACE(::testing::Message()
+                 << ::testing::PrintToString(test_case.args));
+    ExecReq req = MakeFakeExecReqWithArgs(test_case.args);
+    ExecReq req2 = req;
+    req2.set_cwd(tmpdir_->FullPath("second_build_dir"));
+    ASSERT_NE(req.cwd(), req2.cwd());
+    EXPECT_EQ(LocalOutputCache::MakeCacheKey(req),
+              LocalOutputCache::MakeCacheKey(req2));
+  }
 }
 
 }  // namespace devtools_goma
