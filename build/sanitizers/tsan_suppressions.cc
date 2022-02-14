@@ -19,6 +19,8 @@ char kTSanDefaultSuppressions[] =
   // goma_fetch sometimes show data race in buildbot, which we cannot reproduce
   // on our local machine (b/74301421).
   "race:PollEvents\n"
+  // There is a race around VLOG (https://crbug.com/1294084#c9).
+  "race:google::InitVLOG3__\n"
   // PLEASE READ ABOVE BEFORE ADDING NEW SUPPRESSIONS.
   // End of suppressions.
 ;  // Please keep this semicolon.

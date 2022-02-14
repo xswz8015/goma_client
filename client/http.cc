@@ -171,17 +171,26 @@ bool HttpClient::Options::InitFromURL(absl::string_view url) {
 }
 
 std::string HttpClient::Options::SocketHost() const {
-  if (!proxy_host_name.empty()) {
+  if (UseProxy()) {
     return proxy_host_name;
   }
   return dest_host_name;
 }
 
 int HttpClient::Options::SocketPort() const {
-  if (!proxy_host_name.empty()) {
+  if (UseProxy()) {
     return proxy_port;
   }
   return dest_port;
+}
+
+bool HttpClient::Options::UseProxy() const {
+  // don't use proxy for 127.0.0.1 or localhost
+  // https://crbug.com/1295649
+  if (dest_host_name == "127.0.0.1" || dest_host_name == "localhost") {
+    return false;
+  }
+  return !proxy_host_name.empty();
 }
 
 std::string HttpClient::Options::RequestURL(absl::string_view path) const {
@@ -209,7 +218,7 @@ std::string HttpClient::Options::DebugString() const {
   ss << "dest=" << dest_host_name << ":" << dest_port;
   if (!url_path_prefix.empty())
     ss << " url_path_prefix=" << url_path_prefix;
-  if (!proxy_host_name.empty())
+  if (UseProxy())
     ss << " proxy=" << proxy_host_name << ":" << proxy_port;
   if (!extra_params.empty())
     ss << " extra=" << extra_params;
@@ -808,7 +817,7 @@ std::unique_ptr<TLSEngineFactory> HttpClient::NewTLSEngineFactoryFromOptions(
     if (!options.ssl_extra_cert_data.empty())
       ssl_engine_fact->AddCertificateFromString(options.ssl_extra_cert_data);
     ssl_engine_fact->SetHostname(options.dest_host_name);
-    if (!options.proxy_host_name.empty()) {
+    if (options.UseProxy()) {
       ssl_engine_fact->SetProxy(options.proxy_host_name, options.proxy_port);
     }
     ssl_engine_fact->SetCRLMaxValidDuration(options.ssl_crl_max_valid_duration);
@@ -998,7 +1007,7 @@ Descriptor* HttpClient::NewDescriptor() {
   if (options_.use_ssl) {
     TLSEngine *engine = tls_engine_factory_->NewTLSEngine(fd.get());
     TLSDescriptor::Options tls_desc_options;
-    if (!options_.proxy_host_name.empty()) {
+    if (options_.UseProxy()) {
       tls_desc_options.use_proxy = true;
       tls_desc_options.dest_host_name = options_.dest_host_name;
       tls_desc_options.dest_port = options_.dest_port;
@@ -1139,7 +1148,7 @@ std::string HttpClient::DebugString() const {
   if (!options_.extra_params.empty()) {
     ss << ": " << options_.extra_params;
   }
-  if (!options_.proxy_host_name.empty()) {
+  if (options_.UseProxy()) {
     ss << " to "
        << "http://" << options_.dest_host_name << ":" << options_.dest_port;
   }

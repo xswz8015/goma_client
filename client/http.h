@@ -106,7 +106,7 @@ class HttpClient {
     std::string Host() const;
 
     // Returns true if HttpClient is configure to use an HTTP proxy.
-    bool UseProxy() const { return !proxy_host_name.empty(); }
+    bool UseProxy() const;
 
     std::string DebugString() const;
     void ClearAuthConfig();

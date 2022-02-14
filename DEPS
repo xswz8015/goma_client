@@ -2,7 +2,7 @@
 
 vars = {
      "chromium_git": "https://chromium.googlesource.com",
-     "clang_revision": "bfa8372deaca7059d7f1d79b29df50b5c0c5f05a",
+     "clang_revision": "b9894ca3bc6596a03cb033ddbdd36990f11b8ce7",
      "gn_version": "git_revision:dfcbc6fed0a8352696f92d67ccad54048ad182b3",
      "mingw_version": "version:2@11.2.0-6",
      "checkout_mingw": False,
@@ -48,7 +48,7 @@ deps = {
      # google-breakpad
      "client/third_party/breakpad/breakpad":
      Var("chromium_git") + "/breakpad/breakpad.git@" +
-         "a0e078365d0515f4ffdfc3389d92b2c062f62132",
+         "7685201906b55d93be6151fa4681e8b24d6c9c74",
 
      # lss
      "client/third_party/lss":
@@ -125,7 +125,7 @@ deps = {
          'packages': [
              {
                  'package': 'infra/3pp/tools/go/${{platform}}',
-                 'version': 'version:2@1.17.6',
+                 'version': 'version:2@1.17.7',
              },
          ],
          'dep_type': 'cipd',

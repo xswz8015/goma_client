@@ -89,6 +89,7 @@ void InitLogging(const char* argv0) {
 #endif
   LOG(INFO) << "public goma client";
 
+  LOG(INFO) << "goma built date " << kBuiltTimeString;
   LOG(INFO) << "goma built revision " << kBuiltRevisionString;
   LOG(INFO) << "goma built gn args " << kBuiltGNArgsString;
 #ifndef NDEBUG

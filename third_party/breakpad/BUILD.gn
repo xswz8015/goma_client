@@ -195,7 +195,6 @@ if (os != "win") {
 
     executable("minidump_stackwalk") {
       sources = [
-        "breakpad/src/common/scoped_ptr.h",
         "breakpad/src/processor/exploitability.cc",
         "breakpad/src/processor/minidump.cc",
         "breakpad/src/processor/minidump_processor.cc",
@@ -225,6 +224,8 @@ if (os != "win") {
 
     executable("minidump_dump") {
       sources = [
+        "breakpad/src/common/path_helper.cc",
+        "breakpad/src/common/path_helper.h",
         "breakpad/src/common/scoped_ptr.h",
         "breakpad/src/processor/basic_code_module.h",
         "breakpad/src/processor/basic_code_modules.cc",
@@ -268,7 +269,7 @@ if (os != "win") {
 
 if (os == "mac") {
   if (current_toolchain == host_toolchain) {
-    executable("dump_syms") {
+    source_set("common") {
       sources = [
         "breakpad/src/common/dwarf/bytereader.cc",
         "breakpad/src/common/dwarf/dwarf2diehandler.cc",
@@ -290,30 +291,39 @@ if (os == "mac") {
         "breakpad/src/common/mac/macho_utilities.cc",
         "breakpad/src/common/mac/macho_walker.cc",
         "breakpad/src/common/md5.cc",
+        "breakpad/src/common/memory_range.h",
         "breakpad/src/common/module.cc",
         "breakpad/src/common/path_helper.cc",
         "breakpad/src/common/path_helper.h",
         "breakpad/src/common/scoped_ptr.h",
         "breakpad/src/common/stabs_reader.cc",
         "breakpad/src/common/stabs_to_module.cc",
-        "breakpad/src/tools/mac/dump_syms/dump_syms_tool.cc",
       ]
-
-      # For breakpad/src/common/stabs_reader.h.
-      defines = [ "HAVE_MACH_O_NLIST_H" ]
       include_dirs = [ "breakpad/src/common/mac" ]
+
+      configs += [ ":internal_config" ]
 
       # The DWARF utilities require -funsigned-char.
       cflags = [ "-funsigned-char" ]
+
+      # dwarf2reader.cc uses dynamic_cast.
+      configs -= [ "//build/config/compiler:no_rtti" ]
+      configs += [ "//build/config/compiler:rtti" ]
+
+      configs -= [ "//build/config/compiler:goma_code" ]
+      configs += [ "//build/config/compiler:no_goma_code" ]
+
+      # For breakpad/src/common/stabs_reader.h.
+      defines = [ "HAVE_MACH_O_NLIST_H" ]
+    }
+
+    executable("dump_syms") {
+      sources = [ "breakpad/src/tools/mac/dump_syms/dump_syms_tool.cc" ]
 
       configs += [ ":internal_config" ]
 
       configs -= [ "//build/config/compiler:goma_code" ]
       configs += [ "//build/config/compiler:no_goma_code" ]
-
-      # dwarf2reader.cc uses dynamic_cast.
-      configs -= [ "//build/config/compiler:no_rtti" ]
-      configs += [ "//build/config/compiler:rtti" ]
 
       frameworks = [ "Foundation.framework" ]
 
@@ -323,26 +333,40 @@ if (os == "mac") {
         # at -O0 until this can be sorted out.
         # https://crbug.com/google-breakpad/329
         configs -= [ "//build/config/compiler:default_optimization" ]
-        cflags += [ "-O0" ]
+        cflags = [ "-O0" ]
       }
 
-      deps = [ "//build/config:exe_and_shlib_deps" ]
+      deps = [
+        ":common",
+        "//build/config:exe_and_shlib_deps",
+      ]
     }
 
     executable("symupload") {
       sources = [
+        "breakpad/src/common/mac/HTTPGetRequest.m",
         "breakpad/src/common/mac/HTTPMultipartUpload.m",
-        "breakpad/src/tools/mac/symupload/symupload.m",
+        "breakpad/src/common/mac/HTTPPutRequest.m",
+        "breakpad/src/common/mac/HTTPRequest.m",
+        "breakpad/src/common/mac/HTTPSimplePostRequest.m",
+        "breakpad/src/common/mac/SymbolCollectorClient.m",
+        "breakpad/src/common/mac/encoding_util.m",
+        "breakpad/src/tools/mac/symupload/symupload.mm",
       ]
 
       include_dirs = [ "breakpad/src/common/mac" ]
+
+      configs += [ ":internal_config" ]
 
       frameworks = [ "Foundation.framework" ]
 
       configs -= [ "//build/config/compiler:goma_code" ]
       configs += [ "//build/config/compiler:no_goma_code" ]
 
-      deps = [ "//build/config:exe_and_shlib_deps" ]
+      deps = [
+        ":common",
+        "//build/config:exe_and_shlib_deps",
+      ]
     }
   } else {
     binary_symlink("dump_syms") {
@@ -362,7 +386,7 @@ if (os == "mac") {
       "breakpad/src/client/mac/handler/dynamic_images.cc",
       "breakpad/src/client/mac/handler/minidump_generator.cc",
       "breakpad/src/client/minidump_file_writer.cc",
-      "breakpad/src/common/convert_UTF.c",
+      "breakpad/src/common/convert_UTF.cc",
       "breakpad/src/common/mac/MachIPC.mm",
       "breakpad/src/common/mac/arch_utilities.cc",
       "breakpad/src/common/mac/arch_utilities.h",
@@ -437,6 +461,10 @@ if (os == "mac") {
     # defines = [ "USE_PROTECTED_ALLOCATIONS=1" ]
     include_dirs = [ "breakpad/src/client/apple/Framework" ]
 
+    # TODO: Breakpad uses bootstrap_subset() and
+    # bootstrap_create_server(), both of which are deprecated starting in 10.10.
+    cflags = [ "-Wno-deprecated-declarations" ]
+
     deps = [
       ":crash_inspector",
       ":crash_report_sender",
@@ -455,8 +483,15 @@ if (os == "linux") {
       sources = [
         "breakpad/src/common/linux/http_upload.cc",
         "breakpad/src/common/linux/http_upload.h",
+        "breakpad/src/common/linux/libcurl_wrapper.cc",
+        "breakpad/src/common/linux/libcurl_wrapper.h",
+        "breakpad/src/common/linux/symbol_collector_client.cc",
+        "breakpad/src/common/linux/symbol_collector_client.h",
         "breakpad/src/common/linux/symbol_upload.cc",
         "breakpad/src/common/linux/symbol_upload.h",
+        "breakpad/src/common/path_helper.cc",
+        "breakpad/src/common/path_helper.h",
+        "breakpad/src/common/scoped_ptr.h",
         "breakpad/src/tools/linux/symupload/sym_upload.cc",
       ]
 
@@ -506,6 +541,7 @@ if (os == "linux") {
         "breakpad/src/common/linux/memory_mapped_file.cc",
         "breakpad/src/common/linux/memory_mapped_file.h",
         "breakpad/src/common/memory_allocator.h",
+        "breakpad/src/common/memory_range.h",
         "breakpad/src/common/module.cc",
         "breakpad/src/common/module.h",
         "breakpad/src/common/path_helper.cc",
@@ -581,8 +617,9 @@ if (os == "linux") {
       "breakpad/src/client/minidump_file_writer-inl.h",
       "breakpad/src/client/minidump_file_writer.cc",
       "breakpad/src/client/minidump_file_writer.h",
-      "breakpad/src/common/convert_UTF.c",
+      "breakpad/src/common/convert_UTF.cc",
       "breakpad/src/common/convert_UTF.h",
+      "breakpad/src/common/linux/breakpad_getcontext.S",
       "breakpad/src/common/linux/elf_core_dump.cc",
       "breakpad/src/common/linux/elf_core_dump.h",
       "breakpad/src/common/linux/elfutils.cc",
@@ -602,6 +639,7 @@ if (os == "linux") {
       "breakpad/src/common/linux/safe_readlink.cc",
       "breakpad/src/common/linux/safe_readlink.h",
       "breakpad/src/common/memory_allocator.h",
+      "breakpad/src/common/memory_range.h",
       "breakpad/src/common/scoped_ptr.h",
       "breakpad/src/common/simple_string_dictionary.cc",
       "breakpad/src/common/simple_string_dictionary.h",
@@ -684,8 +722,8 @@ if (os == "linux") {
     sources = [
       "breakpad/src/common/path_helper.cc",
       "breakpad/src/common/path_helper.h",
-      "breakpad/src/common/scoped_ptr.h",
       "breakpad/src/tools/linux/md2core/minidump-2-core.cc",
+      "breakpad/src/tools/linux/md2core/minidump_memory_range.h",
     ]
 
     include_dirs = [ "breakpad/src" ]
@@ -699,7 +737,11 @@ if (os == "linux") {
   }
 
   executable("core-2-minidump") {
-    sources = [ "breakpad/src/tools/linux/core2md/core2md.cc" ]
+    sources = [
+      "breakpad/src/common/path_helper.cc",
+      "breakpad/src/common/path_helper.h",
+      "breakpad/src/tools/linux/core2md/core2md.cc",
+    ]
 
     configs += [ ":goma_breakpad_config" ]
 
@@ -717,6 +759,39 @@ if (os == "linux") {
 if (os == "win" && !is_win_gcc) {
   import("//third_party/chromium_build/config/win/visual_studio_version.gni")
 
+  static_library("common_windows") {
+    include_dirs = [
+      "$visual_studio_path/DIA SDK/include",
+      "breakpad/src",
+    ]
+    sources = [
+      "breakpad/src/common/windows/dia_util.cc",
+      "breakpad/src/common/windows/dia_util.h",
+      "breakpad/src/common/windows/guid_string.cc",
+      "breakpad/src/common/windows/guid_string.h",
+      "breakpad/src/common/windows/http_upload.cc",
+      "breakpad/src/common/windows/http_upload.h",
+      "breakpad/src/common/windows/module_info.h",
+      "breakpad/src/common/windows/omap.cc",
+      "breakpad/src/common/windows/omap.h",
+      "breakpad/src/common/windows/omap_internal.h",
+      "breakpad/src/common/windows/pdb_source_line_writer.cc",
+      "breakpad/src/common/windows/pdb_source_line_writer.h",
+      "breakpad/src/common/windows/pe_source_line_writer.cc",
+      "breakpad/src/common/windows/pe_source_line_writer.h",
+      "breakpad/src/common/windows/pe_util.cc",
+      "breakpad/src/common/windows/pe_util.h",
+      "breakpad/src/common/windows/string_utils-inl.h",
+      "breakpad/src/common/windows/string_utils.cc",
+      "breakpad/src/common/windows/symbol_collector_client.cc",
+      "breakpad/src/common/windows/symbol_collector_client.h",
+    ]
+
+    # There are some warnings in this code.
+    configs -= [ "//build/config/compiler:goma_code" ]
+    configs += [ "//build/config/compiler:no_goma_code" ]
+  }
+
   executable("dump_syms") {
     # TODO using this with VS2015 may break the crash server.
     # https://crbug.com/696671
@@ -725,19 +800,9 @@ if (os == "win" && !is_win_gcc) {
       "breakpad/src",
     ]
 
-    sources = [
-      "breakpad/src/common/windows/dia_util.cc",
-      "breakpad/src/common/windows/dia_util.h",
-      "breakpad/src/common/windows/guid_string.cc",
-      "breakpad/src/common/windows/guid_string.h",
-      "breakpad/src/common/windows/omap.cc",
-      "breakpad/src/common/windows/omap.h",
-      "breakpad/src/common/windows/pdb_source_line_writer.cc",
-      "breakpad/src/common/windows/pdb_source_line_writer.h",
-      "breakpad/src/common/windows/string_utils-inl.h",
-      "breakpad/src/common/windows/string_utils.cc",
-      "breakpad/src/tools/windows/dump_syms/dump_syms.cc",
-    ]
+    sources = [ "breakpad/src/tools/windows/dump_syms/dump_syms.cc" ]
+
+    deps = [ ":common_windows" ]
 
     lib_dirs = []
     if (target_cpu == "x64") {
@@ -747,6 +812,7 @@ if (os == "win" && !is_win_gcc) {
     }
 
     libs = [
+      "dbghelp.lib",
       "diaguids.lib",
       "imagehlp.lib",
     ]
