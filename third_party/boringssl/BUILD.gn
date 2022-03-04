@@ -71,7 +71,7 @@ if (os == "win" && !is_msan && !is_win_gcc) {
       public_configs = [ ":no_asm_config" ]
     } else if (cpu_arch == "x64") {
       if (os == "mac") {
-        sources += crypto_sources_mac_x86_64
+        sources += crypto_sources_apple_x86_64
       } else if (os == "linux") {
         sources += crypto_sources_linux_x86_64
       } else {
@@ -79,7 +79,7 @@ if (os == "win" && !is_msan && !is_win_gcc) {
       }
     } else if (cpu_arch == "x86") {
       if (os == "mac") {
-        sources += crypto_sources_mac_x86
+        sources += crypto_sources_apple_x86
       } else if (os == "linux") {
         sources += crypto_sources_linux_x86
       } else {

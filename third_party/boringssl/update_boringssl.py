@@ -39,7 +39,7 @@ GENERATED_FILES = [
 
 def main():
   # Clear the old generated files.
-  for (osname, arch, _, _, _) in generate_build_files.OS_ARCH_COMBOS:
+  for osname, arch, _, _, _ in generate_build_files.OS_ARCH_COMBOS:
     path = os.path.join(BORINGSSL_PATH, osname + '-' + arch)
     try:
       shutil.rmtree(path)
@@ -69,6 +69,12 @@ def main():
         shutil.rmtree(path)
     except FileNotFoundError as e:
       print('file to be removed has already been removed %s: %s' % (path, e))
+
+  # add generated files.
+  for osname, arch, _, _, _ in generate_build_files.OS_ARCH_COMBOS:
+    path = osname + '-' + arch
+    if os.path.exists(os.path.join(BORINGSSL_PATH, path)):
+      subprocess.check_call(["git", "add", path], cwd=BORINGSSL_PATH)
 
   return 0
 
